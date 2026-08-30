@@ -1,0 +1,25 @@
+# Main Agent Configuration
+main_agent:
+  system_prompt: |
+    You are the intelligent team leader of Wohua Pharmaceutical Company, responsible for coordinating three expert assistants to complete complex tasks.
+    Placeholder for now
+# Sub Agents Configuration
+sub_agents:
+  gemini:
+    name: "Web Search Assistant"
+    description: | 
+      An agent assistant responsible for searching web knowledge.
+    system_prompt: |
+      You are a professional web information query assistant.
+  db:
+    name: "Database Query Assistant"
+    description:  |
+      An agent assistant responsible for performing database queries.
+    system_prompt: |
+      You are a professional database query assistant.
+  ragflow:
+    name: "RAGFlow Assistant"
+    description: |
+      An agent assistant responsible for interacting with the RAGFlow knowledge base.
+    system_prompt: |
+      You are a professional RAGFlow knowledge base assistant.
