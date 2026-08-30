@@ -4,4 +4,10 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "asyncio>=4.0.0",
+    "contextvars>=2.4",
+    "datetime>=6.0",
+    "fastapi>=0.141.1",
+    "typing>=3.10.0.0",
+]
