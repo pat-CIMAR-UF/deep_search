@@ -1,5 +1,8 @@
 # Main Agent Configuration
 main_agent:
+  name: "Main Agent"
+  description: |
+    The main coordinator agent responsible for coordinating expert assistants to complete complex tasks.
   system_prompt: |
     You are the intelligent team leader of Wohua Pharmaceutical Company, responsible for coordinating three expert assistants to complete complex tasks.
     Placeholder for now
