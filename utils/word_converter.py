@@ -1,30 +1,20 @@
 import logging
-import os
 from pathlib import Path
-import time
 
-try:
-    import markdown
-    import win32com.client
-    import pythoncom
-except ImportError:
-    pass
+import markdown
+from weasyprint import HTML
 
 
-def convert_md_to_pdf_via_word(md_abs_path: Path, pdf_abs_path: Path) -> str:
+def convert_md_to_pdf(md_abs_path: Path, pdf_abs_path: Path) -> str:
     """
-    使用 Microsoft Word COM 接口将 Markdown 转换为 PDF。
-    Convert Markdown to PDF via the Microsoft Word COM interface.
-    依赖：pywin32, markdown
-    Dependencies: pywin32, markdown
+    使用 WeasyPrint 将 Markdown 转换为 PDF(跨平台,无需 Microsoft Word)。
+    Convert Markdown to PDF via WeasyPrint (cross-platform, no Microsoft Word needed).
+    依赖:weasyprint, markdown
+    Dependencies: weasyprint, markdown
     """
-    temp_html_path = md_abs_path.with_suffix('.temp.html')
-    word_app = None
-
     try:
         # 1. MD 转 HTML / Markdown → HTML
-        with open(md_abs_path, 'r', encoding='utf-8') as f:
-            md_content = f.read()
+        md_content = md_abs_path.read_text(encoding='utf-8')
 
         html_body = markdown.markdown(md_content, extensions=['tables', 'fenced_code'])
         html_content = f"""
@@ -32,10 +22,10 @@ def convert_md_to_pdf_via_word(md_abs_path: Path, pdf_abs_path: Path) -> str:
         <head>
             <meta charset="UTF-8">
             <style>
-                body {{ font-family: "Microsoft YaHei", "SimHei", sans-serif; }}
+                body {{ font-family: "Noto Sans CJK SC", "Microsoft YaHei", "SimHei", sans-serif; }}
                 table {{ border-collapse: collapse; width: 100%; }}
                 th, td {{ border: 1px solid black; padding: 8px; }}
-                pre {{ background-color: #f5f5f5; padding: 10px; border-radius: 4px; }}
+                pre {{ background-color: #f5f5f5; padding: 10px; border-radius: 4px; white-space: pre-wrap; }}
                 code {{ font-family: "Consolas", "Monaco", monospace; }}
             </style>
         </head>
@@ -45,45 +35,14 @@ def convert_md_to_pdf_via_word(md_abs_path: Path, pdf_abs_path: Path) -> str:
         </html>
         """
 
-        with open(temp_html_path, 'w', encoding='utf-8') as f:
-            f.write(html_content)
-
-        # 2. 调用 Word COM / Invoke Word COM
-        pythoncom.CoInitialize()
-        word_app = win32com.client.Dispatch('Word.Application')
-        word_app.Visible = False
-        word_app.DisplayAlerts = False
-
-        doc = word_app.Documents.Open(str(temp_html_path.resolve()))
-        doc.SaveAs(str(pdf_abs_path.resolve()), FileFormat=17)  # wdFormatPDF = 17
-        doc.Close(SaveChanges=0)
+        # 2. HTML 转 PDF / HTML → PDF
+        HTML(string=html_content).write_pdf(str(pdf_abs_path.resolve()))
 
         if pdf_abs_path.exists():
-            return f"Converted successfully: {pdf_abs_path} (Word engine)"
+            return f"Converted successfully: {pdf_abs_path} (WeasyPrint engine)"
         else:
             return f"Conversion finished but file was not created: {pdf_abs_path}"
 
-    except ImportError:
-        return "Missing dependencies. Install with: pip install pywin32 markdown"
     except Exception as e:
-        logging.error(f"Word-to-PDF conversion failed: {e}", exc_info=True)
+        logging.error(f"Markdown-to-PDF conversion failed: {e}", exc_info=True)
         return f"Conversion failed: {str(e)}"
-
-    finally:
-        # 3. 资源清理 / Release resources
-        if word_app:
-            try:
-                word_app.Quit()
-            except:
-                pass
-
-        if temp_html_path.exists():
-            try:
-                temp_html_path.unlink()
-            except:
-                pass
-
-        try:
-            pythoncom.CoUninitialize()
-        except:
-            pass
