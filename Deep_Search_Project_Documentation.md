@@ -1,463 +1,1395 @@
-# Deep Search Project Based on DeepAgents
+# A Deep Search Project Built on DeepAgents
 
 **Introduction**
 
-In just a few short years, the form and paradigm of Artificial Intelligence have undergone a profound, step-by-step evolution. It has progressed from early Large Language Models (LLMs) that could only "answer queries," to AI Agents endowed with "tool-calling and execution" capabilities, and is now rapidly advancing toward **Agentic AI**—systems capable of autonomous collaboration and orchestrating complex workflows. This evolution is not a mere stacking of features; it represents a qualitative leap from *language understanding* to *autonomous action*, and ultimately to *intelligent organization and multi-agent synergy*—forming the core backbone of future intelligent applications.
+Over just the past few years, artificial intelligence has been going through a deep, layered evolution. It started as a Large Language Model (LLM) that could do little more than "answer questions," then iterated into an AI Agent capable of "calling tools and actually getting things done," and is now accelerating toward Agentic AI — systems with a sense of collaboration that can drive complex workflows. This trajectory is not a simple stacking of features; it is a qualitative leap from *language understanding* to *autonomous action*, and finally to *intelligent organization and collaboration* — arguably the central axis of future intelligent applications.
 
-<img src="assets/image-20260214223026633.png" alt="Evolution of AI" style="zoom:50%;" />
+<img src="assets/image-20260214223026633.png" alt="image-20260214223026633" style="zoom:50%;" />
 
-To overcome existing technological bottlenecks, two pivotal concepts have rapidly emerged as core driving forces in both research and industry practice: **Deep Agents** and **Higher-Order Prompts (HOPs)**.
+Two key concepts have risen rapidly in both research and practice as the driving forces behind this breakthrough — **Deep Agents** and **Higher-Order Prompts (HOPs)**.
 
-In the architecture of Deep Agents, the model is no longer a black-box that outputs an answer in a single shot. Instead, it becomes an autonomous agent operating within a closed loop of **"Planning → Execution → Feedback → Iteration"**:
+In the Deep Agent architecture, the model is no longer a black box that "emits an answer once." It becomes an intelligent actor with a closed loop of *plan → execute → feed back → iterate*:
 
-- When faced with complex tasks, it first decomposes them into actionable sub-goals;
-- It matches each sub-goal to a dedicated sub-agent for specialized division of labor;
-- During execution, it continuously monitors intermediate outputs to identify anomalies and course deviations;
-- Based on execution feedback, it dynamically adjusts plans, substitutes strategies, or spawns new subtasks to fill gaps;
-- When encountering errors, it uses reflection mechanisms to trace root causes and correct execution paths.
+- When faced with a complex task, it first decomposes it into actionable sub-goals;
+- It matches each sub-goal with a dedicated sub-agent, achieving specialized division of labor;
+- During execution it monitors the output of each step in real time, precisely identifying deviations from the goal;
+- Based on execution results it dynamically adjusts the plan, swaps strategies, or generates new subtasks to complete the chain;
+- When errors occur, a reflection mechanism traces the problem back to its root cause and corrects the execution path.
 
-Meanwhile, **Higher-Order Prompts (HOPs)** focus on *teaching models how to think*: If Deep Agents are the "organizational architects" that establish the execution framework, Higher-Order Prompts are the "cognitive directors" defining underlying reasoning logic and thought processes.
+Higher-Order Prompts (HOPs), meanwhile, focus on "teaching the model *how to think*." If the Deep Agent is the *organizational architect* of the intelligent system — responsible for building the skeleton of task execution — then the Higher-Order Prompt is the *cognitive standards designer*, defining the underlying logic of thinking and reasoning.
 
-* **Traditional Prompt**: Tells the model **what to do**.
+* **Traditional prompt**: tells me **what to do**.
 
-  > Analyze the following user review, determine whether the sentiment is positive, negative, or neutral, and provide suggestions for improvement.
+  > Analyze the user review below, judge whether the sentiment is positive, negative, or neutral, and give improvement suggestions.
   >
-  > Review: "This app lags constantly, takes forever to open, has an ugly interface, and is frustrating to use."
+  > Review: "This software lags constantly, takes forever to open, and the UI is ugly. It's really frustrating to use."
 
-* **Higher-Order Prompt (HOP)**: Tells the model **how to think, which steps to follow, and what logic to apply**.
+* **Higher-order prompt**: tells me **how to think, in what steps, with what logic**.
 
-  > Please analyze the user review using the following **structured reasoning workflow**:
+  > Analyze the user review using the following **fixed thinking procedure**:
   >
-  > 1. **Extract facts sentence-by-sentence**: What specific issues did the user mention?
-  > 2. **Assess sentiment**: Determine if sentiment is positive, negative, or neutral based on key phrases, providing clear reasoning.
-  > 3. **Rank by severity**: Order issues from most critical to least impactful on user experience.
-  > 4. **Actionable suggestions**: Provide concrete, actionable remediation steps for each issue (avoid generic platitudes).
-  > 5. **Core summary**: Summarize the primary pain point in a single concise sentence.
+  > 1. First extract the facts sentence by sentence: which specific problems did the user mention?
+  > 2. Then judge the sentiment: decide positive / negative / neutral based on keywords, and give your reasoning.
+  > 3. Rank the problems by severity: from the one that hurts the experience most to the least.
+  > 4. For each problem, give an **actionable** improvement suggestion — nothing vague.
+  > 5. Finally, summarize the core pain point in one sentence.
   >
-  > Review: "This app lags constantly, takes forever to open, has an ugly interface, and is frustrating to use."
+  > Review: "This software lags constantly, takes forever to open, and the UI is ugly. It's really frustrating to use."
 
-Traditional prompts focus on commanding direct outcomes, while Higher-Order Prompts convey structured cognitive frameworks and reasoning paradigms. This fundamentally elevates decision precision and execution reliability.
+A traditional prompt leans toward "issuing a direct instruction for a result," while a higher-order prompt goes a step further: what it transmits to the model is a **thinking framework and reasoning paradigm** — explicitly telling the model how to analyze the problem, how to break down the logic, and how to organize its thought process, thereby improving decision accuracy and execution reliability at the root.
 
----
+## 1. Core of the DeepAgents Framework
 
-## 1. DeepAgents Framework Core
+### 1.1 What DeepAgents Is and What It Does
 
-### 1.1 Introduction and Role of DeepAgents
-
-> Build agents capable of planning, leveraging subagents, and using virtual filesystems to tackle complex tasks.
+> Build agents (deep agents) that can plan, use subagents, and leverage a file system to handle complex tasks.
 >
-> Official Documentation: https://docs.langchain.com/oss/python/deepagents/overview
+> https://docs.langchain.com/oss/python/deepagents/overview
 
-**DeepAgents** is an autonomous multi-agent library built on top of LangChain agent building blocks (analogous to the relationship between Spring Boot and the Spring Framework). It specializes in **Agentic AI** systems. DeepAgents is the simplest way to build LLM-powered applications equipped with built-in task planning, filesystem-based context management, subagent delegation, and long-term memory. It empowers developers to solve complex, multi-step, autonomous planning tasks.
+**DeepAgents** is a standalone library built on top of LangChain's core agent building blocks (the relationship is similar to Spring Boot vs. the Spring Framework). Its main purpose is to implement **autonomous multi-agent systems (Agentic AI)**. DeepAgents is the simplest way to build agents and applications driven by Large Language Models (LLMs) — with built-in task planning, a file system for context management, subagent spawning, and long-term memory. You can use it for complex, multi-step tasks that require autonomous planning.
 
-#### Framework Family Comparison
+**Comparison across the family of frameworks:**
 
-> Official Concepts: https://docs.langchain.com/oss/python/concepts/products
+> https://docs.langchain.com/oss/python/concepts/products
 >
-> Note: These three layers are not strictly unidirectional; cyclic delegations and co-invocations can occur in advanced architectures.
+> The three do not reference each other in only one direction — circular call scenarios do occur.
 
-- **LangChain (Framework)**: Executes **"Actions"**—the foundational agent framework. It encapsulates LLM interactions and tool calling, providing flexible agent abstractions without opinionated planning, persistent memory, or filesystem mechanisms.
-- **LangGraph (Runtime)**: Manages **"Workflows"**—the outer runtime engine. It models execution as controllable state graphs, supporting cycles, branching, parallel branches, and durable persistence.
-- **DeepAgents (Harness)**: Handles **"Organization"**—the outermost agentic toolkit. It features built-in planners, subagents, virtual filesystems, and durable memory storage, elevating agents from basic task executors to autonomous entities capable of organization, management, and reflection.
+- **LangChain (Framework)**: handles the *actions*. It is the core agent framework. It encapsulates the interaction between LLMs and tools and provides a flexible agent structure, but it does not include planning, memory, or a file system — it suits developers who want to customize the logic themselves.
+- **LangGraph (Runtime)**: handles the *flow*. It is the outer runtime layer. It turns execution into a manageable graph structure, supports loops, parallelism, and persistence, and guarantees stable, controllable agent execution.
+- **DeepAgents (Harness)**: handles the *organization*. It is the outermost toolkit. It ships with a planner, subagents, a file system, and persistent storage, upgrading an agent from "able to execute" to a deep agent that "can organize, manage, and remember."
 
-<img src="assets/image-20260214225424700.png" alt="Framework Comparison" style="zoom:67%;" />
+<img src="assets/image-20260214225424700.png" alt="image-20260214225424700" style="zoom:67%;" />
 
-#### Feature Matrix Comparison
+**Feature-by-feature comparison:**
 
-![Feature Comparison](assets/c238aeda-4709-4820-b3f8-846226a68e1d.jpg)
+![c238aeda-4709-4820-b3f8-846226a68e1d](assets/c238aeda-4709-4820-b3f8-846226a68e1d.jpg)
 
-#### Use Case Decision Matrix
+**Summary of when to use LangChain, LangGraph, and Deep Agents:**
 
-1. **When to use LangChain?**
-   - Rapidly building single agents and standalone autonomous utilities.
-   - Standard abstractions for models, tools, and basic agent loops are sufficient.
-   - Clean, lightweight, and flexible development workflows.
-   - Developing simple, straightforward agent applications without complex orchestration.
+1. When should you use LangChain?
 
-2. **When to use LangGraph?**
-   - Fine-grained, low-level control over agent orchestration and state transitions is required.
-   - Long-running, stateful, durable execution across multiple sessions.
-   - Combining deterministic rule steps with non-deterministic agentic steps in complex cyclic workflows.
-   - Building production-grade agent deployment infrastructure.
+   - You want to **build agents and autonomous applications quickly**.
 
-3. **When to use DeepAgents SDK?**
-   - Building long-running, self-operating, autonomous planning agents.
-   - Handling complex, multi-step, open-ended research or engineering tasks.
-   - Leveraging built-in utilities: virtual filesystems, custom tools, automated context engineering, and memory offloading.
-   - Utilizing out-of-the-box subagent hierarchies and prompt templates.
+   - You need standard abstractions over **models, tools, and the agent loop** (single agent).
 
----
+   - You need an **easy-to-use and flexible** development framework.
+
+   - You are building a **simple, straightforward agent application** with no complex orchestration needs.
+
+2. When should you use LangGraph?
+
+   - You need **fine-grained, low-level control over agent orchestration**.
+
+   - You need **durable execution** that supports **long-running, stateful agents**.
+
+   - You are building **complex workflows that combine deterministic steps with intelligent agent steps**.
+
+   - You need **production-ready** agent deployment infrastructure.
+
+3. When should you use the Deep Agents SDK?
+
+   - You are building **long-running, continuously operating, self-planning** intelligent agents.
+
+   - You are building agents that must handle **complex, multi-step tasks**.
+
+   - You need **predefined tools**: file system operations, custom tools, automated context engineering, and so on.
+
+   - You want to use **preset prompts and subagent** capabilities directly.
 
 ### 1.2 Core Capabilities of DeepAgents
 
-#### Core Capability 1: Intelligent Planning & Task Decomposition (Eliminating Static Workflow Rigidity)
+**Core capability 1: intelligent planning and task decomposition** (the clearest expression of intelligent coordination — it avoids the traditional hard-coded workflow)
 
-> DeepAgents provides built-in `write_todos` tooling, enabling agents to:
-> - Decompose complex instructions into discrete execution steps.
-> - Track task execution progress in real time.
-> - Dynamically adapt and adjust plans based on incoming runtime discoveries.
+> DeepAgents ships with a built-in `write_todos` tool that lets an agent:
+>
+> - Decompose complex tasks into discrete execution steps
+> - Track task progress in real time
+> - Dynamically adjust the execution plan as new information arrives
 
-*Example*: If instructed to "organize a company summit," DeepAgents will not execute blindly. Instead, it formulates an actionable todo list:
-`1. Determine date/venue → 2. Invite speakers → 3. Procure catering/equipment → 4. Set up hall → 5. Run rehearsal`
-During execution, it marks items as completed/pending. If a speaker cancels, it dynamically revises the plan to invite a backup speaker.
+For example: you want to "throw a birthday party." A Deep Agent will not dive in blindly; it will first draft a clear to-do list for you:
 
-> *Note*: `write_todos` is a built-in tool function within DeepAgents:
-> - `read_todos`: Reads the current todo checklist to guide next actions.
-> - `update_todos`: Modifies steps or adjusts priorities based on intermediate findings.
-> - `delete_todos`: Prunes redundant or obsolete steps.
+1. Decide the party time/place → 2. Invite friends → 3. Buy ingredients/cake → 4. Decorate the venue → 5. Prepare games
 
-#### Core Capability 2: Efficient Context Management (Offloading Memory to Avoid Context Overflow)
+While executing, it also marks items "done / not done" in real time. If it finds the bakery is closed, it will automatically change "buy a cake" to "try another shop," or even add a new step, "order a cake for delivery" — exactly like an experienced planner who breaks a complex affair into small, actionable steps and stays flexible.
 
-> DeepAgents includes virtual filesystem tools (`ls`, `read_file`, `write_file`, `edit_file`), enabling agents to:
-> - Offload voluminous raw data and intermediate outputs to external storage.
-> - Prevent LLM context window overflow and attention degradation.
-> - Manage variable-length execution results smoothly.
+Note: `write_todos` is not a native Python function — it is a **built-in "tool function" of the DeepAgents framework**. Think of it as:
 
-*Analogy*: When summarizing a 100-page dossier, an agent's context window can quickly saturate. DeepAgents provides an external filing cabinet:
-1. Splits raw data into files stored in the backend workspace.
-2. Reads only relevant sections (`read_file`) on demand.
-3. Writes intermediate drafts (`write_file`) and updates them (`edit_file`).
-4. Keeps the active LLM context clean, focused, and token-efficient.
+> A "to-do list generator" that ships with the Deep Agent, designed specifically to let the agent break a complex task into executable to-do items and store them. DeepAgent also provides companion tools for adjusting todos:
+>
+> - `read_todos`: while executing a task, the agent uses this to *read* the current to-do list so it knows what comes next;
+> - `update_todos`: used when execution reveals that a step needs adjusting (for example, "search for material" needs an added "filter for authoritative sources");
+> - `delete_todos`: removes steps that are no longer needed (for example, after the report is written, remove the duplicate "check completeness" item).
 
-#### Core Capability 3: Subagent Spawning Mechanism (Hierarchical Specialization & Context Isolation)
+**Core capability 2: efficient context management** (the most practical "memory expansion" scheme — it prevents context overflow)
 
-> DeepAgents provides a built-in `task` tool, enabling agents to:
-> - Delegate specialized subtasks to dedicated subagents.
-> - Isolate execution contexts, preventing intermediate tool noise from polluting the main agent's context.
-> - Execute deep, multi-turn reasoning loops in isolated sub-environments.
+> DeepAgents ships with a built-in file system toolset (`ls`, `read_file`, `write_file`, `edit_file`) that lets an agent:
+>
+> - Offload large context payloads to external storage
+> - Effectively prevent context-window overflow
+> - Handle tool results of variable length
 
-*Analogy*: When building an enterprise application, the Project Manager (Main Agent) delegates UI design to a Designer Subagent, backend logic to a Coder Subagent, and database schemas to a DBA Subagent. Each subagent operates independently with specialized tools, returning only distilled summaries to the Leader.
+It is like being asked to "organize a 100-page annual work summary." Your brain (the agent's context window) can only hold about 10 pages at once — beyond that you forget the beginning as you read the end. The Deep Agent prepares a "dedicated filing cabinet" for you:
 
-#### Core Capability 4: Long-Term Memory (Cross-Thread Knowledge Persistence)
+1. Split the 100-page summary into 10 files in the cabinet → 2. When reading pages 1–10, hold only those 10 pages → 3. Put them back, then fetch pages 11–20 → 4. Write the extracted key points onto scratch paper (temporary files) first, then consolidate into the final version.
 
-> DeepAgents integrates LangGraph's durable Store mechanism, enabling agents to:
-> - Extend cross-thread, cross-session persistent memory.
-> - Save, index, and retrieve historical conversation records and user profiles.
-> - Share institutional knowledge across multiple collaborating agents.
+During execution it also manages files flexibly: if it retrieves a 50,000-word AI industry dataset, it will not cram it into the "brain" — it saves it to the filing cabinet with `write_file`, and when a specific section is needed, it retrieves precisely that with `read_file`. To see what is stored, it runs `ls`; if it finds an error in the data, it corrects it directly with `edit_file` — exactly like an assistant who is good at filing, keeping the "brain" loaded only with what is currently in use, so nothing overflows and nothing is lost.
 
----
+Note: this file system toolset is not simple "local file manipulation" — it is a **cross-storage toolset wrapped by DeepAgents**. Think of it as the Deep Agent's built-in "smart file butler," designed to manage information that exceeds "brain capacity." It supports local files, cloud storage (OSS/S3), and other backends, and it can be chained with other tools.
 
-### 1.3 DeepAgents Quickstart
+**Core capability 3: subagent spawning** (the most flexible "division of labor" pattern — it prevents overloading the main agent)
 
-Let's build your first Deep Agent: **An Autonomous AI Researcher that searches the web and writes reports** powered by Gemini's Grounding with Google Search.
+> DeepAgents ships with a built-in `task` tool that lets an agent:
+>
+> - Select the appropriate subagent to handle a specific task
+> - Achieve context isolation, keeping the main agent's environment clean
+> - Execute complex subtask flows in depth
 
-> **Why Gemini Search Grounding over Traditional Search APIs?**
-> Gemini's `google_search` grounding integrates search directly within the model runtime: a single API call performs search query generation, web page crawling, comprehension, and synthesis. It directly returns a coherent natural-language response accompanied by `grounding_metadata` (actual search queries and source URLs). This eliminates transmitting massive raw HTML/JSON back and forth, significantly lowering token overhead and providing native citation tracking.
+It is like renovating a house: you (the main agent) do not act as designer, bricklayer, *and* electrician. You hire specialists for specialist work:
 
-#### Step 1: Install Dependencies
+1. Dispatch the "design subagent" to produce the renovation blueprint → 2. Dispatch the "construction subagent" to lay bricks and tiles to the blueprint → 3. Dispatch the "plumbing/electrical subagent" to install pipes and wiring → 4. You are only responsible for coordinating progress and consolidating results.
 
-```bash
-pip install deepagents google-genai python-dotenv langchain-openai
+During execution the subagents also work independently: the design subagent focuses only on "style, dimensions, color scheme" and is never distracted by construction details; if the construction subagent hits a problem (say, an uneven wall) it fixes it on its own, without disturbing you or the plumbing/electrical subagent — exactly like a project manager who knows how to "recruit," handing complex tasks to specialist helpers and keeping only the global oversight.
+
+**Core capability 4: long-term memory** (the most durable "memory storage" system — it prevents agent "amnesia")
+
+> DeepAgents leverages LangGraph's Store feature, letting an agent:
+>
+> - Extend persistent memory across threads (coroutines)
+> - Save and retrieve historical conversation information
+> - Support knowledge sharing across multiple sessions
+
+It is like "following up on one customer's requirements over time." You would not restart every conversation with "So what features do you want?" — you keep a "customer file":
+
+1. The first conversation records that the customer "wants a red product, budget ¥5,000" → filed → 2. A week later, you check the file first to recall the earlier requirements → 3. The newly discussed "add a custom logo" is appended → 4. When a colleague takes over, they can read the same file — you do not have to relay anything.
+
+During execution, this memory also works across contexts: requirements you discussed with the customer on a desktop are still retrievable by the agent after you log in from a phone; multiple colleagues (multiple agents) following the same customer all share this file — exactly like a support rep with a "permanent archive cabinet," remembering earlier information no matter how much time passes or which device is used.
+
+
+### 1.3 DeepAgents Quick Start
+
+Let's quickly build the first Deep Agent: **an "AI researcher" that can autonomously search the web and write a report**, borrowing the Tavily web-search tool.
+
+**Step 1: install dependencies**
+
+```cmd
+pip install deepagents tavily-python python-dotenv langchain-openai
 ```
 
-#### Step 2: Configure Environment Variables (`.env`)
+**Step 2: configure API keys**
 
-```ini
-# OpenAI-compatible LLM Configuration
+Make sure you have API keys for an LLM and for Tavily (search). Location: `.env`
+
+```bash
+# OPENAI-style configuration
 OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-OPENAI_API_KEY=your-openai-or-dashscope-api-key
+OPENAI_API_KEY=your-openai-api-key
 LLM_QWEN3=qwen3-32b
 LLM_QWEN_MAX=qwen-max
 
-# Google Gemini API Configuration (https://aistudio.google.com/apikey)
-GEMINI_API_KEY=your-gemini-api-key
-GEMINI_MODEL=gemini-3.6-flash
+#https://app.tavily.com/
+#tavily-api-key
+TAVILY_API_KEY=your-tavily-api-key
 ```
 
-#### Step 3: Define Search Tool (`gemini.py`)
+**Step 3: define the search tool**
+
+DeepAgents interacts with the outside world through tools. Let's start by defining a simple web-search tool.
+
+Location: `tavily_tools.py`
 
 ```python
+from typing import Literal
+from langchain.tools import tool
+from tavily import TavilyClient
+from dotenv import load_dotenv,find_dotenv
 import os
-from dotenv import find_dotenv, load_dotenv
-from google import genai
-from google.genai import types
-from langchain_core.tools import tool
 
-# Load .env file
+# Load the .env file
 load_dotenv(find_dotenv())
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+# Create the tavily_client
+tavily_client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
-# Initialize Gemini client
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
-# Define web search tool
-@tool("gemini_web_search")
-def gemini_web_search(query: str) -> str:
+# Define the search tool
+@tool
+def internet_search(
+        query:str,
+        max_results:int =10,
+        topic:Literal["general","news","finance"] = "general",
+        include_raw_content:bool = False):
     """
-    Internet search tool powered by Google Search via Gemini grounding.
-    :param query: A complete, self-contained search query.
-    :return: Synthesized answer + search queries used + source links.
+    Internet search tool!
+    :param query: search keywords
+    :param max_results: number of results to return
+    :param topic: topic category
+    :param include_raw_content: False = concise, True = return detailed results
+    :return: list of search results
     """
-    print(f"[Web Search] Query: {query}")
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=query,
-        config=types.GenerateContentConfig(
-            # Enable Google Search grounding
-            tools=[{"google_search": {}}],
-        ),
+    print(f"Running a web search! Query: {query}, topic category: {topic}, max results: {max_results}")
+    return tavily_client.search(
+        query=query,
+        max_results=max_results,
+        topic=topic,
+        include_raw_content=include_raw_content
     )
-
-    parts = [response.text or "(No content returned)"]
-
-    # Extract grounding metadata: queries and source URLs
-    candidates = response.candidates
-    metadata = candidates[0].grounding_metadata if candidates else None
-    if metadata:
-        if metadata.web_search_queries:
-            parts.append("Search queries used: " + ", ".join(metadata.web_search_queries))
-        if metadata.grounding_chunks:
-            sources = [
-                f"  [{i + 1}] {chunk.web.title}: {chunk.web.uri}"
-                for i, chunk in enumerate(metadata.grounding_chunks)
-                if chunk.web
-            ]
-            if sources:
-                parts.append("Sources:\n" + "\n".join(sources))
-
-    return "\n\n".join(parts)
 ```
 
-#### Step 4: Assemble Deep Agent
+**Step 4: create the Deep Agent**
+
+Use the `create_deep_agent` factory function to assemble the tools and the system prompt into an agent.
 
 ```python
-import os
-from dotenv import find_dotenv, load_dotenv
 from langchain.chat_models import init_chat_model
 from deepagents import create_deep_agent
-from gemini import gemini_web_search
+import os
+from dotenv import load_dotenv, find_dotenv
 
+from base.tavily_tool import internet_search
+
+# Using find_dotenv() automatically locates the .env file, so environment variables
+# load correctly no matter which directory you run the script from
 load_dotenv(find_dotenv())
 
-# Initialize LLM
+# Minimal initialization (automatically reads the OPENAI environment variables)
 llm = init_chat_model(
     model=os.getenv("LLM_QWEN_MAX"),
     model_provider="openai"
 )
 
-# Factory creation of Deep Agent
+# API reference https://reference.langchain.com/python/deepagents/graph/
+# Functionally equivalent to LangChain's create_agent
 deep_agent = create_deep_agent(
     model=llm,
-    tools=[gemini_web_search],
+    tools=[internet_search],
     subagents=[],
     system_prompt="""
-      You are an expert research analyst. Your duty is to conduct thorough investigation and author polished reports.
-      You have access to the gemini_web_search tool to gather verified web information. Always preserve source citations in your findings.
+      You are an expert researcher. Your job is to conduct in-depth research and write a polished report.
+      You have access to the internet_search tool to gather information.
     """
 )
 ```
 
-#### Step 5: Execute and Inspect Results
+**Step 5: run it and get the result**
 
 ```python
-prompt = input("Enter your research topic: ")
+# Run the agent
+prompt = input("Enter the question you care about! ")
 result = deep_agent.invoke({
-    "messages": [
-        {"role": "user", "content": prompt}
+    "messages":[
+        {"role":"user","content":f"{prompt}"}
     ]
 })
+#result = main_agent.invoke({"inout":"Hot news about AI and robots!"})
 
-# Print final distilled output
+"""
+Explanation of the result data
+ {
+    "messages": [
+        # Item 0: your question (HumanMessage)
+        HumanMessage(content='Search for news about Unitree robots!'),
+        # Item 1: the agent's instruction to call a tool (AIMessage, empty content, only triggers the tool)
+        AIMessage(content='', tool_calls=[{'name':'internet_search', ...}]),
+        # Item 2: the search results returned by the tool (ToolMessage, a pile of JSON data)
+        ToolMessage(content='{"query":"Unitree robot news","results":[...]}'),
+        # Item 3: the agent's final consolidated reply (AIMessage — this is what you want)
+        AIMessage(content='Here is some of the latest news about Unitree robots: ...')
+    ]
+}
+"""
 print(result['messages'][-1].content)
 ```
 
----
+Summary
 
-### 1.4 DeepAgents Streaming & Chunk Parsing
+1. `result['messages']`: locates the list that stores the whole conversation flow;
+2. `[-1]`: grabs exactly the last item in the list (the agent's final consolidated reply);
+3. `.content`: filters out all the extra attributes, leaving only the plain-text reply.
 
-DeepAgents is built on LangGraph's streaming infrastructure. When delegating tasks to subagents, updates from each node can be streamed in real time to monitor thoughts, tool calls, and subagent lifecycles.
+### 1.4 Parsing DeepAgents Streaming Output (Key Section)
 
+Deep agents are built on LangGraph's streaming infrastructure and provide first-class streaming support for subagents. When a deep agent delegates work to a subagent, you can stream updates from each subagent independently — tracking progress, LLM tokens, and tool calls in real time.
 ```python
-prompt = input("Enter your query: ")
+# Run the agent
+# Input: query the latest hot topics about robots
+prompt = input("Enter the question you care about! ")
+# Synchronous stream
 stream = deep_agent.stream({
-    "messages": [{"role": "user", "content": prompt}]
+    "messages":[
+        {"role":"user","content":f"{prompt}"}
+    ]
 })
-
+# =============================================================================
+# Chunk data-structure reference (Python object view)
+# =============================================================================
+# The four core scenarios of LangGraph streaming output (chunk):
+# 1. [Scenario A: the agent thinks and decides to call a tool]
+#    {
+#      "model": {
+#        "messages": [
+#          AIMessage(
+#            content="",
+#            tool_calls=[{
+#              "name": "read_file_content",
+#              "args": {"filename": "requirements.docx"},
+#              "id": "call_123"
+#            }]
+#          )
+#        ]
+#      }
+#    }
+# 2. [Scenario B: the tool finishes and returns a result]
+#    {
+#      "tools": {
+#        "messages": [
+#          ToolMessage(
+#            content="[file content]...",
+#            name="read_file_content",
+#            tool_call_id="call_123"
+#          )
+#        ]
+#      }
+#    }
+# 3. [Scenario C: the agent decides to call a subagent (the special 'task' tool)]
+#    {
+#      "model": {
+#        "messages": [
+#          AIMessage(
+#            content="",
+#            tool_calls=[{
+#              "name": "task",
+#              "args": {
+#                "subagent_type": "Network Search Agent",  # target subagent
+#                "description": "Look up the 2024 policy"  # the concrete task handed down
+#              },
+#              "id": "call_456"
+#            }]
+#          )
+#        ]
+#      }
+#    }
+# 4. [Scenario D: the agent's final reply to the user]
+#    {
+#      "model": {
+#        "messages": [
+#          AIMessage(
+#            content="Based on the query results, the new 2024 policy is as follows...",
+#            tool_calls=[]
+#          )
+#        ]
+#      }
+#    }
+# =============================================================================
 for chunk in stream:
+    """
+        # Scenario 1: a single node update (common)
+        chunk = {
+            "model": {"messages": [AIMessage(content='', tool_calls=[...])]}  # only the model node updated
+        }
+
+        # Scenario 2: several nodes updated at once (rarer, but it happens)
+        chunk = {
+            "model": {"messages": [AIMessage(content='final reply...')]},   # model node
+            "tools": {"messages": [ToolMessage(content='tool result...')]}, # tools node
+            "todos": {"todos_list": ["Done: search for Unitree robot news"]} # todo node
+        }
+    """
     for node_name, state in chunk.items():
-        print(f"Active Node: {node_name}")
-        if not state or "messages" not in state:
-            continue
+        print(f"Node type handled this round: {node_name}")
+        # Some intermediate nodes (e.g. TodoListMiddleware) have no messages — skip them!
+        if not state or "messages" not in state: continue
+        # Others can be read directly
         messages = state["messages"]
+        # messages must be non-null and a list type
         if messages and isinstance(messages, list):
+            # Taking the last one gives the final result
             last_msg = messages[-1]
-            # 1. Model Node (model): Deciding next action
+            # 1. Model node (model): decides the next action
             if node_name == "model":
+                # If tool_calls is present, the model has decided to call a tool or a subagent
                 if last_msg.tool_calls:
                     for tool_call in last_msg.tool_calls:
                         if tool_call['name'] == 'task':
                             sub_agent = tool_call['args'].get('subagent_type')
-                            print(f"[Decision] Delegating to subagent: {sub_agent}")
+                            print(f"[Model decision] Calling subagent: {sub_agent}")
                         else:
-                            print(f"[Decision] Invoking tool: {tool_call['name']} with args {tool_call['args']}")
+                            print(f"[Model decision] Calling tool: {tool_call['name']}, args: {tool_call['args']}")
+                # If there are no tool_calls but there is content, this is the final reply
                 elif last_msg.content:
-                    print(f"[Final Output] {last_msg.content}")
-
-            # 2. Tools Node (tools): Execution results
+                    print(f"📝 [Final reply] {last_msg.content}")
+            # 2. Tools node (tools): shows the result of the tool/subagent execution
             elif node_name == "tools":
-                content_preview = last_msg.content[:100] + "..." if len(last_msg.content) > 100 else last_msg.content
-                print(f"[Tool Result] {content_preview}")
+                # A ToolMessage's content is the raw data returned by the tool (possibly a JSON string).
+                # Printing only the first 100 characters is recommended to avoid flooding the screen.
+                # Expanded into a plain if/else for readability
+                content_preview = ''
+                if len(last_msg.content) > 100:
+                    # Take the first 100 characters + ellipsis (truncated preview)
+                    content_preview = last_msg.content[:100] + "..."
+                else:
+                    # Content is short — show it in full
+                    content_preview = last_msg.content
+                print(f"[Execution result] {content_preview}")
 ```
 
-#### Stream Node Lifecycle Breakdown
+**Interpreting the returned results:**
 
-1. **Preprocessing (`PatchToolCallsMiddleware.before_agent`)**: Formats and validates input messages.
-2. **Model Reasoning (`model`)**: Analyzes instructions and decides whether to invoke tools, subagents, or reply directly.
-3. **Post-Model Hook (`TodoListMiddleware.after_model`)**: Internal planning state synchronization.
-4. **Tool Execution (`tools`)**: Executes external integrations (web search, SQL, filesystem) and returns results.
-5. **Final Output (`model`)**: Generates comprehensive natural language responses.
+Scenario 1: agent pre-processing (the `before_agent` node)
 
----
+Node name: `PatchToolCallsMiddleware.before_agent`
 
-### 1.5 Subagents and Multi-Agent Systems (MAS)
+Core meaning: receive the user input, format/validate the message
 
-#### 1.5.1 Multi-Agent Fundamentals
+```json
+{
+  "PatchToolCallsMiddleware.before_agent": {
+    "messages": Overwrite(  # LangChain's custom Overwrite object
+      value=[  # the core data lives in the value field
+        HumanMessage(  # user message object
+          content="What's the weather in Beijing today?",  # the user's question
+          additional_kwargs={},
+          response_metadata={},
+          id="466118de-5cdb-4250-a57f-bacf28b6407a"  # unique message ID
+        )
+      ]
+    )
+  }
+}
+```
 
-A Multi-Agent System (MAS) consists of multiple autonomous, reactive, and goal-directed agents collaborating through standardized communication protocols.
+Scenario 2: the model thinks (and decides to call a tool) (the `model` node)
 
-| Dimension | Monolithic LLM (Attention Dilution) | Multi-Agent Architecture (Divide & Conquer) |
+Node name: `model`
+
+Core meaning: the LLM analyzes the problem and decides to call a tool / subagent (no direct answer)
+
+```json
+{
+  "model": {
+    "messages": [
+      AIMessage(  # model message object
+        content="",  # content is empty (because it is about to call a tool)
+        additional_kwargs={"refusal": None},
+        response_metadata={  # model metadata
+          "token_usage": {"completion_tokens": 30, "prompt_tokens": 5265, "total_tokens": 5295},
+          "model_provider": "openai",
+          "model_name": "qwen-max",
+          "finish_reason": "tool_calls"  # finish reason: calling a tool
+        },
+        id="lc_run--019c6f4e-9c10-7ae0-966a-5788f78b2017-0",
+        tool_calls=[  # the list of tools the model decided to call
+          {
+            "name": "task",  # tool / subtask name
+            "args": {  # tool arguments
+              "subagent_type": "weather_helper",
+              "description": "Look up today's weather in Beijing."
+            },
+            "id": "call_232308d358d64454905543",
+            "type": "tool_call"
+          }
+        ],
+        invalid_tool_calls=[],
+        usage_metadata={"input_tokens": 5265, "output_tokens": 30}
+      }
+    ]
+  }
+}
+```
+
+Subagent: `name="task"`, with `args` containing `subagent_type` / `description`;
+
+Custom tool: `name=<tool name>`, with `args` containing the tool's own parameters (such as `query`).
+
+Scenario 3: the model's post hook (the `after_model` node)
+
+Node name: `TodoListMiddleware.after_model`
+
+Core meaning: an empty hook fired after the model finishes (no actual business data)
+
+```json
+{
+  "TodoListMiddleware.after_model": None
+}
+```
+
+Scenario 4: tool / subagent execution (the `tools` node)
+
+Node name: `tools`
+
+Core meaning: execute the tool call and return external data (weather, search results, etc.)
+
+```json
+{
+  "tools": {
+    "messages": [
+      ToolMessage(  # tool message object
+        content='{"query": "DeepAgents", "results": [{"url": "...", "title": "deepagents - PyPI", "content": "..."}]}',  # what actually comes back is a JSON string
+        name="internet_search",  # the name of the tool that was called (e.g. internet_search)
+        id="81d0bddd-30de-4874-baac-0bca8aa38936",
+        tool_call_id="call_232308d358d64454905543"  # links back to the tool-call ID from the model
+      )
+    ]
+  }
+}
+```
+
+Scenario 5: the model produces the final answer (the `model` node)
+
+Node name: `model`
+
+Core meaning: based on the tool results, the model generates the final natural-language answer
+
+```json
+{
+  "model": {
+    "messages": [
+      AIMessage(
+        content="Beijing is sunny today with a temperature of 25 degrees — perfect for going out.",  # final answer
+        additional_kwargs={"refusal": None},
+        response_metadata={
+          "token_usage": {"completion_tokens": 17, "prompt_tokens": 5318, "total_tokens": 5335},
+          "finish_reason": "stop"  # finish reason: completed normally
+        },
+        id="lc_run--019c6f4e-af53-7ca3-aee6-9f386be2ac78-0",
+        tool_calls=[],  # no tool calls (the answer is done)
+        usage_metadata={"input_tokens": 5318, "output_tokens": 17}
+      )
+    ]
+  }
+}
+```
+
+### 1.5 Subagents and Multi-Agent Systems
+
+> Guide: https://www.anthropic.com/engineering/building-effective-agents
+
+#### 1.5.1 Understanding Multi-Agent Systems
+
+A Multi-Agent System (MAS) is a collaborative structure made up of several agents that are **autonomous, reactive, and goal-directed**. Through standardized communication and coordination mechanisms they jointly complete complex tasks that no single agent could handle alone.
+
+Put simply: break a complex task into multiple subtasks, dispatch them to agents that specialize in them, and combine the results at the end. In essence — **divide and conquer**.
+
+| Dimension | Monolithic model (the law of attention dilution) | Multi-agent (the leverage of divide and conquer) |
 | :--- | :--- | :--- |
-| **Core Limitation** | A single model attempts to handle multiple disparate domains (e.g., Medicine + Law + Code), leading to knowledge interference and reasoning degradation. | Tasks are decomposed physically; specialized agents handle isolated subtasks in parallel, dramatically improving quality. |
-| **Analogy** | Solo full-stack generalist (spread thin, lacks depth). | Agile specialized team (clear division of labor, deep domain expertise). |
-| **Cognitive Load** | Attention budget is diluted across excessive tokens. | Distributed reasoning + modular context guarantees clean cognitive focus. |
+| **Core problem** | One model must handle knowledge across many domains (e.g. medicine + law); information from different domains contaminates each other and reasoning quality falls off a cliff | The task is physically decomposed, with specialized agents handling independent parallel subtasks; multiple parties work on independent tasks, and performance improves dramatically |
+| **Organizational analogy** | One person doing full stack (energy spread thin, insufficient depth) | A specialized agile team (clear division of labor, everyone in their lane) |
+| **Core logic** | Attention resources are diluted across multi-domain tasks, causing cognitive overload | Distributed compute + specialization, breaking through the physical ceiling of a monolithic model |
 
-#### 1.5.2 Costs & Pitfalls of Multi-Agent Systems
+#### 1.5.2 The Downsides of Multi-Agent Systems
 
-1. **Exponential Token Consumption**:
-   When multiple agents exchange verbose conversation histories and intermediate tool logs across multiple cycles, token consumption can skyrocket exponentially.
-   *Remediation*: Implement intercept thresholds. Route simple queries to single agents and enforce concise communication boundaries.
-2. **Debugging Non-Determinism & Distributed Tracing**:
-   Multi-agent emergent behaviors introduce non-linear interactions. A failure is rarely isolated to one node.
-   *Remediation*: Full-link tracing (`Tracing`) and structured event logging are mandatory before deploying multi-agent systems to production.
+While multi-agent systems deliver a **divide-and-conquer performance leap**, they inevitably carry two **catastrophic costs** that become the main obstacles to shipping:
 
-#### 1.5.3 Three Golden Rules for Multi-Agent Adoption
+**Exponentially uncontrolled token consumption**
 
-Only deploy a Multi-Agent architecture if at least one of these criteria is met:
-1. **Open-Ended, Non-Deterministic Tasks**: High-complexity workflows with no fixed single-path answer (e.g., enterprise strategy planning, deep scientific synthesis).
-2. **Domain Conflicts**: Tasks spanning distinct domain boundaries requiring separate context silos to prevent cross-domain hallucination.
-3. **Multi-Branch Parallelism**: Workflows that naturally decompose into independent parallel paths (e.g., parallel data scraping, multi-version document drafting).
+A monolithic model only pays the token cost of its own reasoning, whereas the core interaction logic of a multi-agent system is **context exchange between agents**. When multiple agents repeatedly pass long-text context back and forth and loop through multiple rounds of restating, token consumption explodes exponentially.
 
-#### 1.5.4 Multi-Agent Architecture Patterns
+Worse still, unconstrained group-chat-style interaction can burn through an API quota in a very short time, leading directly to **runaway cost** — often the main economic barrier for small and mid-sized teams adopting multi-agent designs. The key countermeasure is to establish an **interception baseline**: refuse multi-agent collaboration outright for simple tasks and force a single agent or a standard graph workflow instead, controlling interaction volume at the source.
 
-- **Pattern 1: Hierarchical (Orchestrator-Workers)**: Centralized coordination. A Leader Agent plans, delegates subtasks to specialized Worker Agents, and aggregates the results. *(DeepAgents standard)*
-- **Pattern 2: Collaborative (Peer-to-Peer / Network)**: Decentralized collaboration. Peer agents communicate directly through a shared blackboard/context state. *(AutoGen standard)*
+**Debugging becomes a nightmare: nondeterminism and an end-to-end black box**
 
-<img src="assets/image-20260312152617270.png" alt="Hierarchical Architecture" style="zoom:67%;" />
+The "emergent" quality of multi-agent systems also brings **uncontrollability**: interactions between agents are non-linear, and a system failure is not a single-node fault — it is more like a chain-reaction pileup in city traffic, triggered by cascading multi-step interactions and hard to reproduce.
 
-#### 1.5.5 Subagent Configuration Schema
+The traditional single-agent log-debugging approach fails completely. Without an **end-to-end tracing** system in place, you can neither locate the root cause nor replay the interaction when something goes wrong, which makes going to production extremely risky. Hence "no end-to-end tracing recording, no launch" becomes a **hard floor** for shipping multi-agent systems — and the core prerequisite for stability and maintainability.
 
-In DeepAgents, subagents can be configured as dictionaries or `CompiledSubAgent` objects:
-
-| Field | Type | Required | Description | Inheritance Rule |
+| Cost type | Core problem | Concrete symptoms | Risk threshold / signature | Baseline / strategy |
 | :--- | :--- | :--- | :--- | :--- |
-| `name` | `str` | Yes | Unique identifier used by the main agent during `task()` dispatch. | None (Must define) |
-| `description` | `str` | Yes | Functional description guiding the main agent on when to route tasks here. | None (Must define) |
-| `system_prompt`| `str` | Optional | Custom execution instructions, persona, and output constraints. | Independent (Does not inherit) |
-| `tools` | `list[Callable]`| Optional | Specialized tools accessible to this subagent. | Independent (Does not inherit) |
-| `model` | `str \| BaseChatModel` | Optional | LLM powering this subagent (e.g., `"openai:gpt-4o"`, `"google_genai:gemini-3.6-flash"`). | Defaults to Main Agent model |
-| `middleware` | `list[Middleware]` | Optional | Middleware hooks for logging, rate limiting, or validation. | Independent |
-| `skills` | `list[str]` | Optional | Virtual filesystem paths to external `SKILL.md` packages. | Independent |
+| **Blown budget** | Runaway token consumption | Agents constantly pass long text contexts to each other; token use grows **exponentially**; unbounded chatter drains the API quota fast | A sharp spike in a short period | Establish an interception baseline: never trigger the multi-agent flow for simple tasks; cap interaction text length |
+| **Debugging nightmare** | System nondeterminism and non-traceability | The swarm network is inherently "nondeterministic"; failure scenarios are complex and irregular, and root causes are hard to locate — like a city-wide traffic-light outage causing a chain of accidents | Non-reproducible anomalies in multi-agent interaction; no end-to-end log tracing | No launch without end-to-end tracing; mandatory interaction logging |
 
-#### Subagent Code Example
+#### 1.5.3 The Three Iron Rules for Using Multiple Agents
+
+These three rules are effectively the **entry ticket for multi-agent systems**. Only when at least one of them holds is it worth paying the cost and complexity of going multi-agent:
+
+1. **The problem is extremely open-ended.** These tasks have no standard answer or fixed procedure — think "formulate the company's annual strategy" or "open-ended scientific exploration." A monolithic model easily gets stuck in a local optimum, whereas multiple agents can explore different directions through different roles and adjust the path dynamically.
+2. **There are domain conflicts.** When a task spans two or more specialized domains (e.g. "medicine + law," "finance + engineering"), a monolithic model's attention is spread thin and reasoning precision drops off a cliff. Multi-agent designs physically isolate agents per domain, avoiding knowledge contamination and preserving depth in each module.
+3. **Parallelism across directions is required.** The task naturally splits into several mutually independent subtasks (e.g. "multi-source data collection," "designing several versions of a plan in parallel"). Multiple agents can exploit distributed compute to run them in parallel, drastically shortening total time and achieving a genuine "1 + 1 > 2" efficiency gain.
+
+Only when these conditions are met is a multi-agent design a *treasure*; otherwise forcing it on the problem simply drops the system into a *poison* of cost and debugging pain.
+
+| Rule | Core scenario | Detail |
+| :--- | :--- | :--- |
+| Extremely open-ended problem | High-complexity tasks with no fixed path | Complexity is too high to hard-code the path in advance; the system needs to pivot flexibly and explore side branches during execution |
+| Domain conflict | Tasks mixing multiple domains | Once two or more domains are mixed, a monolithic model degrades from attention dilution; the reasoning contexts of the different domain experts must be physically isolated |
+| Parallelism across directions | Tasks that naturally decompose into independent paths | The task inherently requires several independent paths advancing simultaneously; a multi-agent architecture running them in parallel yields a very significant time-cost benefit |
+
+#### 1.5.4 Two Multi-Agent Architecture Patterns
+
+**Pattern 1: hierarchical workflow (Hierarchical / Orchestrator-Workers)**
+
+> Also known as: commander pattern, master–worker pattern. Core logic: **centralized authority**. One "brain" thinks and assigns tasks; the other agents are just the "hands" that do the work.
+
+- How it works:
+  1. Input: the user gives a complex task (e.g. "write a go-to-market plan for a new product").
+  2. The orchestrator: the supervising agent receives the task. It does not do the work directly — it analyzes the task and decomposes it into several subtasks (e.g. market research, creative design, copywriting).
+  3. Dispatch: the supervisor hands each subtask to the corresponding **vertical-domain expert agent** (worker).
+  4. Execution: the worker agents work in parallel or in sequence and return results to the supervisor.
+  5. Consolidation: the supervisor aggregates all results into a final report and outputs it.
+- Advantages:
+  - Strong controllability: the brain has global oversight, knows the progress, and can correct errors easily.
+  - Clear logic: the reporting relationships are explicit, like a traditional corporate org chart.
+- Disadvantages:
+  - Single point of failure: if the brain dies or misjudges, the entire task collapses.
+  - Communication bottleneck: all information has to be relayed through the brain.
+
+<img src="assets/image-20260312152617270.png" alt="image-20260312152617270" style="zoom:67%;" />
+
+**Pattern 2: collaborative workflow (Collaborative / Network)**
+
+> Also known as: mesh pattern, expert-panel pattern. Core logic: **decentralization**. There is no absolute leader — everyone is an equal expert, sitting together in a meeting, discussing and exchanging information.
+
+- How it works:
+  1. Input: the user poses an open-ended question (e.g. "assess this company's investment value").
+  2. Sharing: the task is dropped into a "shared meeting room" (shared state/context).
+  3. Self-organization: different expert agents (pricing, product, finance, compliance) pull the information they need from the "meeting room" according to their specialty and analyze it.
+  4. Interaction: agents can talk to each other directly. For instance, if the finance agent computes that the cost is too high, it tells the pricing agent to adjust the price directly — no approval from a leader required.
+  5. Convergence: finally, an **evaluator** or a rule decides when the discussion ends and outputs the final plan.
+- Advantages:
+  - Extremely high flexibility: well suited to genuinely complex problems with no standard answer.
+  - Emergence: collisions between different experts can produce unexpectedly innovative solutions.
+- Disadvantages:
+  - Easy to lose control: agents can fall into endless argument (an infinite loop).
+  - Hard to debug: it is very difficult to trace who actually made the pivotal decision.
+
+<img src="assets/image-20260312152724561.png" alt="image-20260312152724561" style="zoom:67%;" />
+
+**DeepAgents** is a textbook **hierarchical/commander pattern**, while **AutoGen** is a textbook **decentralized/mesh collaboration pattern** (like a group-chat brainstorm). **CrewAI** can be configured either way.
+
+| Framework | Core pattern | Collaboration shape | Suitable for | Complexity |
+| :--- | :--- | :--- | :--- | :--- |
+| **DeepAgents (MetaGPT)** | **Hierarchical workflow** | **Pipeline**: roles are clearly divided and tasks are passed in a predefined order (e.g. PM → architect → engineer). | **Standardized processes**: end-to-end software development, long-form report writing. | Medium |
+| **AutoGen** | **Collaborative workflow** | **Group chat / mesh**: all agents share one room, chime in based on context, and interact freely. | **Open-ended exploration**: multi-role brainstorming, complex problem solving, automated code correction. | Low (works out of the box) |
+| **CrewAI** | **Hybrid** | **Hierarchical + delegation**: primarily hierarchical tasks, but agents may autonomously delegate subtasks to others. | **General-purpose tasks**: scenarios that need process control plus a bit of flexibility. | Low |
+
+#### 1.5.5 Getting Started with DeepAgents Subagents
+
+https://docs.langchain.com/oss/python/deepagents/subagents#configuration
+A deep agent can create subagents to delegate work. You specify custom subagents through the `subagents` parameter. Subagents serve two purposes: context isolation (keeping the main agent's context clean) and providing specialized instructions.
+
+<img src="assets/image-20260218202038937.png" alt="image-20260218202038937" style="zoom:67%;" />
+
+Subagents solve the **context-bloat problem**. When an agent uses tools with large outputs (web search, file reads, database queries), the context window fills up rapidly with intermediate results. Subagents isolate that detailed work — the main agent receives only the final result, not the dozens of tool calls that produced it.
+
+**When to use a subagent:**
+
+- A multi-step task would clutter the main agent's context.
+
+- There is a step that needs "specialized skills / dedicated tools."
+
+  > For example, if the main agent is doing "stock analysis," where "fundamental analysis" needs financial tools and "technical analysis" needs candlestick tools, give each of those two steps a dedicated subagent with the corresponding tools.
+
+- Tasks that need different model capabilities (multimodal).
+
+- When you want the main agent to focus on high-level coordination.
+
+**When *not* to use a subagent:**
+
+- The task is simple and can be done in one step.
+
+- The intermediate information must stay coherent and cannot be split.
+
+  > For example, "read an article, then summarize the core argument." Splitting the read into one subagent and the summarize into another loses context — the main agent may as well do it in one pass.
+
+- When the operational cost exceeds the benefit.
+
+**How to configure subagents:** `subagents` accepts two forms — a **dictionary** or a **`CompiledSubAgent`** object.
+
+Define a subagent as a dictionary with the following fields:
+
+| Field | Type | Required / optional | Description | Inheritance rule (relationship to the main agent) |
+| :--- | :--- | :--- | :--- | :--- |
+| name | str | Required | The subagent's unique identifier. The main agent uses this name when calling the `task()` tool, and it also appears as metadata on AIMessages / streaming output to distinguish agents | — (no inheritance; must be defined) |
+| description | str | Required | A description of the subagent's function (should be specific and action-oriented). The main agent uses this to decide whether to delegate a task to this subagent | — (no inheritance; must be defined) |
+| system_prompt | str | Optional | The subagent's execution instructions; should cover tool-usage guidance, output-format requirements, and other core rules | Not inherited from the main agent; must be defined |
+| tools | list[Callable] | Optional | The list of tools the subagent may use. Keep it minimal — only the necessary tools | Not inherited from the main agent; must be defined |
+| model | str \| BaseChatModel | Optional | The model the subagent uses: 1. pass a string (e.g. `openai:gpt-5`); 2. pass a LangChain model object (e.g. `init_chat_model("gpt-5")`). If omitted, the main agent's model is used | Inherits the main agent's model by default; a custom value overrides it |
+| middleware | list[Middleware] | Optional | Custom middleware for logging, rate limiting, custom behavior, and so on | Not inherited from the main agent; must be defined |
+| interrupt_on | dict[str, bool] | Optional | Configures human-in-the-loop (HITL) for specific tools; must be used together with a checkpointer | — |
+| skills | list[str] | Optional | Source paths for skill files (e.g. `["/skills/research/"]`), used to load skills specific to this subagent | — |
+
+**Example**: create a main agent with three helpers:
+
+1. **Weather helper**: looks up the weather (always returns "sunny").
+2. **Math helper**: handles math problems.
+3. **Translator**: handles Chinese↔English translation.
+
+**Implementation**:
 
 ```python
-import os
-from dotenv import find_dotenv, load_dotenv
 from langchain.chat_models import init_chat_model
 from deepagents import create_deep_agent
+import os
+from dotenv import load_dotenv, find_dotenv
+import json
 
 load_dotenv(find_dotenv())
 
-llm = init_chat_model(model=os.getenv("LLM_QWEN_MAX"), temperature=0.1, model_provider="openai")
+# Minimal initialization (automatically reads the OPENAI environment variables)
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),
+    temperature=0.1,  # custom temperature (more rigorous answers)
+    model_provider="openai"
+)
 
-# 1. Weather Subagent
+# 1. Define the subagent: weather helper
 weather_agent = {
     "name": "weather_helper",
-    "description": "Used to query weather information for any given city.",
-    "system_prompt": "You are a weather assistant. Provide current meteorological conditions and recommendations.",
-    "tools": []
+    "description": "Used to look up weather information. Call this helper when the user asks about the weather.",
+    "system_prompt": "You are a weather helper. No matter which city the user asks about, always answer: 'It's sunny today, 25 degrees — great weather for going out.'",
+    "tools": []  # No extra tools needed here; the prompt alone drives the reply
 }
 
-# 2. Math Subagent
+# 2. Define the subagent: math helper
 math_agent = {
     "name": "math_helper",
-    "description": "Specialized in performing rigorous mathematical calculations.",
-    "system_prompt": "You are a precise mathematics assistant.",
+    "description": "Used to handle mathematical calculations.",
+    "system_prompt": "You are a rigorous math assistant. Help the user solve math problems.",
     "tools": []
 }
 
-# 3. Translation Subagent
+# 3. Define the subagent: translator
 translate_agent = {
     "name": "translator",
-    "description": "Translates text seamlessly between English and Chinese.",
-    "system_prompt": "You are an expert bilingual translator.",
+    "description": "Used for Chinese↔English translation tasks.",
+    "system_prompt": "You are a translation assistant. Translate Chinese into English, and English into Chinese.",
     "tools": []
 }
 
-# 4. Main Agent with Subagents registered
+# 4. Create the main agent and register the subagents
+main_agent = create_deep_agent(
+    model=llm,
+    tools=[],  # The main agent carries no tools of its own; it relies on subagents
+    subagents=[weather_agent, math_agent, translate_agent],
+    system_prompt="You are an all-purpose butler. Based on the user's needs, you dispatch different helpers to solve the problem."
+)
+
+
+# 5. Run it with visibility (Stream)
+# Using stream() instead of invoke() prints the agent's "dispatch" process in real time,
+# so you can see how it hands out tasks
+def test_stream(query):
+    print(f"\n>>> Question: {query}")
+    # Iterate over the streaming output
+    for chunk in main_agent.stream({"messages": [{"role": "user", "content": query}]}):
+        # chunk is a dict whose keys are node names (e.g. 'model', 'tools') and whose values are that node's state update
+        for node_name, state in chunk.items():
+            if not state or "messages" not in state: continue
+            messages = state["messages"]
+            if messages and isinstance(messages, list):
+                last_msg = messages[-1]
+                # 1. Model node (model): decides the next action
+                if node_name == "model":
+                    # If tool_calls is present, the model has decided to call a tool or a subagent
+                    if last_msg.tool_calls:
+                        for tool_call in last_msg.tool_calls:
+                            if tool_call['name'] == 'task':
+                                sub_agent = tool_call['args'].get('subagent_type')
+                                print(f"[Model decision] Calling subagent: {sub_agent}")
+                            else:
+                                print(f"[Model decision] Calling tool: {tool_call['name']}, args: {tool_call['args']}")
+                    # If there are no tool_calls but there is content, this is the final reply
+                    elif last_msg.content:
+                        print(f"[Final reply] {last_msg.content}")
+
+                # 2. Tools node (tools): shows the result of the tool/subagent execution
+                elif node_name == "tools":
+                    content_preview = ''
+                    if len(last_msg.content) > 100:
+                        # Take the first 100 characters + ellipsis (truncated preview)
+                        content_preview = last_msg.content[:100] + "..."
+                    else:
+                        # Content is short — show it in full
+                        content_preview = last_msg.content
+                    print(f"[Execution result] {content_preview}")
+test_stream("What's the weather in Beijing today?")
+test_stream("What is 100 + 256?")
+```
+
+**How it works**:
+
+- The `subagents` parameter takes a list; each element is a dictionary defining one subagent's configuration.
+- `description` is critical: the main agent uses it to decide when to invoke that subagent.
+- When the main agent finds that the user's intent matches a subagent's `description`, it automatically emits a `task` tool call to hand the work down.
+
+**Important**: by default, context is isolated between the main agent and its subagents.
+
+1. Independent prompts: each agent has its own `system_prompt` defining who it is and what it is responsible for.
+2. Independent toolset (skills/tools): a subagent may use only the tools assigned to it — it normally cannot call the parent agent's tools directly, and vice versa.
+3. Independent memory/state: the temporary conversation history and variable state a subagent produces while working are usually valid only within its own lifecycle. After it reports its result to the parent, those intermediate steps may not all be synced back to the parent (unless passed through a specific return value).
+
+The point of this design:
+
+- Focus: prevents context contamination. The agent writing code does not need to know the specific instructions given to the agent writing copy.
+- Safety: restricts tool permissions. For example, only the top-level agent may approve a release; the lower-level agent can only submit code.
+- Modularity: makes subagents easy to test and reuse independently.
+
+**You can also switch to asynchronous execution:**
+
+1. **High-concurrency services**: when building endpoints with FastAPI/Starlette (e.g. returning streaming answers to a front end), `astream()` + async lets you serve hundreds or thousands of concurrent user requests without one request blocking the whole service;
+2. **Batch task processing**: when you need to invoke the agent on several queries at once (like the 3 questions in this test), running them concurrently with `astream()` takes roughly as long as the single longest task — several times faster than serial synchronous `stream()`;
+3. **Non-blocking main thread**: when calling the agent from a GUI program (PyQt/Tkinter) or a scheduled job, async `astream()` will not freeze the UI or stall the scheduled job.
+
+```python
+from langchain.chat_models import init_chat_model
+from deepagents import create_deep_agent
+import os
+import asyncio  # New: import the async library
+from dotenv import load_dotenv, find_dotenv
+import json
+
+load_dotenv(find_dotenv())
+
+# Minimal initialization (automatically reads the OPENAI environment variables)
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),
+    verbose=True,  # custom parameter
+    temperature=0.1,  # custom temperature (more rigorous answers)
+    model_provider="openai"
+)
+
+# 1. Define the subagent: weather helper (unchanged)
+weather_agent = {
+    "name": "weather_helper",
+    "description": "Used to look up weather information. Call this helper when the user asks about the weather.",
+    "system_prompt": "You are a weather helper. No matter which city the user asks about, always answer: 'It's sunny today, 25 degrees — great weather for going out.'",
+    "model": llm,
+    "tools": []
+}
+
+# 2. Define the subagent: math helper (unchanged)
+math_agent = {
+    "name": "math_helper",
+    "description": "Used to handle mathematical calculations.",
+    "system_prompt": "You are a rigorous math assistant. Help the user solve math problems.",
+    "model": llm,
+    "tools": []
+}
+
+# 3. Define the subagent: translator (unchanged)
+translate_agent = {
+    "name": "translator",
+    "description": "Used for Chinese↔English translation tasks.",
+    "system_prompt": "You are a translation assistant. Translate Chinese into English, and English into Chinese.",
+    "model": llm,
+    "tools": []
+}
+
+# 4. Create the main agent (unchanged)
 main_agent = create_deep_agent(
     model=llm,
     tools=[],
     subagents=[weather_agent, math_agent, translate_agent],
-    system_prompt="You are an executive butler. Dispatch tasks to the appropriate specialist assistant based on user requests."
+    system_prompt="You are an all-purpose butler. Based on the user's needs, you dispatch different helpers to solve the problem."
 )
+
+
+# 5. Async version: adapted for astream() (the key change)
+async def test_astream(query):  # New: async defines a coroutine function
+    print(f"\n>>> Question: {query}")
+    # Key change: synchronous `for` → asynchronous `async for`
+    async for chunk in main_agent.astream({"messages": [{"role": "user", "content": query}]}):
+        for node_name, state in chunk.items():
+            if not state or "messages" not in state: continue
+            messages = state["messages"]
+            if messages and isinstance(messages, list):
+                last_msg = messages[-1]
+                # 1. Model node logic (unchanged)
+                if node_name == "model":
+                    if last_msg.tool_calls:
+                        for tool_call in last_msg.tool_calls:
+                            if tool_call['name'] == 'task':
+                                sub_agent = tool_call['args'].get('subagent_type')
+                                print(f"[Model decision] Calling subagent: {sub_agent}")
+                            else:
+                                print(f"[Model decision] Calling tool: {tool_call['name']}, args: {tool_call['args']}")
+                    elif last_msg.content:
+                        print(f"[Final reply] {last_msg.content}")
+                # 2. Tools node logic (unchanged)
+                elif node_name == "tools":
+                    content_preview = ''
+                    if len(last_msg.content) > 100:
+                        content_preview = last_msg.content[:100] + "..."
+                    else:
+                        content_preview = last_msg.content
+                    print(f"[Execution result] {content_preview}")
+
+# 6. Run the async function (new)
+if __name__ == "__main__":
+    # Run a single query
+    #asyncio.run(test_astream("What's the weather in Beijing today?"))
+    # You can also run several queries concurrently (the core advantage of coroutines)
+    async def batch_run():
+        # Run 2 queries concurrently
+        task1 = test_astream("What's the weather in Beijing today?")
+        task2 = test_astream("What is 100 + 256?")
+        task3 = test_astream("Translate 你好 into English.")
+        await asyncio.gather(task1, task2,task3)
+
+    # # Run the wrapped coroutine
+    asyncio.run(batch_run())
 ```
 
----
+**Extended note**: the DeepAgents framework supports nesting subagents — a subagent can have subagents of its own.
 
-### 1.6 LangGraph & LangChain Interoperability
+1. Arbitrarily nested structure:
 
-DeepAgents can mount standard LangGraph compiled graphs and LangChain agents as subagents via `CompiledSubAgent`:
+   - You can create a Main Agent.
+   - Give it a Subagent A.
+   - Subagent A can itself be configured with its own Subagent B.
+   - In theory this structure supports many levels of nesting (Agent → Subagent → Sub-subagent).
+2. How to configure it:
+
+   - When creating the agent, pass the list of subagents via the `subagents` parameter.
+   - If one of those subagents also needs subordinates, configure its own `subagents` parameter when you define it.
+
+Code example (Python): suppose you want to build a **corporate-hierarchy** agent system: CEO → CTO → Coder.
 
 ```python
 import os
-from typing import Annotated, TypedDict
-from langchain_core.messages import AIMessage
+from langchain.chat_models import init_chat_model
+from deepagents import create_deep_agent
+from dotenv import load_dotenv, find_dotenv
+
+# Load environment variables
+load_dotenv(find_dotenv())
+
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),
+    model_provider="openai"
+)
+
+# ---------------------------------------------------------
+# The key configuration for enforcing hierarchical delegation
+# ---------------------------------------------------------
+
+# 1. Bottom-level Coder configuration
+# Clear responsibility: only this agent may write code
+coder_config = {
+    "name": "Coder",
+    "description": "Senior Python engineer — the only one authorized to write actual code.",
+    "system_prompt": "You are a senior Python engineer. Your job is to receive concrete coding tasks and implement them. Use the write_file tool to write code.",
+    "tools": [],  # The Coder has the default file-operation tools
+}
+
+# 2. Middle-level CTO configuration
+# Clear responsibility: bridges up and down — must direct the Coder
+cto_config = {
+    "name": "CTO",
+    "description": "Technical director, responsible for turning strategic requirements into technical tasks and assigning them to engineers.",
+    # Key change: explicitly tell the CTO not to write code, but to find the Coder
+    "system_prompt": """You are the technical director.
+    Note: you do NOT have permission to write code!
+    Your responsibilities are:
+    1. Analyze the CEO's requirements.
+    2. Design the technical approach.
+    3. Call the 'Coder' subagent to do the actual coding work.
+    """,
+    "tools": [],
+    "subagents": [coder_config]
+}
+
+# 3. Top-level CEO configuration
+# Clear responsibility: strategy only — forbidden from doing the hands-on work
+ceo_agent = create_deep_agent(
+    model=llm,
+    name="CEO",
+    # Key change: explicitly tell the CEO not to do it personally, but to find the CTO
+    system_prompt="""You are the CEO, responsible for the company's strategic decisions.
+    Note: you are strictly forbidden from writing code or manipulating files directly!
+    You must delegate all technical development tasks to the 'CTO'.
+    Your job is to review and accept what the CTO delivers.
+    """,
+    subagents=[cto_config]
+)
+
+# Run the CEO agent
+print(">>> Starting the task chain...")
+stream = ceo_agent.stream({
+    "messages": [
+        {"role": "user", "content": "Build me a Snake game, implemented in Python"}
+    ]
+})
+
+# Print the final result
+print("\n>>> Final result:")
+for chunk in stream:
+    print(chunk)
+```
+Caveat: although arbitrarily deep nesting is supported, too many levels make debugging hard and increase latency. Two to three levels is generally enough for business needs.
+
+### 1.6 Compatibility with LangGraph and LangChain
+
+Other agents in the LangChain ecosystem (`AgentExecutor`, `ReActAgent`, `StructuredChatAgent`, etc.) **can be mounted as DeepAgents subagents**, but not directly — you first need to wrap them into "a graph that conforms to the LangGraph StateGraph specification" (the key requirement being that the state contains a `messages` key), and then wrap that with `CompiledSubAgent`.
+Put simply: DeepAgents recognizes "LangGraph-format graphs," not LangChain Agents directly; but every LangChain Agent can be converted into a LangGraph graph, so in the end they can all be mounted.
+
+**Compatibility with compiled LangGraph graphs**
+
+1. The "entry requirement" for a DeepAgents subagent
+
+   DeepAgents has exactly one core requirement for dispatching to a subagent: the subagent's execution logic must be a **"state graph with a `messages` key"** (whether that graph was written directly with `StateGraph` or converted from another agent). That `messages` key is the core field you saw earlier in the `result` structure — DeepAgents relies on it to pass conversation turns, tool calls, and execution results. Without it, the subagent cannot communicate with the main agent.
+
+2. Demonstration: mounting a LangGraph-format graph
+
+```python
+import os
+from typing import TypedDict, Annotated
+from dotenv import load_dotenv, find_dotenv
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from deepagents import create_deep_agent, CompiledSubAgent
 from langchain.chat_models import init_chat_model
 
+# Load environment variables
+load_dotenv(find_dotenv())
+
+# We wrap an agent of the earlier form into subagents [deepagent]
+# 1. The state you define MUST contain a messages attribute [deepagents]
+# 2.
+
+# --- 1. Define the subagent (based on StateGraph) ---
+
+# Define the State (must contain messages)
 class SubState(TypedDict):
     messages: Annotated[list, add_messages]
 
+
+# Define the node logic (with print statements added to prove it was triggered)
 def processing_node(state: SubState):
+    print("\n    >>> [inside subagent] Task received, processing...")
+
+    # Get the task description passed down by the main agent
     last_msg = state["messages"][-1]
-    result_text = f"[Graph Processed] Verified business logic: {last_msg.content}"
+    print(f"    >>> [inside subagent] Input content: {last_msg.content}")
+
+    # Simulate the processing logic
+    result_text = f"[Handled by the Graph] Verified — business logic processing complete. Original content: {last_msg.content}"
+
+    print(f"    >>> [inside subagent] Processing complete, preparing to return.\n")
     return {"messages": [AIMessage(content=result_text)]}
 
+
+# Build the graph
 workflow = StateGraph(SubState)
 workflow.add_node("worker", processing_node)
 workflow.set_entry_point("worker")
 workflow.add_edge("worker", END)
 compiled_graph = workflow.compile()
 
-# Wrap compiled graph into CompiledSubAgent
+# Wrap as a CompiledSubAgent
 sub_agent_config = CompiledSubAgent(
     name="complex_worker",
-    description="Subagent for executing intricate business logic and validation audits.",
+    description="A subagent that handles complex business logic and verification tasks. Call it when the user mentions 'complex business' or 'verification'.",
     runnable=compiled_graph
 )
 
-llm = init_chat_model(model=os.getenv("LLM_QWEN_MAX"), model_provider="openai")
+# --- 2. Create the main agent ---
+
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),
+    model_provider="openai"
+)
 
 deep_agent = create_deep_agent(
     model=llm,
     subagents=[sub_agent_config],
-    system_prompt="You are a supervisor. Delegate complex verification tasks to complex_worker."
+    system_prompt="You are a coordinator. When a complex task arrives, you must call the complex_worker subagent to handle it."
+)
+
+# --- 3. Run the test (with readable logs) ---
+
+if __name__ == "__main__":
+    query = "Please handle this complex business task for me: verify the data for user ID 9527."
+    print(f"User: {query}")
+    print("=" * 60)
+
+    # Use stream and parse the results
+    for chunk in deep_agent.stream({"messages": [HumanMessage(content=query)]}):
+        print(f"chunk result: {chunk}")
+```
+
+**Compatibility with a single LangChain agent**
+
+```python
+import os
+from langchain.chat_models import init_chat_model
+from langchain.agents import create_agent
+from langchain_core.tools import tool
+from deepagents import create_deep_agent, CompiledSubAgent
+from dotenv import load_dotenv, find_dotenv
+
+# Load environment variables
+load_dotenv(find_dotenv())
+
+# 1. Initialize the model
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),
+    model_provider="openai"
+)
+
+
+@tool
+def get_weather(city: str) -> str:
+    """Look up the weather for the given city"""
+    return f"The weather in {city} is sunny, 25 degrees"
+
+# Create a custom agent
+agent = create_agent(
+    model=llm,
+    tools=[get_weather]
+)
+
+# Use it as a custom subagent
+custom_subagent = CompiledSubAgent(
+    name="subagent",
+    description="Subtask handler that can call the weather tool to look up weather information!",
+    runnable=agent
+)
+
+subagents = [custom_subagent]
+
+deep_agent = create_deep_agent(
+    model=llm,
+    tools=[],
+    system_prompt="You are an intelligent assistant. You mainly deliver functionality by calling subagents; you only assign tasks, and you can call `subagent` to get the work done!",
+    subagents=[custom_subagent]
+)
+
+result = deep_agent.invoke({
+    "messages":[
+        {"role":"user","content":"Look up the weather in Beijing!"}]
+})
+
+print(f"Final result: {result['messages'][-1].content}")
+```
+
+### 1.7 Human-in-the-Loop (HITL) in the Flow
+
+https://docs.langchain.com/oss/python/deepagents/human-in-the-loop
+
+Some tool operations are sensitive and need human approval before they run. Deep agents support human-in-the-loop workflows through LangGraph's interrupt feature. You configure which tools require approval with the `interrupt_on` parameter.
+
+<img src="assets/image-20260312162445613.png" alt="image-20260312162445613" style="zoom:67%;" />
+
+#### 1.7.1 The Interaction Steps
+
+**Step 1: decide whether each tool requires human interaction**
+
+Configure this according to each tool's risk level.
+
+```python
+# A property of create_deep_agent that configures whether a tool needs human interaction
+deep_agent = create_deep_agent(
+   model = ""
+   tools = [a,b,c,d]
+   subagents = []
+    interrupt_on = {
+        # tool name : {the human-review actions allowed! approve, edit (approve but modify the tool's arguments), reject}
+        "delete_file": {"allowed_decisions": ["approve", "edit", "reject"]},
+        "a": True,
+        "write_file": {"allowed_decisions": ["approve", "reject"]},
+        # No approval needed — the default is False, so this can be omitted
+        "read_file": True,
+        "list_files": False,
+    } )
+```
+
+**Step 2: configure a checkpointer**
+
+Human interaction needs a checkpoint to preserve agent state between the interrupt and the resume:
+
+```python
+from langgraph.checkpoint.memory import MemorySaver
+
+checkpointer = MemorySaver()
+agent = create_deep_agent(
+    tools=[...],
+    interrupt_on={...},
+    checkpointer=checkpointer  # Required — without it there is no saved progress!
 )
 ```
 
----
+**Step 3: use the same thread_id**
 
-### 1.7 Human-in-the-Loop (HITL) Workflows
-
-Sensitive tools (e.g., deleting databases or modifying files) can trigger human approval pauses using `interrupt_on` and durable checkpoints.
-
-<img src="assets/image-20260312162445613.png" alt="Human In The Loop" style="zoom:67%;" />
+When resuming, you must use the same configuration and the same `thread_id`.
 
 ```python
+# First call: nothing executes immediately; it checks whether an interrupt action is needed
+config = {"configurable": {"thread_id": "my-thread"}}
+result = agent.invoke(input, config=config)
+
+# Second call: same thread ID plus the approval decisions — this is when execution actually happens.
+# It must be the same thread ID so the same agent thread state is used.
+result = agent.invoke(Command(resume={...}), config=config)
+```
+
+**Step 4: configure the action decisions**
+
+The decision list must follow the same order as `action_requests`:
+
+```python
+# Check whether the result contains an interrupt state! If so, gather human input and then continue.
+if result.get("__interrupt__"):
+    interrupts = result["__interrupt__"][0].value
+    action_requests = interrupts["action_requests"]
+
+    # Following the tool order, set a decision for each: execute or edit
+    decisions = []
+    for action in action_requests:
+        decision = get_user_decision(action)  # a logic function we define ourselves!
+        decisions.append(decision)
+
+    result = agent.invoke(
+        Command(resume={"decisions": decisions}),
+        config=config
+    )
+```
+
+| Field | Meaning |
+| :--- | :--- |
+| `action_requests` | The list of operations requiring approval (e.g. dropping a database `delete_database`, deleting a file `delete_file`), including the operation name, arguments, and a risk description. `{'action_requests': [{'name': 'delete_table', 'args': {'tablename': 'users'}, 'description': "description"}` |
+| `review_configs` | The permitted review actions (`approve` / `reject` / `edit` the arguments) |
+| `id` | The interrupt session's unique identifier (ensures the resume matches the same session) |
+
+#### 1.7.2 Interrupt Interaction
+
+When the agent calls several tools that require approval, all the interrupts are batched into a single interrupt. You must supply a decision for each action, in order.
+
+```python
+# -*- coding: utf-8 -*-
+"""
+DeepAgents interrupt-approval mechanism example
+Core purpose: demonstrate the human approval flow before high-risk tool calls,
+with approval control over dropping database tables / deleting files
+"""
+import os
+from langchain.chat_models import init_chat_model
+from langchain.tools import tool
+from deepagents import create_deep_agent
+from langgraph.checkpoint.memory import InMemorySaver  # in-memory checkpointer for saving interrupt state
+from langgraph.types import Command  # the instruction type used to resume execution
+from dotenv import load_dotenv, find_dotenv
+
+# Load environment variables (DASHSCOPE_API_KEY etc.), preferring the .env in the current directory
+load_dotenv(find_dotenv())
+
+
+# ======================== 1. Define the tool functions ========================
+# The @tool decorator turns a plain function into a LangChain-callable tool;
+# the function's docstring becomes the tool description given to the agent
+@tool
+def delete_database(table_name: str):
+    """
+    High-risk operation: drop a database table
+    :param table_name: the name of the table to drop
+    :return: a message describing the result
+    """
+    print(f"[Tool execution] Dropping table: {table_name}")
+    return f"Successfully dropped table: {table_name}"
+
+
+@tool
+def select_data(table_name: str):
+    """
+    Ordinary operation: query the data of the given table (no approval needed)
+    :param table_name: the name of the table to query
+    :return: a message describing the result
+    """
+    print(f"[Tool execution] Querying data from table: {table_name}")
+    return f"Query succeeded: {table_name}"
+
+
+@tool
+def delete_file(file_name: str):
+    """
+    High-risk operation: delete a file
+    :param file_name: the path/name of the file to delete
+    :return: a message describing the result
+    """
+    print(f"[Tool execution] Deleting file: {file_name}")
+    return f"Successfully deleted file: {file_name}"
+
+
+# ======================== 2. Core configuration ========================
+# Configure a checkpointer (required): saves the agent's state at the interrupt so that
+# execution can pick up the context when it resumes.
+# Note: InMemorySaver is for testing only; in production use a persistent option such as RedisCheckpointer.
+checkpointer = InMemorySaver()
+
+# Initialize the LLM (Tongyi Qianwen)
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),          # model name (read from the environment variable)
+    model_provider="openai"                   # OpenAI-compatible interface
+)
+
+# Create the DeepAgents agent (core configuration)
+deep_agent = create_deep_agent(
+    model=llm,                                  # bind the LLM
+    tools=[delete_database, delete_file, select_data],  # register the available tools
+    # Interrupt configuration: trigger human approval before calling the tools below (high-risk control)
+    interrupt_on={"delete_database": True, "delete_file": True},
+    checkpointer=checkpointer,                  # bind the checkpointer (required for interrupt/resume)
+    system_prompt="Answer everything in Chinese!"  # system prompt, standardizing the agent's output language
+)
+
+# ======================== 3. Execution flow ========================
+# Session configuration: bind the session via thread_id so interrupt/resume happen in the same session
+thread_config = {"configurable": {"thread_id": "safe_thread_1"}}
+
+print("\n=== Phase 1: trigger the tool calls (planning phase) ===")
+# First call: the agent plans the sequence of operations, but once the interrupt fires it executes no tools
+result_1 = deep_agent.invoke(
+    {
+        "messages": [
+            {
+                "role": "user",
+                "content": "First drop the users table! Then query the product table data! Finally delete the user.txt file too!"
+            }
+        ]
+    },
+    config=thread_config  # bind the session ID so the state is traceable
+)
+print("Current status: the agent is paused, awaiting human confirmation.")
+
+# Extract the interrupt information (the key part: the list of operations to approve)
+interrupts = result_1.get("__interrupt__")
+
+if interrupts:
+    # Parse the interrupt data: Interrupt object → value dict → action_requests list
+    action_requests = interrupts[0].value['action_requests']
+    # Print the number and names of the operations needing approval (for display in a review UI)
+    print(f"Number of actions requiring review: {len(action_requests)}, output: {[action_request['name'] for action_request in action_requests]} ")
+
+    # Simulated human approval decisions (in production, replace with a human interaction / approval-system interface)
+    # Note: the order of `decisions` must match the order of `action_requests`
+    decisions = [
+        {"type": "approve"},  # Decision 1: approve dropping the database table (delete_database)
+        {"type": "reject"}    # Decision 2: reject deleting the file (delete_file)
+    ]
+
+    # Second call: resume execution — the agent acts according to the approval decisions
+    result = deep_agent.invoke(
+        # Command(resume) is the DeepAgents-specific resume instruction
+        Command(resume={
+            "decisions": decisions  # pass in the human approval results
+        }),
+        config=thread_config  # you must use the same thread_id, otherwise the state cannot be restored
+    )
+
+    # Print the final execution result (the agent's final reply)
+    print("\n=== Execution result ===")
+    print(result["messages"][-1].content)
+```
+
+#### 1.7.3 Editing Arguments
+
+Building on the earlier drop-database / delete-file scenario, here is complete "edit approval handling" code covering **argument editing, multi-operation editing, and execution verification**. The comments are clear and the code is ready to run:
+
+```python
+# -*- coding: utf-8 -*-
+"""
+DeepAgents interrupt approval — EDIT operation example
+Core purpose: demonstrate the full flow of editing a tool's arguments by hand and then resuming execution
+"""
 import os
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
@@ -468,372 +1400,1104 @@ from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
 
+
+# ======================== 1. Define the tool functions ========================
 @tool
 def delete_database(table_name: str):
-    """High-risk action: Delete database table."""
+    """Dangerous operation: drop a database table"""
+    print(f"[Tool execution] Dropping table: {table_name}")
     return f"Successfully dropped table: {table_name}"
+
 
 @tool
 def select_data(table_name: str):
-    """Normal action: Query table data."""
-    return f"Retrieved data for table: {table_name}"
+    """Query the data of the given table"""
+    print(f"[Tool execution] Querying data from table: {table_name}")
+    return f"Query succeeded: {table_name}"
 
+
+@tool
+def delete_file(file_name: str):
+    """Dangerous operation: delete a file"""
+    print(f"[Tool execution] Deleting file: {file_name}")
+    return f"Successfully deleted file: {file_name}"
+
+
+# ======================== 2. Core configuration ========================
 checkpointer = InMemorySaver()
-llm = init_chat_model(model=os.getenv("LLM_QWEN_MAX"), model_provider="openai")
 
-deep_agent = create_deep_agent(
-    model=llm,
-    tools=[delete_database, select_data],
-    interrupt_on={"delete_database": True},  # Require approval for high-risk operations
-    checkpointer=checkpointer,
-    system_prompt="Always execute operations faithfully following user confirmation."
+# Initialize the LLM
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),
+    model_provider="openai"
 )
 
-thread_config = {"configurable": {"thread_id": "audit_session_1"}}
+# Create the agent
+deep_agent = create_deep_agent(
+    model=llm,
+    tools=[delete_database, delete_file, select_data],
+    interrupt_on={"delete_database": True, "delete_file": True},  # high-risk operations trigger approval
+    checkpointer=checkpointer,
+    system_prompt="Answer everything in Chinese! Execute tool operations strictly with the approved arguments!"
+)
 
-# Step 1: Trigger planning and pause at interrupt
-result_1 = deep_agent.invoke(
-    {"messages": [{"role": "user", "content": "Delete table users and then select products."}]},
+# ======================== 3. Core EDIT-approval logic ========================
+# Session configuration
+thread_config = {"configurable": {"thread_id": "edit_safe_thread_1"}}
+
+print("\n=== Phase 1: trigger the interrupt (obtain the original operation arguments) ===")
+# First call: trigger the interrupt and obtain the original arguments the agent planned
+result = deep_agent.invoke(
+    {
+        "messages": [
+            {
+                "role": "user",
+                "content": "Drop the users table! Delete the /user.txt file!"
+            }
+        ]
+    },
     config=thread_config
 )
 
-interrupts = result_1.get("__interrupt__")
-if interrupts:
-    action_requests = interrupts[0].value['action_requests']
-    print(f"Approval required for actions: {[a['name'] for a in action_requests]}")
+# Detect the interrupt and handle the EDIT approval
+if result.get("__interrupt__"):
+    # 1. Parse the interrupt data (extract the original operation arguments)
+    interrupts = result["__interrupt__"][0].value
+    action_requests = interrupts["action_requests"]
 
-    # Step 2: Resume with approved / rejected / edited decisions
-    decisions = [{"type": "approve"}]
-    final_result = deep_agent.invoke(
-        Command(resume={"decisions": decisions}),
-        config=thread_config
+    print(f"\n=== Operations awaiting approval ===")
+    for idx, action in enumerate(action_requests):
+        print(f"Operation {idx + 1} - tool name: {action['name']}, original args: {action['args']}")
+
+    # 2. Simulate a human editing the arguments (the core: the EDIT operation)
+    # Scenario:
+    # - delete_database: original argument `users` → edited to `test_users` (avoid dropping the production table)
+    # - delete_file: original argument `/user.txt` → edited to `/tmp/test.txt` (avoid deleting a core file)
+    decisions = []
+    for action in action_requests:
+        if action["name"] == "delete_database":
+            # Edit the drop-table argument: only drop the test table
+            decisions.append({
+                "type": "edit",  # approval type: edit the arguments
+                "edited_action": {
+                    "name": action["name"],  # the tool name must be kept
+                    "args": {"table_name": "test_users"}  # the edited arguments
+                }
+            })
+        elif action["name"] == "delete_file":
+            # Edit the delete-file argument: only delete the temporary file
+            decisions.append({
+                "type": "edit",
+                "edited_action": {
+                    "name": action["name"],
+                    "args": {"file_name": "/tmp/test.txt"}
+                }
+            })
+
+    print(f"\n=== Approval decisions after human editing ===")
+    print(f"Approval result: {decisions}")
+
+    # 3. Resume execution (using the edited arguments)
+    print("\n=== Phase 2: resume execution (using the edited arguments) ===")
+    result = deep_agent.invoke(
+        Command(resume={"decisions": decisions}),  # pass in the edited decisions
+        config=thread_config  # the same thread_id must be used
     )
-    print(final_result["messages"][-1].content)
+
+    # 4. Output the final result
+    print("\n=== Execution complete ===")
+    print(f"Agent's final reply: {result['messages'][-1].content}")
+else:
+    # If there was no interrupt, print the result directly
+    print("No operations required approval. Result:", result["messages"][-1].content)
 ```
 
----
 
-### 1.8 Backends & Virtual Filesystems
 
-DeepAgents abstracts storage via **Backends**—a virtual filesystem interface that decouples agent file operations (`read_file`, `write_file`, `edit_file`) from physical storage layers.
+### 1.8 Backends (Storage)
 
-<img src="assets/image-20260220001740264.png" alt="Backend Architecture" style="zoom:80%;" />
+https://docs.langchain.com/oss/python/deepagents/backends
 
-| Backend Type | Storage Medium | Ideal Use Case | Analogy |
+The DeepAgents **Backend** system is a "virtual file system" built for agents. Its core purpose is to define where the files an agent generates ultimately live, and it is also the vehicle for cross-thread data sharing and durable long-term memory.
+
+<img src="assets/image-20260220001740264.png" alt="image-20260220001740264" style="zoom: 80%;" />
+
+**Core mechanics:**
+
+1. Passive triggering: the Backend is activated only when the agent actively calls a file-operation tool (`write_file`, `edit_file`, `read_file`, etc.). Note that the agent's reasoning process, conversation context, and other transient state live only in memory (State) and are never written to the Backend automatically — only content from an explicit file operation enters the system.
+2. Path-mapping rules: every file the agent touches is addressed by a "virtual path" (e.g. `/report.txt`, `/store/memory.txt`). The Backend maps these virtual paths onto the actual physical storage medium according to preset rules — a local disk, a Redis database, memory, and so on — making the "virtual path → physical storage" translation transparent.
+
+**Storage behavior at a glance:**
+
+| Behavior | Stored by the Backend? | Where it lives |
+| :--- | :--- | :--- |
+| The agent says "Hello" | No | Only in the current conversation's memory (State) |
+| The agent's reasoning process | No | Only in the current conversation's memory (State) |
+| The agent calls `write_file("a.txt", "content")` | Yes | **Backend** (disk/database) |
+
+#### 1.8.1 Overview of Backend Types
+
+DeepAgents provides four standard backend implementations for different development and production scenarios:
+
+| Backend type | Storage medium | Suitable for | Analogy |
 | :--- | :--- | :--- | :--- |
-| **StateBackend** *(Default)* | Memory (State) | Ephemeral files, scratchpads. Destroyed when session ends. | Incognito browser mode |
-| **FilesystemBackend** | Local disk | Local development, direct artifact inspection. | Local hard drive |
-| **StoreBackend** | Database (KV Store) | Distributed production, cross-agent persistent memory (Redis/PostgreSQL). | Cloud drive (S3/iCloud) |
-| **CompositeBackend** | Hybrid router | Enterprise production: routes `/store/*` to DB and regular files to disk. | OS Disk + Cloud Mount |
+| **StateBackend** (default) | Memory (State) | Temporary files, intermediate computation results. Destroyed when the session ends. | A browser's "incognito mode" |
+| **FilesystemBackend** | Local disk | Local development, debugging, scenarios where you need to inspect generated files directly. | Your computer's local disk |
+| **StoreBackend** | Database (KV store) | Production, data shared across agents, persistent memory (Redis/Postgres). | Cloud storage (iCloud/OneDrive) |
+| **CompositeBackend** | Hybrid storage | Best practice for production. Distinguishes "temporary files" from "important memories." | System drive (C:) + data drive (D:) |
 
-#### CompositeBackend Example
+#### 1.8.2 Local File Storage (FilesystemBackend)
+
+**Scenario:**
+During local development or debugging, we want the files the agent generates to appear directly in the project folder, so the developer can inspect and verify them. `FilesystemBackend` maps the agent's virtual paths straight onto the host machine's physical file system.
+
+**Features:**
+
+- **Directly visible**: generated files can be opened straight from the IDE or a file manager.
+- **Safe isolation**: enabling `virtual_mode=True` is recommended — it confines the agent to the designated working directory (`root_dir`) and prevents unauthorized access to sensitive system files.
+
+**Code example:**
 
 ```python
-from pathlib import Path
+from pathlib import Path  # import the Path class
+from deepagents import create_deep_agent
+from deepagents.backends import FilesystemBackend
+from langchain.chat_models import init_chat_model
+from dotenv import load_dotenv, find_dotenv
 import os
+
+load_dotenv(find_dotenv())
+
+# 1. Prepare the local working directory (rewritten with Path)
+workspace_dir = Path("./agent_workspace").resolve()  # resolve() is equivalent to os.path.abspath() — get the absolute path
+if not workspace_dir.exists():  # equivalent to os.path.exists()
+    workspace_dir.mkdir(parents=True, exist_ok=True)  # equivalent to os.makedirs()
+
+print(f"The agent's working directory is set to: {workspace_dir}")
+
+# 2. Configure the local filesystem backend
+# virtual_mode=True turns on sandbox mode, restricting the agent to workspace_dir only
+backend = FilesystemBackend(root_dir=workspace_dir, virtual_mode=True)
+
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),
+    model_provider="openai"
+)
+
+# 3. Create the agent
+# The system prompt tells the agent to create files only on demand
+agent = create_deep_agent(
+    model=llm,
+    backend=backend,
+    system_prompt="You are an intelligent assistant. You may use the file tools to read and write files, but only create a file when the user explicitly asks for one."
+)
+
+# 4. Run and verify
+print("\n=== Case 1: ordinary Q&A (should NOT produce a file) ===")
+result1 = agent.invoke({"messages": [{"role": "user", "content": "Tell me, when was Python invented?"}]})
+print("Agent reply:", result1["messages"][-1].content)
+
+# === Case 1: verify that no file was generated ===
+# Replaces os.listdir → Path.iterdir() + a check for whether any file exists
+files = list(workspace_dir.iterdir())  # list every entry in the directory (files/subdirectories)
+if not files:
+    print("Case 1 passed: no files were generated in the directory.")
+else:
+    # Extract the file/directory names to keep the output format consistent
+    file_names = [f.name for f in files]
+    print(f"Case 1 failed: files were generated in the directory: {file_names}")
+
+print("\n=== Case 2: explicitly asking for a file ===")
+result2 = agent.invoke({"messages": [{"role": "user", "content": "Write me a short introduction to Java and save it as java_intro.md"}]})
+print("Agent reply:", result2["messages"][-1].content)
+
+# 5. Verify that the Case 2 file really exists
+# Replaces os.path.join → the Path / operator
+file_path = workspace_dir / "java_intro.md"  # Path concatenation is more intuitive
+if file_path.exists():  # replaces os.path.exists → Path.exists()
+    print(f"\nCase 2 passed! The file was generated at: {file_path}")
+    with open(file_path, "r", encoding="utf-8") as f:  # a Path object can be passed straight to open
+        print(f" File content preview:\n{f.read()[:100]}...")
+else:
+    print("\nCase 2 failed: the file was not generated.")
+```
+
+#### 1.8.3 Database / In-Memory Storage (StoreBackend)
+
+**Scenario:**
+In production or in a distributed system, files should not be stored on a local disk. `StoreBackend` uses LangGraph's Store mechanism to keep file contents as key-value data in a database (Redis, Postgres) or in memory. This is essential for **sharing memory across threads**.
+
+**Features:**
+- **Persistence**: paired with RedisStore, data can be stored durably.
+- **Sharing**: different threads — even different agents — can share data by accessing the same Store.
+- **Adapter pattern**: `StoreBackend` acts as an adapter, translating file operations into KV-store operations.
+
+**Code example:**
+
+```python
+from deepagents import create_deep_agent
+from deepagents.backends import StoreBackend, StateBackend
+from langgraph.store.memory import InMemoryStore
+from dotenv import load_dotenv, find_dotenv
+from langchain.chat_models import init_chat_model
+import os
+load_dotenv(find_dotenv())
+
+# For production, RedisStore is recommended: from langgraph.store.redis import RedisStore
+
+# 1. Prepare the Store (simulating a database)
+# InMemoryStore is a lightweight in-memory store; data is lost on restart.
+store = InMemoryStore()
+
+# 2. Configure the Store backend
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),
+    model_provider="openai"
+)
+
+# StoreBackend translates the agent's file operations into reads/writes against the Store.
+# By default it stores files under the key ("filesystem", filename)
+agent = create_deep_agent(
+    model=llm,
+    store=store,          # pass in the data store
+    backend=StoreBackend, # Note: here the primary backend is set to StateBackend; StoreBackend is usually used as an auxiliary or via Composite
+    tools=[],
+    system_prompt="Please save the user's important information to user_profile.txt"
+)
+
+# Note: to have the agent store files directly through StoreBackend,
+# you would normally set backend to StoreBackend outright, or route to it inside a CompositeBackend.
+# The example below mainly demonstrates the Store's cross-thread read capability.
+
+# 3. Run the agent (Thread A) — write a memory
+print("\n=== Writing a memory (Thread A) ===")
+config_a = {"configurable": {"thread_id": "thread_a"}}
+# Assume the agent's internal logic writes the information into the Store (this requires the correct
+# backend configuration; here we simplify to demonstrate the Store interaction).
+# When actually using StoreBackend, the agent's write_file("user_profile.txt") call lands in the Store.
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "My name is Dafengzi and my lucky number is 7."}]
+}, config=config_a)
+
+print("Agent reply:", result["messages"][-1].content)
+
+# 4. Run the agent (Thread B) — read across threads
+print("\n=== Reading the memory (Thread B) ===")
+# A different thread_id simulates another session
+config_b = {"configurable": {"thread_id": "thread_b"}} # note that this is thread_b
+
+# The key point here: the Store is shared. Thread B can read what Thread A wrote.
+result_b = agent.invoke({
+    "messages": [{"role": "user", "content": "Please read user_profile.txt and tell me: what is my name? What is my lucky number?"}]
+}, config=config_b)
+
+print("Agent (Thread B) reply:", result_b["messages"][-1].content)
+
+# Verification: inspect the Store data directly
+print("\n=== Verifying the Store data ===")
+# Every file creation, modification, and read is automatically associated with the ("filesystem",) top-level namespace
+items = store.search(("filesystem",))
+for item in items:
+    print(f"Key: {item.key}")
+    print(f"Value: {item.value}")
+```
+
+#### 1.8.4 Hybrid Storage Strategy (CompositeBackend)
+
+**Scenario:**
+This is the most flexible configuration and the recommended one for production. `CompositeBackend` lets you route files to different backends **based on their path prefix** — for example, keep temporary files locally and important memories in a database.
+
+**Configuration logic:**
+- **Default route**: handles ordinary paths, typically mapped to `FilesystemBackend` (local) or `StateBackend` (temporary).
+- **Specific routes**: handle particular prefixes (such as `/store/`), mapped to `StoreBackend` (database).
+
+**Code example:**
+
+```python
 from deepagents import create_deep_agent
 from deepagents.backends import StoreBackend, FilesystemBackend, CompositeBackend
 from langgraph.store.memory import InMemoryStore
+from dotenv import load_dotenv, find_dotenv
 from langchain.chat_models import init_chat_model
+import os
+from pathlib import Path  # newly imported Path class
+load_dotenv(find_dotenv())
 
+# 1. Prepare the Store
 store = InMemoryStore()
-llm = init_chat_model(model=os.getenv("LLM_QWEN_MAX"), model_provider="openai")
 
+# 2. Configure the LLM
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),
+    model_provider="openai"
+)
+
+# 3. Define the composite-backend factory function
 def create_composite_backend(runtime):
-    workspace_dir = Path("./agent_workspace").resolve()
-    workspace_dir.mkdir(parents=True, exist_ok=True)
+    # Backend A: the local file system (stores ordinary files)
+    # 1. Prepare the local working directory (rewritten with Path)
+    workspace_dir = Path("./agent_workspace").resolve()  # resolve() is equivalent to os.path.abspath() — get the absolute path
+    if not workspace_dir.exists():  # equivalent to os.path.exists()
+        workspace_dir.mkdir(parents=True, exist_ok=True)  # equivalent to os.makedirs()
     fs_backend = FilesystemBackend(root_dir=workspace_dir, virtual_mode=True)
+
+    # Backend B: database storage (stores important memories)
     store_backend = StoreBackend(runtime)
 
+    # Composite backend: configure the routing rules
     return CompositeBackend(
-        default=fs_backend,
-        routes={"/store/": store_backend}
+        default=fs_backend,  # by default go to the local file system
+        routes={
+            "/store/": store_backend  # paths starting with /store/ go to database storage
+        }
     )
+
 
 agent = create_deep_agent(
     model=llm,
     store=store,
-    backend=create_composite_backend,
+    backend=create_composite_backend,  # pass in the factory function
     tools=[],
-    system_prompt="Save standard deliverables locally, and persistent memories under /store/."
+    system_prompt="""You are an intelligent assistant.
+    - Ordinary files: write the filename directly (e.g. `report.txt`) — they are saved to the local workspace.
+    - Important memories: write into the `/store/` directory (e.g. `/store/profile.txt`) — they are saved to whatever storage the store is configured with.
+    """
 )
+
+# 4. Run the agent
+print("\n=== Testing hybrid storage ===")
+config = {"configurable": {"thread_id": "thread_composite"}}
+
+# Task: trigger both storage paths at once
+user_input = "1. Create a local file local.txt with the content 'local file'.\n2. Create a memory file /store/memory.txt with the content 'important memory'."
+print(f"User instruction: {user_input}")
+
+result = agent.invoke({
+    "messages": [{"role": "user", "content": user_input}]
+}, config=config)
+
+print("Agent reply:", result["messages"][-1].content)
+
+# 5. Verify the results
+print("\n=== Verifying the local file (Filesystem) ===")
+# Replaces os.path.join + os.path.exists with the Path style
+local_path = Path("agent_workspace") / "local.txt"  # Path-based path joining
+if local_path.exists():  # Path has a built-in exists method
+    print(f"Local file exists: {local_path}")
+else:
+    print("Local file missing")
+
+print("\n=== Verifying database storage (Store) ===")
+# CompositeBackend automatically strips the route prefix, so /store/memory.txt has the key /memory.txt in the Store
+items = store.search(("filesystem",))
+for item in items:
+    print(item)
 ```
 
----
+### 1.9 Core Concepts of Middleware
 
-### 1.9 Middleware System
+Middleware is DeepAgents' "flow interceptor." It lets you insert custom logic at **key lifecycle points** of agent execution (before/after a tool call, after the model finishes thinking, before the reply is generated) to implement:
 
-Middleware intercepts execution across key lifecycle events (pre/post tool calls, model calls) to provide audit logs, metrics, or parameter guards:
+- Operation logging
+- Permission checks / argument filtering
+- Modification of tool results
+- Exception capture / fallback handling
+- Custom monitoring / alerting
+
+Example: implement a middleware that emits logs:
+
+1. **Pre-call log**: record the tool name and arguments;
+2. **Post-call log**: record the tool's result and elapsed time.
+
+**Implementation with @wrap_tool_call**
 
 ```python
+# -*- coding: utf-8 -*-
+"""
+A minimal DeepAgents Middleware example
+Core: implement logging/monitoring middleware for tool calls
+"""
+import os
 import time
+
 from langchain.agents.middleware import wrap_tool_call
+from langchain.agents.middleware.types import AgentMiddleware, ToolCallRequest
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from deepagents import create_deep_agent
+from langgraph.checkpoint.memory import InMemorySaver
+from dotenv import load_dotenv, find_dotenv
 
+# Load environment variables
+load_dotenv(find_dotenv())
+
+
+# ======================== 1. Define the test tool ========================
 @tool
-def add_numbers(a: int, b: int) -> int:
-    """Calculate the sum of two numbers."""
-    return a + b
+def add_numbers(a: int, b: int):
+    """Compute the sum of two numbers"""
+    time.sleep(0.5)  # simulate a slow operation
+    result = a + b
+    print(f"[Tool execution] {a} + {b} = {result}")
+    return result
+
 
 @wrap_tool_call
 def log_tool_call(request, handler):
     tool_name = request.tool_call["name"]
     tool_args = request.tool_call["args"]
-    print(f"[Middleware] Invoking {tool_name} with {tool_args}")
-    start = time.time()
+
+    # 1. Pre-call logic
+    print(f"\n[Pre-middleware] Tool call starting - tool: {tool_name}, args: {tool_args}, time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    start_time = time.time()
+
+    # 2. Execute the tool (call the handler)
     result = handler(request)
-    duration = time.time() - start
-    print(f"[Middleware] Completed {tool_name} in {duration:.2f}s")
+
+    end_time = time.time()
+    duration = end_time - start_time
+
+    # 3. Post-call logic
+    # First try to read the `content` attribute from the result object; if `result` has no `content`
+    # (e.g. it is not a ToolMessage), fall back to converting `result` to a string.
+    content = getattr(result, "content", str(result))
+    print(f"[Post-middleware] Tool call complete - tool: {tool_name}, result: {content}, elapsed: {duration:.2f}s")
+
     return result
+
+# ======================== 3. Configure the agent and bind the middleware ========================
+# Initialize the LLM
+llm = init_chat_model(
+    model=os.getenv("LLM_QWEN_MAX"),
+    model_provider="openai"
+)
+
+# Create the agent and bind the middleware
+deep_agent = create_deep_agent(
+    model=llm,
+    tools=[add_numbers],
+    checkpointer=InMemorySaver(),
+    # Bind the middleware: pass a list of Middleware instances
+    middleware=[log_tool_call],
+    system_prompt="You are a calculator assistant. Use the add_numbers tool to perform addition, and return only the computed result."
+)
+
+# ======================== 4. Run the test ========================
+if __name__ == "__main__":
+    # Session configuration
+    thread_config = {"configurable": {"thread_id": "middleware_test_1"}}
+
+    # Invoke the agent
+    result = deep_agent.invoke(
+        {
+            "messages": [
+                {"role": "user", "content": "Compute 100 + 200 for me"}
+            ]
+        },
+        config=thread_config
+    )
+
+    # Print the final result
+    print("\n=== Final reply ===")
+    print(result["messages"][-1].content)
 ```
 
----
+### 1.10 Agent Skills
 
-### 1.10 Agent Skills Extension
+The **Skills** mechanism provided by DeepAgents is the primary way to inject domain knowledge and specialized capabilities into an agent. A Skill is essentially a reusable, pluggable "capability package," built around an instruction document (`SKILL.md`) plus supporting resources. It lets the agent dynamically load and use the relevant skill knowledge at runtime, driven by what the task actually needs — extending specialized capability quickly without touching the agent's core logic.
 
-**Skills** allow injecting domain-specific capabilities into agents dynamically using structured markdown definition packages (`SKILL.md`) without polluting the base prompt.
+https://skillsmp.com/zh
 
-#### Standard Skill Directory Structure
+**Core concepts:**
+- **SKILL.md**: the skill's core description file — the "manual" the agent reads to learn and use the skill. It has two parts: **frontmatter metadata** at the top (YAML, defining `name` and `description`) and the **detailed instructions** in the body (written in Markdown). By parsing this file, the agent learns how to use the skill, when it applies, and what steps to follow.
 
-```text
-skill-code-reviewer/
-├── SKILL.md              # Core skill instructions & metadata (Required)
-├── requirements.txt      # Dependency specifications (Optional)
-├── resources/            # Templates, examples, and schemas (Optional)
-└── scripts/              # Helper execution scripts (Optional)
+- **Progressive disclosure**: the core optimization strategy of the Skills mechanism, addressing the limited context window of large models. At startup the agent reads only the metadata of every skill (lightweight, consuming very little context), recording just the basics — "skill name, applicable scenario, trigger keywords." Only when a user's task matches a skill's trigger conditions does the agent load that skill's detailed instructions. This effectively prevents irrelevant information from consuming context and improves task-execution efficiency.
+
+  ![image-20260312165423918](assets/image-20260312165423918.png)
+
+**The standard skill directory structure:**
+
+A complete DeepAgents skill package follows a standardized directory layout in which each file has a clear job, keeping skills reusable and maintainable. A typical structure:
+
+```cmd
+skill-xxx/                # Skill root directory (naming convention: skill-<name>, lowercase + hyphens)
+├── SKILL.md              # Core: the skill description file (required)
+├── requirements.txt      # Dependency declaration file (optional)
+├── resources/            # Supporting resources directory (optional)
+│   ├── template/         # Template files (report templates, code templates, ...)
+│   ├── examples/         # Example files (sample inputs/outputs for the skill)
+│   └── config/           # Configuration files (default tool-call parameters, rule configuration)
+└── scripts/              # Helper script directory (optional)
+    └── helper.py         # Helper scripts for the skill (encapsulating complex logic, data preprocessing)
 ```
 
-#### Standard `SKILL.md` Format
+What each file/directory does:
+
+1. **SKILL.md (required)**
+
+   The skill's core carrier and the only file the agent must parse. A typical structure:
+
+   ```markdown
+   ---
+   # Metadata (frontmatter, YAML format, read at agent startup)
+   name: Data cleaning     # skill name (unique identifier)
+   version: 1.0            # skill version
+   trigger: ["clean data", "process CSV", "fill missing values"]  # trigger keywords (load the skill when the user's instruction matches)
+   tools: ["pandas", "read_csv", "write_csv"]     # required tools (the agent must register these in advance)
+   author: xxx             # skill author
+   description: Used for deduplication, missing-value handling, and format standardization of CSV/Excel data  # skill summary
+   ---
+   # Detailed instructions (read when the agent triggers the skill)
+   ## Skill description
+   This skill applies to structured data cleaning. It supports CSV/Excel formats and covers both basic cleaning and advanced normalization.
+
+   ## Steps
+   1. Call the read_csv tool to read the data, specifying utf-8 encoding;
+   2. Deduplicate: df.drop_duplicates(subset=["primary key column"], keep="first");
+   3. Handle missing values: fill numeric columns with the mean, text columns with an empty string;
+   4. Call the write_csv tool to save the cleaned data, with index output disabled.
+
+   ## Caveats
+   - If the file encoding looks wrong, try switching to gbk;
+   - Columns where more than 50% of values are missing should generally be dropped outright.
+   ```
+
+2. **requirements.txt (optional)**
+
+   Declares the third-party packages and versions the skill needs to run, e.g.:
+
+   ```cmd
+   pandas>=2.0.0
+   openpyxl>=3.1.0  # support for Excel file handling
+   ```
+
+   Purpose: dependencies can be installed in one command when deploying the skill, so it does not fail because of a missing environment.
+
+3. **resources/ (optional)**
+
+   Holds the skill's static assets, subdivided by purpose:
+
+   - `template/`: template files such as "Data cleaning report template.md" or "Financial statement template.xlsx" — the agent can use them to produce standardized output quickly;
+   - `examples/`: usage examples such as "raw data sample.csv" and "cleaned data sample.csv," helping the agent understand the skill's expected input/output;
+   - `config/`: configuration files (JSON/YAML) such as "data cleaning rules.json," defining fixed rules (date formats, field mappings) instead of hard-coding them in SKILL.md.
+
+4. **scripts/ (optional)**
+
+   Holds the skill's helper scripts, encapsulating complex logic or tool-call details, e.g.:
+
+   - `helper.py`: define a `fill_missing_value()` function that wraps the missing-value logic, so SKILL.md only has to call the function rather than spell out the full code;
+   - Scripts can be referenced by the tool functions the agent calls, simplifying the instructions in SKILL.md and improving execution efficiency.
+
+Additional notes
+
+- The core of a skill package is `SKILL.md`; every other file is supporting material, added or not depending on the skill's complexity;
+- Every file should follow the "keep it light" principle, especially the detailed-instructions section of SKILL.md — overly long content risks blowing the context limit;
+- Skill packages support dynamic loading/unloading: you can register a skill with an agent through the DeepAgents API and remove skills you no longer need at runtime.
+
+**A standard SKILL.md example:**
+File path: `base/skills/code-reviewer/SKILL.md`
 
 ```markdown
 ---
 name: code-reviewer
-description: Use this skill when asked to perform a code review or detect security bugs.
+description: Use this skill when the user requests a code review or asks you to find bugs in code.
 ---
 # Code Reviewer Skill
 
-## Instructions
-1. Security Audit: Check for SQL Injection, path traversal, hardcoded secrets.
-2. Performance Optimization: Identify duplicate loops or memory leaks.
-3. Code Style: Enforce PEP 8 formatting.
-4. Output Format: Present findings in a structured Markdown table with a score (0-100).
+## Role definition
+You are a senior architect with 10 years of experience, known for being rigorous and incisive.
+
+## Review standards (Instructions)
+When reviewing user-supplied code, follow these steps strictly:
+
+1.  **Security check**:
+    - Look for SQL injection, hard-coded secrets, path traversal, and similar security risks.
+    - Anything you find must be conspicuously flagged with a [CRITICAL] tag.
+
+2.  **Performance optimization**:
+    - Look for redundant computation, useless loops, or excessive memory usage.
+    - Give concrete optimized-code suggestions.
+
+3.  **Code style (PEP 8)**:
+    - Check whether variable naming follows the convention.
+    - Check for missing but necessary comments.
+
+4.  **Output format**:
+    - List every issue in a Markdown table.
+    - Score: give the code a rating (0–100).
 ```
 
----
+**Code example: loading an external Skills file**
 
-## 2. Deep Search Project Overview
+```python
+import os
+from pathlib import Path
+from langchain.chat_models import init_chat_model
+from deepagents import create_deep_agent
+from deepagents.backends import FilesystemBackend
+from langgraph.checkpoint.memory import MemorySaver
+from dotenv import load_dotenv, find_dotenv
 
-This project represents a production-grade best practice implementation of the DeepAgents framework: **An Autonomous Deep Research System**.
+# Load environment variables
+load_dotenv(find_dotenv())
 
-<img src="assets/image-20260222190235512.png" alt="Deep Search Overview" style="zoom:50%;" />
+# ======================== 1. Set up the Backend ========================
+# Use FilesystemBackend to connect to the local file system.
+# Assume the skills directory sits in skills/ next to this script.
+current_dir = Path(__file__).parent.resolve()
+# We set root_dir to the current directory (base)
+# Note: FilesystemBackend's root_dir is the root of the physical path
+fs_backend = FilesystemBackend(root_dir=current_dir)
 
-### 2.1 Project Objectives
-The system emulates the cognitive methodology of senior research analysts through a multi-agent cooperative architecture (1 Leader + N Specialists). It transcends single-turn RAG retrieval by executing iterative **Search → Read → Reflect → Re-Search** loops, discovering hidden patterns across heterogeneous data sources with high precision, broad coverage, and authoritative citations.
+# ======================== 2. Initialize the agent ========================
+llm = init_chat_model(
+    model="qwen-max",
+    model_provider="openai"
+)
 
-### 2.2 Agent Architecture
+# Create an agent that has the Skill
+agent = create_deep_agent(
+    model=llm,
+    # Key point 1: inject the filesystem backend
+    backend=fs_backend,
+    # Key point 2: tell the agent to look for skills in the /skills/ directory.
+    # This /skills/ is relative to the backend's root_dir.
+    # The physical path is: base/skills/
+    skills=["skills"],
+    checkpointer=MemorySaver(),
+    # The system prompt can be very generic — the specialized instructions come from the Skill
+    system_prompt="You are a helpful AI assistant."
+)
 
-The system adopts a **1 Leader + N Specialists** hierarchical design:
+# ======================== 3. Run the demo ========================
+
+def run_demo():
+    print("\n=== Scenario: the user submits problematic code for review ===")
+
+    bad_code = """
+        def get_user(user_id):
+            # Connect to the database
+            import sqlite3
+            conn = sqlite3.connect('test.db')
+            cursor = conn.cursor()
+            # Concatenating SQL directly — injection risk!
+            sql = "SELECT * FROM users WHERE id = " + user_id
+            cursor.execute(sql)
+            return cursor.fetchall()
+    """
+
+    print(f"User's code snippet:\n{bad_code}\n")
+    print(">>> The agent is thinking and matching a skill...\n")
+
+    # The user's question triggers the description in SKILL.md ("when the user requests a code review...").
+    # The agent automatically reads the contents of SKILL.md and follows the steps inside it.
+    result = agent.invoke({
+        "messages": [
+            {"role": "user", "content": f"Please use the code-reviewer skill to review this code for me:\n{bad_code}"}
+        ],
+    }, config={"configurable": {"thread_id": "skill_demo_v3"}})
+
+    print("=== Agent reply (based on the code-reviewer skill) ===")
+    print(result["messages"][-1].content)
+
+if __name__ == "__main__":
+    run_demo()
+
+```
+
+**Key points:**
+1.  **Physical storage**: keep `SKILL.md` in a real file directory (`base/skills/code-reviewer/`).
+2.  **FilesystemBackend**: use `FilesystemBackend` to mount the local directory into the agent's virtual file system.
+3.  **Skills path mapping**: `skills=["skills"]` points at a virtual path; the agent maps it to the physical path automatically through the Backend.
+## 2. Introducing the Deep Search Project
+
+This project is a representative best practice for the DeepAgents framework: building a **"deep search researcher."**
+
+<img src="assets/image-20260222190235512.png" alt="image-20260222190235512" style="zoom:50%;" />
+
+### 2.1 Project Goal
+Use DeepAgents to build a multi-path composite agent system that **simulates the thinking of a senior human researcher**. Its core architecture is "one main agent coordinating + several expert subagents collaborating in parallel." It breaks past the single-shot retrieval limitation of traditional RAG by iterating through multiple rounds of **search → read → reflect → search again**, digging out the hidden logic behind vast amounts of information to deliver **broad coverage, high precision, and strong reliability** in complex information processing and document generation.
+
+### 2.2 Agent Design
+The system uses a **1 main + N specialists** composite pattern. The main agent does the dispatching; three kinds of expert subagents each own their lane and work in parallel:
 
 ```mermaid
 graph TD
-    Start((User Query)) -->|WebSocket| Server[FastAPI Server]
-    Server -->|Inject ThreadID & Session Dir| Main[Main Agent Leader]
-    
-    subgraph "Thinking Loop (Cognitive Cycle)"
-        Main --> Plan{Task Planning}
-        Plan -->|Missing Information?| Dispatch[Dispatch Subtasks]
-        Plan -->|Sufficient Information?| Generate[Generate Deliverables]
-        
-        subgraph "Specialist Subagents"
-            Dispatch -->|Public Web Info| Gemini[Gemini Google Search Agent]
-            Dispatch -->|Structured Enterprise Data| DB[MySQL Database Agent]
-            Dispatch -->|Internal Private Docs| RAG[RAGFlow Knowledge Agent]
+    Start((User instruction)) -->|WebSocket| Server[FastAPI Server]
+    Server -->|Inject ThreadID & Path| Main[Main Agent]
+
+    subgraph "Thinking Loop"
+        Main --> Plan{Planning}
+        Plan -->|Missing information?| Dispatch[Dispatch tasks]
+        Plan -->|Enough information?| Generate[Generate deliverable]
+
+        subgraph "Sub-Agents"
+            Dispatch -->|External info| Tavily[Tavily Search]
+            Dispatch -->|Business data| DB[MySQL DB]
+            Dispatch -->|Private documents| RAG[RAGFlow]
         end
-        
-        Gemini -->|Synthesized Evidence| Main
-        DB -->|Structured Data| Main
-        RAG -->|Document Chunks| Main
-        
-        subgraph "Artifact Tools"
-            Generate -->|1. Author Content| MD[Generate Markdown]
-            MD -->|2. Render Deliverable| PDF[Convert to PDF]
+
+        Tavily -->|Result| Main
+        DB -->|Result| Main
+        RAG -->|Result| Main
+
+        subgraph "Tools"
+            Generate -->|1. Write| MD[Generate Markdown]
+            MD -->|2. Convert| PDF[Convert to PDF]
         end
     end
-    
-    PDF -->|Stream Notification| End((Task Complete))
+
+    PDF -->|Final response| End((Task complete))
 ```
 
-#### Roles and Responsibilities
-* **Main Agent (Project Manager / Leader)**:
-  - Understands user requirements, drafts todo plans, coordinates specialists, and synthesizes final multi-page reports.
-  - Controls session lifecycle, memory, and output artifacts.
-* **Specialist Subagents**:
-  - **Web Search Assistant**: Conducts multi-angle, deep iterative searches on the public internet (up to 5 iterations, 3+ perspectives) with verified citations.
-  - **Database Query Assistant**: Queries internal relational databases (MySQL) to extract exact tabular metrics, inventory levels, and transactional sales records via Text-to-SQL.
-  - **RAGFlow Assistant**: Queries private corporate knowledge bases to retrieve proprietary manuals, clinical trials, and internal regulations.
+The Main Agent is the "project manager" (leader) of the whole agent team. It does not perform the concrete search or query work itself; it focuses on understanding the requirement, decomposing the task, dispatching resources, and delivering the result.
 
-### 2.3 Tool Matrix
+*   **Main Agent**:
+    *   **Responsibility**: project manager. Understands the user's intent, breaks the task into steps, spawns subtasks, and consolidates the final report.
+    *   **Capability**: has the global view and manages the state and memory of the whole session.
+*   **Subagents**:
+    *   Network Search Agent: broad retrieval of public knowledge, supporting progressively deeper multi-round searches — at most 5 precise queries, covering 3 or more information dimensions.
+    *   Database Query Agent: connects to the enterprise business database, supporting schema reads, data previews, and custom SQL queries to extract precise product/business detail data.
+    *   RAGFlow Knowledge Base Agent: connects to the enterprise private knowledge base. It first retrieves the list of available assistants, then asks layered questions for deep retrieval, keeping internal proprietary information both secure and usable.
 
-| Agent | Tool Name | Description |
-| :--- | :--- | :--- |
-| **Main Agent** | `generate_markdown` | Writes structured Markdown reports to the session directory. |
-| **Main Agent** | `convert_md_to_pdf` | Converts generated Markdown documents into formatted PDF files. |
-| **Main Agent** | `read_file_content` | Reads and parses user-uploaded files (`.md`, `.docx`, `.pdf`, `.xlsx`). |
-| **Web Search Agent** | `gemini_web_search` | Multi-turn internet grounding via Google Search with citations. |
-| **Database Agent** | `list_sql_tables` | Discovers available relational schema tables. |
-| **Database Agent** | `get_table_data` | Previews the first 100 rows of a table in CSV format. |
-| **Database Agent** | `execute_sql_query` | Executes customized SQL queries on MySQL. |
-| **RAGFlow Agent** | `get_assistant_list` | Queries available RAGFlow knowledge base assistants. |
-| **RAGFlow Agent** | `create_ask_delete` | Dispatches single-turn deep queries to target RAG assistants. |
+### 2.3 The Toolset
+We equip the agents with a solid tool library:
+
+Main Agent tools
+
+1. **generate_markdown** — generates a standard Markdown document
+2. **convert_md_to_pdf** — converts Markdown into a PDF file
+
+Network Search Agent
+
+1. **internet_search (Tavily)** — multi-round, multi-angle retrieval of public information from the internet
+
+Database Query Agent
+
+1. **list_sql_tables** — lists all table structures in the database
+2. **get_table_data** — reads a preview of a table's data
+3. **execute_sql_query** — executes a custom SQL query
+
+RAGFlow Knowledge Base Agent
+
+1. **get_assistant_list** — retrieves the list of available knowledge-base assistants
+2. **create_ask_delete** — poses a query to the knowledge base
 
 ### 2.4 Technology Stack
+This project uses a fully asynchronous, high-performance architecture:
 
-- **LangChain / LangGraph / DeepAgents**: Core orchestration, cyclic state graphs, and subagent hierarchies.
-- **FastAPI & Uvicorn**: High-performance asynchronous REST API backend.
-- **WebSockets**: Real-time bi-directional streaming of agent thoughts and tool logs.
-- **Google GenAI SDK (`gemini-3.6-flash`)**: Built-in Google Search Grounding for internet research.
-- **RAGFlow SDK**: Enterprise knowledge base integration.
-- **MySQL Connector & SQLAlchemy**: Secure relational database operations.
-- **PyPDF, python-docx, pandas, openpyxl**: Multi-format document parser.
-- **ContextVars**: Async thread-safe session isolation for high-concurrency environments.
+- LangChain / LangGraph / DeepAgents:
+  - What it is: the project's "central nervous system." LangGraph builds the **stateful cyclic workflow (StateGraph)**, giving the agent memory, planning, and self-correction abilities and breaking past the single-turn Q&A limitation of a traditional LLM.
+- OpenAI SDK:
+  - What it is: the official interface for calling models such as GPT-4o / DeepSeek. Tool calling (function calling) is implemented via `bind_tools`.
+- Pydantic:
+  - What it is: the foundation of data validation. Used to define the agent's state structure (`AgentState`) and the input-parameter models of the tools, guaranteeing type safety as data flows through the system.
+- FastAPI:
+  - What it is: a high-performance asynchronous web framework. Provides the RESTful API endpoints and supports file upload and static asset hosting.
+- WebSocket:
+  - What it is: full-duplex communication. Used to push the agent's **thinking process** and tool execution results to the front end in real time, improving the user experience.
+- Uvicorn:
+  - What it is: the ASGI server — FastAPI's launch engine.
+- Tavily Search API (`tavily_tools.py`):
+  - What it is: a search engine designed for AI. Compared with Google, what it returns is far more structured — not just links, but cleaned page bodies — dramatically reducing the agent's token consumption.
+- RAGFlow (`ragflow_tools.py`):
+  - What it is: an enterprise-grade RAG engine. Used to connect to a local knowledge base, with deep parsing and semantic retrieval for PDF, Word, and other document formats.
+- PyMuPDF (fitz) (`pdf_tools.py`):
+  - What it is: a high-performance PDF processing library. Used to accurately extract text and tables from PDFs, helping the agent read documents.
+- PyMySQL / SQLAlchemy (`mysql_tools.py`):
+  - What it is: the database connector. Gives the agent the ability to work with structured data (SQL) so it can query business reports.
+- Markdown / File IO (`markdown_tools.py`, `upload_file_read_tool.py`):
+  - What it is: file read/write capability. Supports generating reports in Markdown format and reading arbitrary text files uploaded by the user.
+- Asyncio:
+  - What it is: Python's standard async programming library. `async`/`await` provide non-blocking IO, so while the agent waits on a network request (a search, an LLM generation), the server can still serve other requests.
+- ContextVars:
+  - What it is: coroutine-context variables. In an asynchronous concurrent environment they carry `thread_id` and `user_id` around as if by teleportation, ensuring logs and tools are attributed to the correct user and preventing data from crossing between sessions.
+- Pathlib:
+  - What it is: object-oriented file path handling. Solves the pain of differing path separators between Windows and Linux.
+- Shutil:
+  - What it is: high-level file operations. Used to copy, move, and archive user-uploaded files efficiently.
 
----
+
 
 ## 3. Project Setup Guide
 
-### 3.1 Project Structure
-
-```text
-DeepAgents/
-├── agent/
-│   ├── sub_agents/
-│   │   ├── __init__.py
-│   │   ├── database_query_agent.py  # MySQL Database specialist
-│   │   ├── knowledge_base_agent.py  # RAGFlow knowledge specialist
-│   │   └── network_search_agent.py  # Gemini Web Search specialist
-│   ├── llm.py                       # LLM initialization
-│   ├── main_agent.py                # Main Agent orchestration & execution runtime
-│   └── prompts.py                   # YAML prompt loader
-├── api/
-│   ├── __init__.py
-│   ├── context.py                   # ContextVars session isolation
-│   ├── logger.py                    # Structured logging system
-│   ├── monitor.py                   # WebSocket event dispatcher singleton
-│   └── server.py                    # FastAPI server & endpoints
-├── prompt/
-│   └── prompts.yaml                 # System prompt configurations
-├── sql/
-│   └── company_data.sql             # Relational database schema & seed data
-├── tools/
-│   ├── __init__.py
-│   ├── gemini_tools.py              # Gemini Google Search grounding
-│   ├── markdown_tools.py            # Markdown artifact generator
-│   ├── mysql_tools.py               # Database inspection & query tools
-│   ├── pdf_tools.py                 # PDF converter tool
-│   ├── ragflow_tools.py             # RAGFlow API client tools
-│   └── upload_file_read_tool.py     # Multi-format file reader
-├── utils/
-│   ├── path_utils.py                # Virtual-to-physical path resolver
-│   └── word_converter.py            # Word/HTML-to-PDF conversion engine
-├── ui/                              # Frontend React/Vite application
-├── output/                          # Auto-generated session workspace folders
-├── updated/                         # Temporary upload staging area
-├── .env                             # Environment variables & API keys
-└── pyproject.toml / requirements.txt
-```
-
-### 3.2 Dependencies (`requirements.txt`)
-
-```ini
-# Deep Agents Core
-deepagents>=0.1.0
-
-# LangChain Ecosystem
-langchain>=0.2.0
-langchain-core>=0.2.0
-langchain-community>=0.2.0
-langgraph>=0.1.0
-langchain-openai>=0.1.0
-langchain-google-genai>=2.0.0
-openai>=1.0.0
-
-# Web & Networking
-fastapi>=0.100.0
-uvicorn[standard]>=0.20.0
-python-multipart>=0.0.6
-requests>=2.31.0
-aiofiles>=23.0.0
-
-# Database
-mysql-connector-python>=8.0.0
-
-# Document & File Processing
-python-docx>=1.0.0
-pypdf>=3.0.0
-pandas>=2.0.0
-openpyxl>=3.1.0
-markdown>=3.5.0
-
-# Google Gemini & RAG Integrations
-google-genai>=1.0.0
-ragflow-sdk>=0.1.0
-
-# Utilities
-PyYAML>=6.0
-pydantic>=2.0.0
-python-dotenv>=1.0.0
-typing-extensions>=4.5.0
-```
-
-Install via:
-```bash
-pip install -r requirements.txt
-```
-
-### 3.3 Frontend Deployment (`ui/`)
-
-Ensure **Node.js (v20.x+)** is installed:
-```bash
-cd ui
-npm install
-npm run dev
-```
-Access the web dashboard at `http://localhost:5173`.
-
 ---
 
-### 3.4 API Communication Infrastructure
+### 3.1 Creating the Project
 
-#### 3.4.1 Session Isolation (`api/context.py`)
+<img src="assets/image-20260222195513626.png" alt="image-20260222195513626" style="zoom:50%;" />
+
+### 3.2 Installing Dependencies
+
+```toml
+# --- [Core dependency] the Deep Agents framework ---
+deepagents>=0.1.0           # the core factory method create_deep_agent
+
+# --- The LangChain ecosystem (foundation) ---
+langchain>=0.2.0            # LangChain core library
+langchain-core>=0.2.0       # base components (Prompt, Message, Tool)
+langchain-community>=0.2.0  # community tool integrations
+langgraph>=0.1.0            # agent workflow orchestration
+
+# --- LLM services ---
+langchain-openai>=0.1.0     # OpenAI interface adapter
+openai>=1.0.0               # official OpenAI SDK
+
+# --- Web services (API & WebSocket) ---
+fastapi>=0.100.0            # asynchronous web framework
+uvicorn[standard]>=0.20.0   # server engine (includes WebSocket)
+python-multipart>=0.0.6     # file upload support
+
+# --- Database and storage ---
+mysql-connector-python>=8.0.0 # [corrected] the official MySQL driver (used by mysql_tools)
+# Note: the code uses mysql.connector, which corresponds to this package, not pymysql
+
+# --- File processing (File Processing - upload_file_read_tool) ---
+python-docx>=1.0.0          # Word (.docx) reading
+pypdf>=3.0.0                # [corrected] PDF reading (the code uses pypdf)
+pandas>=2.0.0               # Excel data processing
+openpyxl>=3.1.0             # Excel reading engine (a pandas dependency)
+aiofiles>=23.0.0            # asynchronous file operations
+
+# --- External integrations ---
+tavily-python>=0.3.0        # web search API
+ragflow-sdk>=0.1.0          # knowledge base SDK
+requests>=2.31.0            # HTTP request library
+
+# --- Utilities ---
+PyYAML>=6.0                 # [added] YAML config parsing (prompts.py)
+pydantic>=2.0.0             # data validation
+python-dotenv>=1.0.0        # environment variable management
+typing-extensions>=4.5.0    # typing compatibility support
+```
+
+**Installing the dependencies:**
+
+1. Copy the `requirements.txt` file from the course materials into the project root.
+
+2. Install everything with one command:
+
+   ```cmd
+   pip install -r requirements.txt
+   ```
+
+### 3.3 Project Package Structure
+
+Create the directories and empty files following the structure below:
+
+```cmd
+deep_agent_project/
+├── agent/
+│   ├── sub_agents		    # [core] holds the subagent definitions
+│   └── main_agent.py       # [core] agent assembly and execution logic
+├── api/
+│   ├── __init__.py
+│   ├── context.py          # [core] ContextVars-based session isolation
+│   ├── logger.py           # [core] distributed logging system
+│   ├── monitor.py          # [core] the WebSocket monitor singleton
+│   └── server.py           # [entry point] the FastAPI server
+├── prompt/
+│   └── prompts.yaml        # [core] all prompt configuration
+├── tools/
+│   ├── __init__.py         # tool exports
+│   ├── tavily_tools.py     # search tools
+│   ├── mysql_tools.py      # database tools
+│   ├── ragflow_tools.py    # RAG tools
+│   ├── markdown_tools.py   # file generation
+│   ├── pdf_tools.py        # PDF conversion
+│   └── upload_file_read_tool.py # file reading
+├── ui/                     # holds the front-end project, run under Node
+├── output/                 # auto-created; holds session artifacts
+├── updated/                # storage area for user-uploaded files
+├── .env                    # environment variables
+```
+
+### 3.4 Baseline Imports
+
+Before writing the agents, bring in some foundational classes and the front-end project: **logging, monitoring, session isolation, and the UI front end first**.
+
+#### 3.4.1 Importing the Front-End Project
+
+**Environment prerequisites**
+
+- Install Node.js — **version 20.19.0 is recommended** (via `nvm` or the installer from the Node website)
+- Verify the installation: run `node -v` and confirm the version is v20.19.0 or higher
+
+**Deploying the project files**
+
+Copy the entire `materials/ui` directory into the root of this project.
+
+**Starting the service**
+
+Open a terminal and run:
+
+```bash
+# Enter the UI directory
+cd ui
+# Start the dev server
+npm run dev
+```
+
+**Testing access**
+
+Once the service starts successfully, open in a browser:
+
+```
+http://localhost:5173
+```
+
+<img src="assets/image-20260222215715664.png" alt="image-20260222215715664" style="zoom:50%;" />
+
+Additional notes
+
+- If startup fails, check first: does the Node version match, and are the dependencies in `ui/package.json` complete (run `npm install` to install them)?
+- If port 5173 is already in use, change the port in the config file under `ui/` (e.g. `vite.config.js`).
+
+#### 3.4.2 API Communication
+
+Below are the four core classes to bring into the project:
+
+1. **server.py** — the service entry point
+
+   Receives client requests (the API endpoints), assigns a unique identifier (Thread ID), hands the task to background async processing, and feeds progress back in real time over WebSocket.
+
+2. **context.py** — data isolation
+
+   Tags each task with its own identifier so any part of the code can quickly retrieve the task's identity. Its core purpose is data isolation across multiple tasks (requests), preventing information from crossing over.
+
+3. **monitor.py** — real-time feedback
+
+   Collects the execution status of background tasks and pushes messages precisely using the task identifier, solving cross-thread communication between the back end and the front end.
+
+4. **logger.py** — end-to-end recording
+
+   Records every operation across the task's lifecycle (reasoning, tool calls, results) and files logs by task identifier, making troubleshooting and post-mortems easier.
+
+<img src="assets/image-20260214144806369.png" alt="image-20260214144806369" style="zoom:50%;" />
+
+##### 3.4.2.1 Session Data (`api/context.py`)
+
+**Explanation**: `ContextVars` ensures that different users' requests (coroutines) are fully isolated inside the server and never get their file paths mixed up.
 
 ```python
 from contextvars import ContextVar
 from typing import Optional
 
+
+# Stores the folder associated with the current session
 _session_dir_ctx: ContextVar[Optional[str]] = ContextVar("session_dir", default=None)
+
+# Stores the websocket associated with the current session
 _thread_id_ctx: ContextVar[Optional[str]] = ContextVar("thread_id", default=None)
 
+
 def set_session_context(path: str):
+    """
+    Set the session directory for the current request chain.
+    Normally called before the agent starts executing a task.
+
+    Returns:
+        Token: a Token object that can later be used to reset the variable's state.
+    """
     return _session_dir_ctx.set(path)
 
 def get_session_context() -> Optional[str]:
+    """
+    Get the session directory for the current request chain.
+    Can be used directly inside any deeply nested tool function — no need to thread the
+    parameter through every layer.
+    """
     return _session_dir_ctx.get()
 
 def set_thread_context(thread_id: str):
+    """
+    Set the Thread ID for the current request chain.
+    """
     return _thread_id_ctx.set(thread_id)
 
 def get_thread_context() -> Optional[str]:
+    """
+    Get the Thread ID for the current request chain.
+    """
     return _thread_id_ctx.get()
 
 def reset_session_context(session_token, thread_token=None):
+    """
+    Clean up / reset the context.
+    Normally called at the end of request handling (in a finally block) to prevent memory
+    leaks or contamination of subsequent requests.
+    """
     _session_dir_ctx.reset(session_token)
     if thread_token:
         _thread_id_ctx.reset(thread_token)
+
+
+if __name__ == "__main__":
+    import asyncio
+    import random
+
+    # =========================================================================
+    # Simulated case: Zhang San and Li Si transact business at the same time
+    # =========================================================================
+    async def process_user_request(user_name: str, user_dir: str):
+        print(f"[{user_name}] 1. Request starting, setting up the environment -> {user_dir}")
+
+        # 1. [Entering] Set the context and take the token
+        #    Note: there is no need to pass the token to deep_function — it can read the context itself
+        dir_token = set_session_context(user_dir)
+        id_token = set_thread_context(f"thread_{user_name}")
+
+        try:
+            # 2. [Doing the work] Simulate descending into a deep call (there may be eight or ten layers in between)
+            await deep_nested_function(user_name)
+
+        finally:
+            # 3. [Leaving] Business done — you must close the account with the token (restore the scene)
+            print(f"[{user_name}] 4. Request finished, cleaning up the environment")
+            reset_session_context(dir_token, id_token)
+
+            # Verify the cleanup (it should be back to None or the initial value)
+            current_dir = get_session_context()
+            print(f"[{user_name}] 5. Check after cleanup: {current_dir} (should be None)")
+
+    async def deep_nested_function(user_name):
+        """
+        This is a deeply nested function that receives no path parameter,
+        yet it can "teleport" the value out of the ContextVar.
+        """
+        # Simulate a slow operation so that Zhang San's and Li Si's tasks interleave
+        await asyncio.sleep(random.uniform(0.1, 0.5))
+
+        # The key verification: read the values straight from the context.
+        # Without isolation, Li Si might pick up Zhang San's directory.
+        current_dir = get_session_context()
+        current_thread = get_thread_context()
+
+        print(f"[{user_name}] 2. Reading the context inside the deep function:")
+        print(f"    - Directory: {current_dir}")
+        print(f"    - Thread: {current_thread}")
+
+        if user_name in current_thread and user_name in current_dir:
+            print(f"[{user_name}] 3. ✅ Verified! The data is correct!")
+        else:
+            print(f"[{user_name}] 3. ❌ Verification failed! The data crossed over!")
+
+    async def main():
+        print("--- Starting the concurrency test ---\n")
+        # Launch two tasks at once to simulate concurrency
+        task1 = asyncio.create_task(process_user_request("Zhang San", "/data/zhangsan"))
+        task2 = asyncio.create_task(process_user_request("Li Si", "/data/lisi"))
+
+        await asyncio.gather(task1, task2)
+        print("\n--- Test finished ---")
+
+    asyncio.run(main())
 ```
 
-#### 3.4.2 Real-time Monitoring & WebSocket (`api/monitor.py`)
+##### 3.4.2.2 Real-Time Monitoring (`api/monitor.py`)
+
+**Explanation**: this is a singleton class responsible for pushing the agent's internal thinking process to the front end over WebSocket in real time.
 
 ```python
 import datetime
@@ -842,19 +2506,42 @@ from typing import Any, Dict, Optional
 from fastapi import WebSocket
 from api.context import get_thread_context
 
+# Try importing the global runtime (used for streaming output in script mode)
+try:
+    import builtins
+except ImportError:
+    builtins = None
+
 class ToolMonitor:
+    """
+    Tool monitoring class, used to report progress and status while a tool is executing.
+    Designed as a singleton so it can be imported and used directly from any tool.
+    Compatible with both the FastAPI WebSocket and the script runtime's stream_writer.
+
+    Usage example:
+    from api.monitor import monitor
+
+    def my_tool(arg1):
+        monitor.report_start("my_tool", {"arg1": arg1})
+        ...
+        monitor.report_running("my_tool", "Processing data...", progress=0.5)
+        ...
+        monitor.report_end("my_tool", result)
+    """
     _instance = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ToolMonitor, cls).__new__(cls)
-            cls._instance.websocket_manager = None
+            cls._instance.websocket_manager = None # reserved for the FastAPI WebSocketManager
         return cls._instance
 
     def set_websocket_manager(self, manager):
+        """Set FastAPI's WebSocket manager"""
         self.websocket_manager = manager
 
     def _emit(self, event_type: str, message: str, data: Optional[Dict[str, Any]] = None):
+        """Internal send method"""
         payload = {
             "type": "monitor_event",
             "event": event_type,
@@ -863,530 +2550,2435 @@ class ToolMonitor:
             "timestamp": datetime.datetime.now().isoformat()
         }
 
+        # 1. Prefer sending through the FastAPI WebSocket (targeted push)
         if self.websocket_manager:
             try:
+                # Get the current thread ID
                 thread_id = get_thread_context()
+
+                # Make sure the loop has been loaded
                 manager_loop = self.websocket_manager.get_loop()
-                if manager_loop and thread_id:
-                    try:
-                        current_loop = asyncio.get_running_loop()
-                    except RuntimeError:
-                        current_loop = None
 
-                    if current_loop and current_loop == manager_loop:
-                        current_loop.create_task(
-                            self.websocket_manager.send_to_thread(payload, thread_id)
-                        )
+                if manager_loop:
+                    if thread_id:
+                        # Check whether we are currently in the same event loop
+                        try:
+                            current_loop = asyncio.get_running_loop()
+                        except RuntimeError:
+                            current_loop = None
+
+                        if current_loop and current_loop == manager_loop:
+                            # If we are in the same loop (e.g. running inside create_task), create the task directly
+                            current_loop.create_task(
+                                self.websocket_manager.send_to_thread(payload, thread_id)
+                            )
+                        else:
+                            # If we are on a different thread, use the threadsafe method
+                            asyncio.run_coroutine_threadsafe(
+                                self.websocket_manager.send_to_thread(payload, thread_id),
+                                manager_loop
+                            )
                     else:
-                        asyncio.run_coroutine_threadsafe(
-                            self.websocket_manager.send_to_thread(payload, thread_id), 
-                            manager_loop
-                        )
+                         # No thread_id means this is probably a system-level message, or there is no context
+                         pass
             except Exception as e:
-                print(f"[Monitor] WebSocket broadcast failed: {e}")
+                print(f"[Monitor] WebSocket send failed: {e}")
 
-        print(f"[Monitor:{event_type}] {message}")
+        # 2. Try emitting through the global runtime (DeepAgents script mode).
+        # This lets the MockRuntime in simple_agents.py receive the data.
+        if builtins and hasattr(builtins, 'runtime') and hasattr(builtins.runtime, 'stream_writer'):
+            try:
+                builtins.runtime.stream_writer(payload)
+            except Exception:
+                pass
+
+        # 3. Console fallback output (handy for debugging).
+        # A distinctive prefix makes it easy to spot by eye.
+        print(f"\n[Monitor:{event_type}] {message}")
 
     def report_tool(self, tool_name: str, args: Dict[str, Any] = None):
-        self._emit("tool_start", f"Invoking tool: {tool_name}", {"tool_name": tool_name, "args": args})
+        """Report that a tool has started executing"""
+        self._emit("tool_start", f"Starting tool: {tool_name}", {"tool_name": tool_name, "args": args})
 
     def report_assistant(self, assistant_name: str, args: Dict[str, Any] = None):
-        self._emit("assistant_call", f"Calling subagent: {assistant_name}", {"assistant_name": assistant_name, "args": args})
+        """Report progress on the subagent currently being called"""
+        self._emit("assistant_call", f"Calling assistant: {assistant_name}", {"assistant_name": assistant_name, "args": args})
 
     def report_task_result(self, result: str):
-        self._emit("task_result", "Task execution finished", {"result": result})
+        """Report the task's final result"""
+        self._emit("task_result", "Task execution complete", {"result": result})
 
     def report_session_dir(self, path: str):
-        self._emit("session_created", f"Workspace ready: {path}", {"path": path})
+        """Report the task's working directory"""
+        self._emit("session_created", f"Working directory created: {path}", {"path": path})
 
+# The global singleton instance
 monitor = ToolMonitor()
 
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, WebSocket] = {}
+        # Bind the loop lazily to avoid an inconsistent loop at initialization time
         self.loop = None
 
     def get_loop(self):
+        """Lazily obtain the currently running event loop"""
         if self.loop is None:
             try:
                 self.loop = asyncio.get_running_loop()
+                # Also set the monitor's manager (ensuring a two-way binding)
                 monitor.set_websocket_manager(self)
+                print(f"[Monitor] ConnectionManager auto-bound to loop: {id(self.loop)}")
             except RuntimeError:
-                pass
+                print("[Monitor] Warning: No running event loop found yet.")
         return self.loop
 
     async def connect(self, websocket: WebSocket, thread_id: str):
+        # Try to obtain/refresh the loop on each connection
         self.get_loop()
+
         await websocket.accept()
         self.active_connections[thread_id] = websocket
+        print(f"Client connected: {thread_id}")
 
     def disconnect(self, websocket: WebSocket, thread_id: str):
         if thread_id in self.active_connections:
             del self.active_connections[thread_id]
+        print(f"Client disconnected: {thread_id}")
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
 
     async def send_to_thread(self, message: dict, thread_id: str):
         if thread_id in self.active_connections:
-            await self.active_connections[thread_id].send_json(message)
+            websocket = self.active_connections[thread_id]
+            await websocket.send_json(message)
 
 manager = ConnectionManager()
 ```
 
-#### 3.4.3 Path Sanitization (`utils/path_utils.py`)
+#### 3.4.3 The Configuration File
+
+Create the file: `<project root>/.env`
+
+```ini
+#RAGFLOW_API_URL=http://121.4.54.247
+#RAGFLOW_API_KEY=your-ragflow-api-key
+RAGFLOW_API_URL=http://129.211.218.165
+# Your RAGFlow service address
+RAGFLOW_API_KEY=your-ragflow-api-key
+# Your API key
+# LLM configuration
+OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+OPENAI_API_KEY=your-openai-api-key
+LLM_QWEN2.5=qwen2.5-14b-instruct
+LLM_QWEN3=qwen3-32b
+LLM_QWEN_MAX=qwen-max
+
+#tavily-api-key
+TAVILY_API_KEY=your-tavily-api-key
+
+# Database configuration
+MYSQL_USER=root
+MYSQL_PASSWORD=your-mysql-password
+MYSQL_DATABASE=pharma_db
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+```
+
+#### 3.4.4 Importing the Utilities
+
+File: `utils/word_converter.py`
+
+> The utility class responsible for converting Markdown to PDF.
+
+```python
+import logging
+import os
+from pathlib import Path
+import time
+
+try:
+    import markdown
+    import win32com.client
+    import pythoncom
+except ImportError:
+    pass
+
+def convert_md_to_pdf_via_word(md_abs_path: Path, pdf_abs_path: Path) -> str:
+    """
+    Convert Markdown to PDF using the Microsoft Word COM interface.
+    Dependencies: pywin32, markdown
+    """
+    temp_html_path = md_abs_path.with_suffix('.temp.html')
+    word_app = None
+
+    try:
+        # 1. MD → HTML
+        with open(md_abs_path, 'r', encoding='utf-8') as f:
+            md_content = f.read()
+
+        html_body = markdown.markdown(md_content, extensions=['tables', 'fenced_code'])
+        html_content = f"""
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: "Microsoft YaHei", "SimHei", sans-serif; }}
+                table {{ border-collapse: collapse; width: 100%; }}
+                th, td {{ border: 1px solid black; padding: 8px; }}
+                pre {{ background-color: #f5f5f5; padding: 10px; border-radius: 4px; }}
+                code {{ font-family: "Consolas", "Monaco", monospace; }}
+            </style>
+        </head>
+        <body>
+            {html_body}
+        </body>
+        </html>
+        """
+
+        with open(temp_html_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+
+        # 2. Call Word COM
+        pythoncom.CoInitialize()
+        word_app = win32com.client.Dispatch('Word.Application')
+        word_app.Visible = False
+        word_app.DisplayAlerts = False
+
+        doc = word_app.Documents.Open(str(temp_html_path.resolve()))
+        doc.SaveAs(str(pdf_abs_path.resolve()), FileFormat=17) # wdFormatPDF = 17
+        doc.Close(SaveChanges=0)
+
+        if pdf_abs_path.exists():
+            return f"Converted successfully: {pdf_abs_path} (Word engine)"
+        else:
+            return f"Conversion finished but no file was produced: {pdf_abs_path}"
+
+    except ImportError:
+        return "Missing dependency libraries. Please install: pip install pywin32 markdown"
+    except Exception as e:
+        logging.error(f"Word-based PDF conversion failed: {e}", exc_info=True)
+        return f"Conversion failed: {str(e)}"
+
+    finally:
+        # 3. Resource cleanup
+        if word_app:
+            try:
+                word_app.Quit()
+            except:
+                pass
+
+        if temp_html_path.exists():
+            try:
+                temp_html_path.unlink()
+            except:
+                pass
+
+        try:
+            pythoncom.CoUninitialize()
+        except:
+            pass
+```
+
+File: `utils/path_utils.py`
+
+> The path-handling utility. It makes sure paths stay inside the current session and strips out any virtual paths the LLM invents.
 
 ```python
 import os
 from pathlib import Path
 from typing import Optional
 
+
+def resolve_path(filename: str, session_dir: Optional[str] = None) -> str:
+    import os
+from pathlib import Path
+from typing import Optional
+
 def resolve_path(filename: str, session_dir: Optional[str] = None) -> str:
     """
-    Sanitizes LLM virtual paths (/workspace, /mnt/data, etc.) and guarantees
-    all read/write operations resolve safely inside the active session directory.
-    """
-    path_str = filename.replace("\\", "/")
+    The unified file-path resolution helper.
 
-    # 1. Clean virtual prefixes hallucinated by LLMs
+    Core responsibilities:
+    1. Strip virtual path prefixes (/workspace, /mnt/data, /home/user)
+    2. Recognize the updated/ directory and resolve it relative to the project root first
+    3. Combine with session_dir to handle relative/absolute paths, guaranteeing path isolation
+    4. Prevent path nesting (session_id/session_id)
+
+    Worked examples (test environment: Windows, session_dir=D:/Project/output/session_123, CWD=D:/Project):
+    | Input scenario           | filename                          | session_dir                      | Core operation                        | Final result                      |
+    |--------------------------|-----------------------------------|----------------------------------|---------------------------------------|-----------------------------------|
+    | Virtual path cleanup     | /workspace/report.md              | D:/Project/output/session_123    | strip /workspace → join to session dir | D:/Project/output/session_123/report.md |
+    | updated/ special case    | abc/updated/upload/file.pdf       | D:/Project/output/session_123    | take the part from updated/ → resolve against CWD | D:/Project/updated/upload/file.pdf |
+    | No session directory     | sub/test.md                       | None                             | resolve directly to an absolute path under CWD | D:/Project/sub/test.md            |
+    | Absolute path (inside session) | D:/Project/output/session_123/sub/report.md | D:/Project/output/session_123 | verified inside session → no nesting → return as-is | D:/Project/output/session_123/sub/report.md |
+    | Absolute path (outside session) | D:/OtherDir/file.md          | D:/Project/output/session_123    | verified outside session → keep original path | D:/OtherDir/file.md               |
+    | Unix-style absolute path on Windows | /sub/test.md           | D:/Project/output/session_123    | starts with / but no drive → join to session dir | D:/Project/output/session_123/sub/test.md |
+    | Nesting protection       | D:/Project/output/session_123/session_123/report.md | D:/Project/output/session_123 | detect consecutive session_123 → fix the path | D:/Project/output/session_123/report.md |
+    | Relative path (contains session name) | session_123/report.md | D:/Project/output/session_123    | contains the session name → prevent nesting → session dir + filename | D:/Project/output/session_123/report.md |
+    | Relative path (output prefix) | output/report.md             | D:/Project/output/session_123    | has the output prefix → session dir + filename | D:/Project/output/session_123/report.md |
+    | Ordinary relative path   | sub1/sub2/test.md                 | D:/Project/output/session_123    | no special marker → join to session dir | D:/Project/output/session_123/sub1/sub2/test.md |
+    | Virtual path + updated   | /mnt/data/updated/doc.md          | D:/Project/output/session_123    | strip /mnt/data → trigger updated handling | D:/Project/updated/doc.md         |
+    | Absolute path on Linux   | /home/user/test.md                | /data/session_123 (Linux)        | strip /home/user → join to the Linux session dir | /data/session_123/test.md         |
+
+    Args:
+        filename (str): the input filename or path
+        session_dir (str, optional): the session context directory
+
+    Returns:
+        str: the resolved absolute path
+    """
+    path = Path(filename)
+    path_str = filename.replace("\\", "/")  # normalize for consistent string matching
+
+    # 1. Virtual path cleanup
     virtual_prefixes = ["/workspace", "/mnt/data", "/home/user"]
     for prefix in virtual_prefixes:
         if path_str.startswith(prefix):
-            path_str = path_str[len(prefix):].lstrip("/")
+            # Remove the prefix
+            cleaned = path_str[len(prefix):].lstrip("/")
+            path = Path(cleaned)
+            path_str = str(path).replace("\\", "/")
             break
 
-    # 2. Upload directory handling
+    # 2. Special case: updated/ (user-uploaded files)
+    # Whenever the path contains updated/, take everything from there onward and resolve it against the CWD
     if "updated/" in path_str:
         idx = path_str.find("updated/")
-        return str(Path(path_str[idx:]).resolve())
+        relative_part = path_str[idx:]
+        return str(Path(relative_part).resolve())
 
-    path = Path(path_str)
     if not session_dir:
         return str(path.resolve())
 
     session_path = Path(session_dir).resolve()
     session_name = session_path.name
 
-    # 3. Handle Absolute vs Relative path nesting
-    if path.is_absolute():
+    # 3. Combine with the session context
+
+    # Detect a Unix-style absolute path (starts with /)
+    is_unix_abs = path_str.startswith("/")
+
+    # If it is an absolute path (Windows with a drive letter, or Unix starting with /)
+    if path.is_absolute() or (os.name == 'nt' and is_unix_abs):
+        # Windows special case: starts with / but has no drive letter — treat it as relative
+        if os.name == 'nt' and is_unix_abs and not path.drive:
+            full_path = session_path / path_str.lstrip("/")
+        else:
+            full_path = path.resolve()
+
+        # Check whether it is inside the session directory
         try:
-            if session_path in path.parents or path == session_path:
-                return str(path)
+            # Determine whether full_path is a subpath of session_path
+            if session_path in full_path.parents or full_path == session_path:
+                # Check for nesting (e.g. .../session_abc/session_abc/file.txt)
+                # Look for consecutively repeated session_name components in the path
+                parts = full_path.parts
+                for i in range(len(parts) - 1):
+                    if parts[i] == session_name and parts[i + 1] == session_name:
+                        # Nesting found — correct it to session_dir / filename
+                        return str(session_path / full_path.name)
+                return str(full_path)
         except Exception:
             pass
-        return str(path)
+
+        # Absolute path that is not under session_dir -> keep it unchanged
+        return str(full_path)
+
     else:
-        if session_name in path.parts:
+        # Relative path handling
+        parts = path.parts
+
+        # Check whether it contains session_name (to avoid duplication) or the output/ prefix
+        if session_name in parts:
             return str(session_path / path.name)
-        if path.parts and path.parts[0] == "output":
+
+        if parts and parts[0] == "output":
             return str(session_path / path.name)
+
+        # Default: join it to session_dir
         return str(session_path / path)
+
+```
+## 4. Feature Development & Testing
+
+### 4.1 Preparing the LLM
+
+#### 4.1.1 Check the Configuration File
+
+File: `.env`
+
+```ini
+# LLM configuration
+# Consistent with the earlier section
+OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+OPENAI_API_KEY=sk-key
+LLM_QWEN2.5=qwen2.5-14b-instruct
+LLM_QWEN3=qwen3-32b
+LLM_QWEN_MAX=qwen-max
 ```
 
----
+#### 4.1.2 Create the LLM Object
 
-## 4. Feature Implementation & Testing
-
-### 4.1 LLM Initialization (`agent/llm.py`)
+File: `agent/llm.py`
 
 ```python
-import os
 from dotenv import load_dotenv, find_dotenv
+import os
 from langchain.chat_models import init_chat_model
 
 load_dotenv(find_dotenv())
 
 model = init_chat_model(
-    model=os.getenv("LLM_QWEN_MAX", "qwen-max"),
+    model= os.getenv("LLM_QWEN_MAX"),
     model_provider="openai"
 )
 ```
 
-### 4.2 Prompt Configuration (`prompt/prompts.yaml` & `agent/prompts.py`)
+### 4.2 Prompt Configuration & Loading
 
-#### Prompt File (`prompt/prompts.yaml`)
+#### 4.2.1 Create the Prompt Configuration File (YAML)
 
-```yaml
+File: `prompt/prompts.yml` (simplified — each agent's prompt is refined individually later)
+
+```yml
+# Main Agent Configuration
 main_agent:
   system_prompt: |
-    You are the Lead Research Orchestrator for Wohua Pharmaceutical Intelligence Team.
-    Your mission is to coordinate three specialized expert assistants to solve complex analytical research tasks.
-
-    Your team members:
-    1. **Web Search Assistant (gemini)**: Responsible for external internet information retrieval, competitive intelligence, and industry trends.
-    2. **Database Query Assistant (db)**: Responsible for querying enterprise relational database (pharma_db) to obtain structured drug details, inventory records, and sales volumes.
-    3. **RAGFlow Assistant (ragflow)**: Responsible for querying proprietary internal knowledge bases for confidential corporate documents and regulations.
-
-    Operational Rules:
-    - Execution Sequence:
-      1. Always invoke specialist subagents first to gather complete information.
-      2. NEVER invoke document generation tools before obtaining factual data.
-      3. Only call generate_markdown once comprehensive text is assembled.
-    - Workspace Constraints:
-      All file operations must be performed strictly within the designated session directory provided at runtime.
-    - Output Format:
-      Generate thorough, well-structured Markdown reports (>1000 words) containing actionable todo checklists and verified citation links. Convert to PDF when requested.
-
+    You are the intelligent team lead at Wohua Pharmaceutical, responsible for coordinating three
+    expert assistants to complete complex tasks.
+    Placeholder for now ~~~~~~~~~
+# Sub Agents Configuration
 sub_agents:
-  gemini:
-    name: "Web Search Assistant"
+  tavily:
+    name: "Network Search Agent"
     description: |
-      Specialist agent for public internet knowledge retrieval. Use this assistant when searching for news, industry reports, clinical studies, or non-confidential external data.
+      The agent responsible for searching knowledge on the web
     system_prompt: |
-      You are an expert web research assistant. Query public web information using the gemini_web_search tool.
-      Ensure each query is self-contained. Search across at least 3 distinct perspectives, up to a maximum of 5 iterations.
-      Preserve all source citation URLs in your compiled output.
-
+      You are a professional web information retrieval assistant
   db:
-    name: "Database Query Assistant"
-    description: |
-      Specialist agent for enterprise structured SQL data. Queries tables, previews schemas, and executes analytical SQL queries against the pharmaceutical database.
+    name: "Database Query Agent"
+    description:  |
+      The agent responsible for querying the database.
     system_prompt: |
-      You are a specialized SQL database assistant.
-      Follow the 3-step workflow: 1. list_sql_tables -> 2. get_table_data (preview) -> 3. execute_sql_query.
-      Retrieve exact numbers, batch IDs, and sales records accurately.
-
+      You are a professional database query assistant
   ragflow:
-    name: "RAGFlow Assistant"
+    name: "RAGFlow Knowledge Base Agent"
     description: |
-      Specialist agent for private enterprise documents. Queries RAGFlow knowledge bases for proprietary manuals, SOPs, and internal policies.
+    	The agent responsible for interacting with the RAGFlow knowledge base
     system_prompt: |
-      You are an enterprise knowledge base specialist.
-      Discover available knowledge assistants with get_assistant_list, formulate at least 3 deep queries, and return the raw extracted context without loss of detail.
+      You are a professional RAGFlow knowledge base assistant
 ```
 
-#### Loader (`agent/prompts.py`)
+`|` is known as a **literal block scalar**.
+
+It is YAML's dedicated syntax for handling **multi-line text** (introduced with `|`). Its purpose is to let you write content that needs line breaks — prompts, descriptions, long text — cleanly across multiple lines. When YAML parses it, the **line breaks are preserved exactly**, rather than everything being squeezed onto one line. That makes it ideal for large blocks of textual configuration.
+
+#### 4.2.2 Read the Prompt File
+
+File: `agent/prompts.py`
 
 ```python
-from pathlib import Path
 import yaml
+from pathlib import Path
 
-def load_prompt(file_path: Path) -> dict:
-    with open(file_path, "r", encoding="utf-8") as f:
+
+# Load the YAML-format prompt configuration file
+def load_prompt(file_path):
+    """
+    Read and load the YAML-format prompt configuration file
+    Args:
+        file_path (str/Path): the path to the YAML config file
+    Returns:
+        dict: the parsed YAML config dictionary, containing the prompt configuration for the
+              main agent and the subagents
+    """
+    # Open the file as UTF-8 to avoid mojibake with Chinese characters
+    with open(file_path, 'r', encoding="utf-8") as f:
+        """
+        This is the core difference between safe_load and load (and why you must use it):
+        yaml.load(): unsafe — it will parse "custom objects / executable code" inside the YAML.
+        If the loaded YAML file has been tampered with maliciously (for example, code that runs
+        system commands has been injected), the server can be attacked and data leaked;
+        yaml.safe_load(): parses only standard YAML data types (strings, numbers, dicts, lists,
+        booleans, etc.) and completely forbids parsing or executing any custom object, function,
+        or code — removing the security risk at its root.
+        """
+        # Use safe_load for safe loading; the result is a dictionary
         return yaml.safe_load(f)
 
-root_path = Path(__file__).parents[1]
-prompt_file_path = root_path / "prompt" / "prompts.yaml"
-prompt_config_content = load_prompt(prompt_file_path)
 
+# Get the parent of the current script file's directory (the project root)
+# Path(__file__): the absolute path of the current script file
+# parents[1]: go up two levels to reach the project root
+root_path = Path(__file__).parents[1]
+
+# Build the full path to the prompt config file (<root>/prompt/prompts.yml)
+prompt_file_path = root_path / "prompt" / "prompts.yml"
+
+# Load the YAML config file's contents
+prompt_config_content = load_prompt(prompt_file_path)
+# Print the full configuration for debugging — verify that loading succeeded
+print(f"prompt_config_content: {prompt_config_content}")
+
+# Extract the main agent's configuration from the overall config (the main_agent node in prompts.yml)
 main_agent_config = prompt_config_content["main_agent"]
+# Extract the subagents' configuration from the overall config (the sub_agents node in prompts.yml)
 sub_agents_config = prompt_config_content["sub_agents"]
+
+# Print the split-out configuration to verify the core nodes were extracted correctly
+print(f"main_agent_config: {main_agent_config} , \nsub_agents_config: {sub_agents_config}")
 ```
 
----
+### 4.3 Implementing the Subagents
 
-### 4.3 Subagent Implementations
+#### 4.3.1 Network Search Agent (`network_search_agent`)
 
-#### 4.3.1 Web Search Subagent (`agent/sub_agents/network_search_agent.py`)
+##### 4.3.1.1 Filling in the Details
+
+* **Agent description:**
+
+  ```cmd
+  The agent responsible for searching knowledge on the web. When data needs to be looked up online,
+  it performs the retrieval and returns the search results.
+  You MUST use this assistant whenever you need to query public (non-internal) information — that is,
+  anything that is not database data or RAG data.
+  ```
+
+* **Tool coverage**:
+
+  `internet_search`: performs a web query for the question. Use this tool when you need public information from the external internet, the latest news, or data on a specific topic.
+
+* **Prompt design rationale**:
+
+  * Force multiple perspectives: the prompt explicitly requires "at least 3 angles of search," preventing the model from doing one lazy search and stopping, and forcing divergent thinking.
+
+  * Prevent infinite loops: the hard constraint of "at most 5 searches" stops the model from retrying endlessly — and burning tokens — when it cannot find an answer.
+
+  * Breadth first: emphasizing the retrieval of "public, non-internal information" defines the boundary clearly, so it does not conflict with the Database Query Agent or the RAGFlow Knowledge Base Agent.
+
+  * Reference prompt:
+
+    ```cmd
+    You are a professional web information retrieval assistant. You can retrieve relevant information
+    from the internet based on the user's question. The tool at your disposal is internet_search,
+    which retrieves public, non-internal information from the internet for the user's question.
+    When searching the web, search the question from at least 3 different angles, with a maximum of
+    5 searches in total. Once you exceed 5, you may not search further.
+    ```
+
+* **Execution strategy**: the agent receives the task → thinks about and decomposes the search keywords → calls the search tool → observes the results → decides whether supplementary searches are needed → consolidates the information.
+
+```mermaid
+graph LR
+    classDef default fill:#e3f2fd,stroke:#1565c0,stroke-width:1px,color:#000;
+
+    Start[Receive task from<br/>Main Agent] --> Thought1{Think:<br/>is the information enough?}
+    Thought1 -- "No (more angles needed)" --> Action[Construct<br/>search query]
+    Action --> Tool(Call<br/>internet_search)
+    Tool --> API((Tavily API))
+    API --> Obs[Get<br/>search results]
+    Obs --> Check{"Check:<br/>count<5 and angles<3?"}
+    Check -- Yes --> Thought1
+    Check -- No --> Summary[Consolidate<br/>all results]
+    Thought1 -- "Yes (information sufficient)" --> Summary
+    Summary --> End[Return to<br/>Main Agent]
+```
+
+```yaml
+sub_agents:
+  tavily:
+    name: "Network Search Agent"
+    description: |
+      The agent responsible for searching knowledge on the web. When data needs to be looked up online,
+      it performs the retrieval and returns the search results.
+      You MUST use this assistant whenever you need to query public, non-internal information.
+    system_prompt: |
+      You are a professional web information retrieval assistant. You can retrieve relevant information
+      from the internet based on the user's question. The tool at your disposal is internet_search,
+      which retrieves public, non-internal information from the internet for the user's question.
+      When searching the web, search the question from at least 3 different angles, with a maximum of
+      5 searches in total. Once you exceed 5, you may not search further.
+```
+
+##### 4.3.1.2 The Tavily Search Tool
+
+**Step 1: define the Tavily API key**
+
+File: `.env`
+
+Go straight to the official site: **https://app.tavily.com/** — the **free tier** gives **1,000 requests per month**, more than enough for learning and development.
+
+```ini
+#tavily-api-key
+TAVILY_API_KEY=your-tavily-api-key
+```
+
+**Step 2: define and implement `tavily_tools`**
+
+Location: `tools/tavily_tools.py`
 
 ```python
+# ======================== Import the core dependencies ========================
+# Type annotations: better code hints and static checking
+from typing import  Literal
+# The LangChain tool decorator: turns a plain function into an agent-callable tool
+from langchain_core.tools import tool
+# The official Tavily client: implements the core web-search functionality
+from tavily import TavilyClient
+
+# System / third-party dependencies
+import os  # system paths / environment variables
+from dotenv import load_dotenv  # load environment variables from the .env file
+
+# Custom module: instrumentation/monitoring for tool calls (make sure the api module is importable)
+from api.monitor import monitor
+
+# ======================== Initialization ========================
+# Load the .env file from the project root and read environment variables (e.g. TAVILY_API_KEY)
+load_dotenv()
+
+# Initialize the Tavily client (safely reading the API key from the environment)
+# Note: TavilyClient is the imported class; the existence check is defensive programming
+# to avoid an exception if the import failed
+if TavilyClient:
+    # Read the API key from the environment to avoid hard-coding and leaking the secret
+    tavily_client = TavilyClient(api_key=os.getenv('TAVILY_API_KEY'))
+else:
+    # Set it to None when client initialization fails; later calls return a clear error
+    tavily_client = None
+
+# Define the web search tool
+@tool
+def internet_search(
+        query: str,
+        max_results: int = 5,
+        topic: Literal["general", "news","finace"] = "general",
+        include_raw_content: bool = False
+):
+    """
+     Perform a web query for the question. Use this tool when you need public information from the
+     external internet, the latest news, or data on a specific topic.
+     Core purpose:
+         Called when an AI agent needs public information or time-sensitive data (news, financial
+         movements) from the external internet. It replaces a traditional search engine and returns
+         structured results better suited to a large model.
+     Parameters:
+         query: the core question/keywords to search, e.g. "2026 AI industry policy"
+         max_results: controls how many results come back; 5 or fewer is recommended on the free tier
+         topic: restricts the type of content searched, improving relevance
+         include_raw_content: whether to return detailed news — False for the concise version, True for the detailed one
+     Returns:
+         dict: the structured result returned by the Tavily API, containing these core fields:
+             - query: the original search term
+             - results: the list of search results; each element contains url, content (summary),
+               raw_content (the raw content, optional), etc.
+         str: an error message string when initialization failed
+     Error handling:
+         Catches every exception during the search and re-raises it, so the agent is aware the
+         search failed and can handle it
+     """
+    if not tavily_client:
+        return "Error: 'tavily-python' library is not installed."
+    monitor.report_tool("Web search tool",{"Web search tool":query})
+    try:
+        results = tavily_client.search(
+            query,
+            max_results=max_results,
+            include_raw_content=include_raw_content,
+            topic=topic,
+        )
+        return results
+    except Exception as e:
+        raise e
+```
+
+##### 4.3.1.3 Defining `network_search_agent`
+
+File: `agent/sub_agents/network_search_agent.py`
+
+```python
+
 from agent.prompts import sub_agents_config
-from tools.gemini_tools import gemini_web_search
+from tools.tavily_tools import internet_search
 
 network_search_agent = {
-    "name": sub_agents_config["gemini"].get("name", "Web Search Assistant"),
-    "description": sub_agents_config["gemini"].get("description", ""),
-    "system_prompt": sub_agents_config["gemini"].get("system_prompt", ""),
-    "tools": [gemini_web_search],
-    "model": "google_genai:gemini-3.6-flash"
+    "name":sub_agents_config["tavily"].get("name",""),
+    "description":sub_agents_config["tavily"].get("description",""),
+    "system_prompt":sub_agents_config["tavily"].get("system_prompt",""),
+    "tools": [internet_search]
 }
 ```
 
-#### 4.3.2 Database Query Subagent (`agent/sub_agents/database_query_agent.py`)
+#### 4.3.2 Database Query Agent (`database_query_agent`)
 
-```python
-from agent.prompts import sub_agents_config
-from tools.mysql_tools import list_sql_tables, get_table_data, execute_sql_query
+##### 4.3.2.1 Filling in the Details
 
-database_query_agent = {
-    "name": sub_agents_config["db"].get("name", "Database Query Assistant"),
-    "description": sub_agents_config["db"].get("description", ""),
-    "system_prompt": sub_agents_config["db"].get("system_prompt", ""),
-    "tools": [list_sql_tables, get_table_data, execute_sql_query]
-}
+* **Core responsibility**: query the enterprise's internal structured data (product inventory, sales records, etc.), answering precision questions of the form "exactly how much?"
+
+* **Tech stack**: `Text-to-SQL` (SQL generated by the LLM) + `MySQL Connector`.
+
+* **Agent description:**
+
+  ```
+  The agent responsible for querying the database. It can inspect the table structures in the database,
+  read table data, and execute custom SQL queries to obtain precise business data.
+  The database contains the company's detailed air-conditioner product data, so every detail of any
+  specific product is visible. However, the database contains no general knowledge — only concrete
+  product information.
+  ```
+
+* **Tool descriptions**:
+
+  * `list_sql_tables`: lists every available table in the configured MySQL database — the first step in understanding the database structure.
+  * `get_table_data`: reads the first 100 rows of a given MySQL table, for a quick preview of the data.
+  * `execute_sql_query`: executes a custom SQL query. Use this tool when complex filtering, joins, or aggregation are needed.
+
+* **Prompt design rationale**:
+
+  * **Anti-hallucination mechanism**: the prompt mandates the "Step 1: list_tables" action. Only once the LLM knows the real table names is the SQL it generates executable — this avoids the common hallucination of inventing table names.
+
+  * **Data understanding**: requiring "Step 2: get_table_data" to preview the data lets the LLM understand each field's actual format (is the date `'2026-01'` or `'2026/01'`?), keeping `WHERE` conditions accurate.
+
+  * **Read-only permissions**: the prompt emphasizes "retrieving information," implying a safety boundary of no UPDATE/DELETE operations.
+
+  * **Reference prompt:**
+
+    ```
+     You are a professional database query assistant. You can interact with the MySQL database directly
+     to retrieve information.
+     The tools at your disposal are:
+     1. list_sql_tables: lists every available table in the database — the first step in understanding the database structure.
+     2. get_table_data: reads the first 100 rows of the specified table, for a quick preview of the data.
+     3. execute_sql_query: executes a custom SQL query. Use this tool when complex filtering, joins, or aggregation are needed.
+     The usual workflow is: first list the available tables and confirm the table name; if needed, preview
+     the table data to understand the fields; finally write and execute a SQL query to answer the user's question.
+    ```
+
+* **Execution strategy** (three steps): inspect the schema → preview the data → run the query.
+
+* **Flowchart**:
+
+```mermaid
+graph LR
+    classDef default fill:#e3f2fd,stroke:#1565c0,stroke-width:1px,color:#000;
+
+    Start[Receive task from<br/>Main Agent] --> Step1[1. Call<br/>list_sql_tables]
+    Step1 --> Tables[Get the<br/>database schema]
+    Tables --> Step2{2. Do we need to<br/>understand the fields?}
+    Step2 -- Yes --> Preview[Call get_table_data<br/>to preview the data]
+    Preview --> Context[Obtain a<br/>data sample]
+    Context --> Step3
+    Step2 -- No --> Step3[3. Write the<br/>SQL statement]
+    Step3 --> Execute[Call<br/>execute_sql_query]
+    Execute --> DB((MySQL Database))
+    DB --> Result[Get the<br/>precise data]
+    Result --> End[Return to<br/>Main Agent]
 ```
 
-#### 4.3.3 RAGFlow Subagent (`agent/sub_agents/knowledge_base_agent.py`)
-
-```python
-from agent.prompts import sub_agents_config
-from tools.ragflow_tools import get_assistant_list, create_ask_delete
-
-knowledge_base_agent = {
-    "name": sub_agents_config["ragflow"].get("name", "RAGFlow Assistant"),
-    "description": sub_agents_config["ragflow"].get("description", ""),
-    "system_prompt": sub_agents_config["ragflow"].get("system_prompt", ""),
-    "tools": [get_assistant_list, create_ask_delete]
-}
+```yaml
+sub_agents:
+ db:
+    name: "Database Query Agent"
+    description:  |
+      The agent responsible for querying the database. It can inspect the table structures in the database,
+      read table data, and execute custom SQL queries to obtain precise business data.
+      The database contains the company's detailed air-conditioner product data, so every detail of any
+      specific product is visible. However, the database contains no general knowledge — only concrete
+      product information.
+    system_prompt: |
+      You are a professional database query assistant. You can interact with the MySQL database directly
+      to retrieve information.
+      The tools at your disposal are:
+      1. list_sql_tables: lists every available table in the database — the first step in understanding the database structure.
+      2. get_table_data: reads the first 100 rows of the specified table, for a quick preview of the data.
+      3. execute_sql_query: executes a custom SQL query. Use this tool when complex filtering, joins, or aggregation are needed.
+      The usual workflow is: first list the tables and confirm the table name; if needed, preview the table
+      data to understand the fields; finally write and execute a SQL query to answer the user's question.
 ```
 
----
+##### 4.3.2.2 The Database Search Tools
 
-### 4.4 Main Agent & Execution Runtime (`agent/main_agent.py`)
+**Step 1: prepare the database data**
+Script location: `<project>/sql/company_data.sql`
+
+```sql
+-- Core business database design for a pharmaceutical company
+-- Covers: drug information, inventory management, sales records
+-- Intended for structured-data retrieval with DeepAgents
+
+CREATE DATABASE IF NOT EXISTS pharma_db;
+USE pharma_db;
+
+-- 1. Drug details table
+-- Records the details of every drug
+CREATE TABLE drugs (
+    drug_id INT PRIMARY KEY AUTO_INCREMENT,
+    generic_name VARCHAR(100) NOT NULL,    -- generic name (e.g. Ibuprofen Sustained-Release Capsules)
+    brand_name VARCHAR(100),               -- brand name (e.g. Fenbid)
+    approval_number VARCHAR(50),           -- approval number (China drug approval no. H...)
+    specifications VARCHAR(100),           -- specification (e.g. 0.3 g * 24 capsules/box)
+    dosage_form VARCHAR(50),               -- dosage form (capsule/tablet/injection)
+    manufacturer VARCHAR(100),             -- manufacturer
+    therapeutic_area VARCHAR(50),          -- therapeutic area (e.g. analgesic/antipyretic, cardiovascular)
+    description TEXT,                      -- drug details / indications
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Inventory table
+-- Records drug stock levels, linked by drug_id
+CREATE TABLE inventory (
+    inventory_id INT PRIMARY KEY AUTO_INCREMENT,
+    drug_id INT NOT NULL,
+
+    batch_number VARCHAR(50) NOT NULL,     -- production batch number (a core field in pharma inventory)
+    quantity_on_hand INT DEFAULT 0,        -- current stock on hand (boxes/bottles)
+    warehouse_location VARCHAR(50),        -- warehouse location (e.g. Zone A - Rack 01)
+
+    production_date DATE,                  -- production date
+    expiry_date DATE,                      -- expiry date (used for alerts)
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (drug_id) REFERENCES drugs(drug_id) ON DELETE CASCADE
+);
+
+-- 3. Sales records table
+-- Records the sales of each drug, linked by drug_id
+CREATE TABLE sales_records (
+    sale_id INT PRIMARY KEY AUTO_INCREMENT,
+    drug_id INT NOT NULL,
+
+    sale_date DATE NOT NULL,               -- sale date
+    quantity_sold INT NOT NULL,            -- quantity sold
+    unit_price DECIMAL(10, 2),             -- unit sale price
+    total_amount DECIMAL(15, 2),           -- total sale amount
+
+    customer_name VARCHAR(100),            -- customer name (e.g. XX First People's Hospital, XX Pharmacy)
+    region VARCHAR(50),                    -- sales region (used for regional analysis)
+    sales_rep VARCHAR(50),                 -- sales representative
+
+    FOREIGN KEY (drug_id) REFERENCES drugs(drug_id) ON DELETE CASCADE
+);
+
+-- --- Insert mock data ---
+
+-- 1. Insert 10 drugs (assume all are produced by our own company)
+INSERT INTO drugs (generic_name, brand_name, approval_number, specifications, dosage_form, manufacturer, therapeutic_area, description)
+VALUES
+('Amoxicillin Capsules', 'Amoxin', 'H20051234', '0.25g*24 capsules', 'Capsule', 'Our Pharmaceutical Co.', 'Antibiotic', 'Used to treat upper respiratory tract infections, urogenital infections, and others caused by susceptible bacteria.'),
+('Ibuprofen Sustained-Release Capsules', 'Fenbid', 'H10900089', '0.3g*20 capsules', 'Capsule', 'Our Pharmaceutical Co.', 'Analgesic/Antipyretic', 'Used to relieve mild to moderate pain such as headache, joint pain, migraine, toothache, muscle pain, neuralgia, and dysmenorrhea. Also used for fever caused by the common cold or influenza.'),
+('Metformin Hydrochloride Tablets', 'Glucophage', 'H20023345', '0.5g*48 tablets', 'Tablet', 'Our Pharmaceutical Co.', 'Diabetes', 'First-line treatment for type 2 diabetes patients not adequately controlled by diet alone, especially those who are obese.'),
+('Atorvastatin Calcium Tablets', 'Lipitor', 'H20055567', '20mg*7 tablets', 'Tablet', 'Our Pharmaceutical Co.', 'Cardiovascular', 'For patients with primary hypercholesterolemia, including familial hypercholesterolemia (heterozygous) or mixed hyperlipidemia.'),
+('Oseltamivir Phosphate Capsules', 'Tamiflu', 'H20090123', '75mg*10 capsules', 'Capsule', 'Our Pharmaceutical Co.', 'Antiviral', 'For the treatment of influenza A and B in adults and children aged 1 year and older.'),
+('Ceftriaxone Sodium for Injection', 'Rocephin', 'H10920012', '1.0g/vial', 'Injection', 'Our Pharmaceutical Co.', 'Antibiotic', 'For lower respiratory tract, urinary tract, and biliary infections caused by susceptible pathogens, as well as intra-abdominal infections, pelvic infections, skin and soft tissue infections, bone and joint infections, sepsis, meningitis, and more.'),
+('Montmorillonite Powder', 'Smecta', 'H20000456', '3g*10 sachets', 'Powder', 'Our Pharmaceutical Co.', 'Digestive System', 'For acute and chronic diarrhea in adults and children.'),
+('Nifedipine Controlled-Release Tablets', 'Adalat', 'H20100345', '30mg*30 tablets', 'Tablet', 'Our Pharmaceutical Co.', 'Hypertension', '1. Hypertension. 2. Coronary heart disease — chronic stable angina (exertional angina).'),
+('Aspirin Enteric-Coated Tablets', 'Bayaspirin', 'J20130078', '100mg*30 tablets', 'Tablet', 'Our Pharmaceutical Co.', 'Cardiovascular', 'Reduces the risk of onset in patients with suspected acute myocardial infarction; prevents recurrence of myocardial infarction.'),
+('Lianhua Qingwen Capsules', 'Lianhua Qingwen', 'Z20040063', '0.35g*24 capsules', 'Capsule', 'Our Pharmaceutical Co.', 'TCM / Cold & Flu', 'Clears heat-toxin and disperses lung heat. Used to treat influenza with heat-toxin attacking the lung, presenting as fever or high fever, chills, muscle aches, nasal congestion and runny nose, cough, headache, dry and sore throat.');
+
+-- 2. Insert inventory data
+-- Rule: 3 batches per drug (batch 2501, 2506, 2511)
+-- Dates: all shifted to production in 2025, with expiry in 2027
+
+INSERT INTO inventory (drug_id, batch_number, quantity_on_hand, warehouse_location, production_date, expiry_date)
+VALUES
+-- 1. Amoxicillin
+(1, 'MY-250101-A', 5000, 'Beijing Warehouse 1 - Zone A', '2025-01-01', '2027-01-01'),
+(1, 'MY-250615-B', 8000, 'Beijing Warehouse 2 - Zone B', '2025-06-15', '2027-06-14'),
+(1, 'MY-251120-C', 12000, 'Tianjin Warehouse 1 - Zone A', '2025-11-20', '2027-11-19'),
+
+-- 2. Ibuprofen
+(2, 'MY-250101-A', 2000, 'Tianjin Warehouse 2 - Cold Storage', '2025-01-01', '2027-01-01'),
+(2, 'MY-250615-B', 15000, 'Beijing Warehouse 1 - Zone C', '2025-06-15', '2027-06-14'),
+(2, 'MY-251120-C', 30000, 'Tianjin Warehouse 1 - Zone A', '2025-11-20', '2027-11-19'),
+
+-- 3. Metformin
+(3, 'MY-250101-A', 3000, 'Beijing Warehouse 2 - Zone B', '2025-01-01', '2027-01-01'),
+(3, 'MY-250615-B', 4500, 'Tianjin Warehouse 2 - Zone B', '2025-06-15', '2027-06-14'),
+(3, 'MY-251120-C', 6000, 'Beijing Warehouse 1 - Zone A', '2025-11-20', '2027-11-19'),
+
+-- 4. Atorvastatin
+(4, 'MY-250101-A', 1000, 'Tianjin Warehouse 1 - High-Value Zone', '2025-01-01', '2027-01-01'),
+(4, 'MY-250615-B', 2500, 'Beijing Warehouse 2 - High-Value Zone', '2025-06-15', '2027-06-14'),
+(4, 'MY-251120-C', 4000, 'Tianjin Warehouse 2 - High-Value Zone', '2025-11-20', '2027-11-19'),
+
+-- 5. Oseltamivir
+(5, 'MY-250101-A', 500, 'Beijing Warehouse 1 - Emergency Drug Zone', '2025-01-01', '2027-01-01'),
+(5, 'MY-250615-B', 5000, 'Tianjin Warehouse 1 - Emergency Drug Zone', '2025-06-15', '2027-06-14'),
+(5, 'MY-251120-C', 20000, 'Beijing Warehouse 2 - Emergency Drug Zone', '2025-11-20', '2027-11-19'),
+
+-- 6. Ceftriaxone
+(6, 'MY-250101-A', 2000, 'Tianjin Warehouse 2 - Cool Storage', '2025-01-01', '2027-01-01'),
+(6, 'MY-250615-B', 3500, 'Beijing Warehouse 2 - Cool Storage', '2025-06-15', '2027-06-14'),
+(6, 'MY-251120-C', 5000, 'Tianjin Warehouse 1 - Cool Storage', '2025-11-20', '2027-11-19'),
+
+-- 7. Montmorillonite Powder
+(7, 'MY-250101-A', 4000, 'Beijing Warehouse 1 - General Drug Zone', '2025-01-01', '2027-01-01'),
+(7, 'MY-250615-B', 8000, 'Tianjin Warehouse 2 - General Drug Zone', '2025-06-15', '2027-06-14'),
+(7, 'MY-251120-C', 12000, 'Beijing Warehouse 2 - General Drug Zone', '2025-11-20', '2027-11-19'),
+
+-- 8. Nifedipine
+(8, 'MY-250101-A', 1500, 'Tianjin Warehouse 1 - Chronic Disease Zone', '2025-01-01', '2027-01-01'),
+(8, 'MY-250615-B', 3000, 'Beijing Warehouse 1 - Chronic Disease Zone', '2025-06-15', '2027-06-14'),
+(8, 'MY-251120-C', 5000, 'Tianjin Warehouse 2 - Chronic Disease Zone', '2025-11-20', '2027-11-19'),
+
+-- 9. Aspirin
+(9, 'MY-250101-A', 2000, 'Beijing Warehouse 2 - Ambient Zone', '2025-01-01', '2027-01-01'),
+(9, 'MY-250615-B', 4500, 'Tianjin Warehouse 1 - Ambient Zone', '2025-06-15', '2027-06-14'),
+(9, 'MY-251120-C', 7000, 'Beijing Warehouse 1 - Ambient Zone', '2025-11-20', '2027-11-19'),
+
+-- 10. Lianhua Qingwen
+(10, 'MY-250101-A', 10000, 'Tianjin Warehouse 2 - Epidemic Prevention Zone', '2025-01-01', '2027-01-01'),
+(10, 'MY-250615-B', 50000, 'Beijing Warehouse 2 - Epidemic Prevention Zone', '2025-06-15', '2027-06-14'),
+(10, 'MY-251120-C', 100000, 'Tianjin Warehouse 1 - Epidemic Prevention Zone', '2025-11-20', '2027-11-19');
+
+-- 3. (Optional) Seed sales records for these 10 drugs — generated in the next step
+
+INSERT INTO sales_records (drug_id, sale_date, quantity_sold, unit_price, total_amount, customer_name, region, sales_rep)
+VALUES
+-- 1. Amoxicillin
+(1, '2025-02-15', 200, 25.00, 5000.00, 'Beijing Chaoyang Hospital', 'North China', 'Beijing Chaoyang Sales Dept.'),
+(1, '2025-08-10', 500, 24.50, 12250.00, 'Tianjin Pharmacy', 'North China', 'Tianjin Nankai Sales Branch'),
+
+-- 2. Ibuprofen
+(2, '2025-01-20', 1000, 15.00, 15000.00, 'Neptunus Pharmacy Chain', 'East China', 'Hangzhou Binjiang Sales Dept.'),
+(2, '2025-12-05', 5000, 15.00, 75000.00, 'Shanghai Huashan Hospital', 'East China', 'Shanghai Jing''an Sales HQ'),
+
+-- 3. Metformin
+(3, '2025-03-10', 300, 35.00, 10500.00, 'Guangzhou Sun Yat-sen Hospital', 'South China', 'Guangzhou Yuexiu Sales Dept.'),
+(3, '2025-09-22', 400, 35.00, 14000.00, 'Shenzhen People''s Hospital', 'South China', 'Shenzhen Luohu Sales Branch'),
+
+-- 4. Atorvastatin
+(4, '2025-04-05', 100, 45.00, 4500.00, 'Chengdu West China Hospital', 'Southwest China', 'Chengdu Wuhou Sales Dept.'),
+(4, '2025-10-18', 150, 45.00, 6750.00, 'Chongqing Pharmacy', 'Southwest China', 'Chongqing Yuzhong Sales Dept.'),
+
+-- 5. Oseltamivir
+(5, '2025-01-15', 2000, 100.00, 200000.00, 'Peking Union Medical College Hospital', 'North China', 'Beijing Dongdan Sales Dept.'),
+(5, '2025-11-01', 5000, 100.00, 500000.00, 'Heilongjiang Provincial Hospital', 'Northeast China', 'Harbin Xiangfang Sales Dept.'),
+
+-- 6. Ceftriaxone
+(6, '2025-05-20', 500, 12.00, 6000.00, 'Wuhan Tongji Hospital', 'Central China', 'Wuhan Hankou Sales Dept.'),
+(6, '2025-07-15', 600, 12.00, 7200.00, 'Changsha Xiangya Hospital', 'Central China', 'Changsha Kaifu Sales Dept.'),
+
+-- 7. Montmorillonite Powder
+(7, '2025-06-01', 1000, 18.00, 18000.00, 'Hangzhou First Hospital', 'East China', 'Hangzhou Shangcheng Sales Dept.'),
+(7, '2025-08-25', 2000, 18.00, 36000.00, 'Nanjing Drum Tower Hospital', 'East China', 'Nanjing Gulou Sales Dept.'),
+
+-- 8. Nifedipine
+(8, '2025-02-28', 200, 30.00, 6000.00, 'Xi''an Xijing Hospital', 'Northwest China', 'Xi''an Xincheng Sales Dept.'),
+(8, '2025-11-11', 500, 30.00, 15000.00, 'First Hospital of Lanzhou University', 'Northwest China', 'Lanzhou Chengguan Sales Dept.'),
+
+-- 9. Aspirin
+(9, '2025-03-15', 1000, 10.00, 10000.00, 'Jinan Central Hospital', 'East China', 'Jinan Lixia Sales Dept.'),
+(9, '2025-09-09', 1200, 10.00, 12000.00, 'Qingdao Municipal Hospital', 'East China', 'Qingdao Shibei Sales Dept.'),
+
+-- 10. Lianhua Qingwen
+(10, '2025-01-10', 10000, 20.00, 200000.00, 'Shijiazhuang Yiling Pharmaceutical', 'North China', 'Shijiazhuang Hi-Tech Sales Dept.'),
+(10, '2025-12-20', 50000, 20.00, 1000000.00, 'National Pharmacy Chain Central Warehouse', 'Nationwide', 'Corporate Key Accounts Dept.');
+```
+
+**Step 2: prepare the database configuration**
+
+File: `.env`
+
+```ini
+# Database configuration
+MYSQL_USER=root
+MYSQL_PASSWORD=your-mysql-password
+MYSQL_DATABASE=deepagents_database
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+```
+
+**Step 3: define and implement `mysql_tools`**
 
 ```python
 import os
-import uuid
-import shutil
+from dotenv import load_dotenv
+from api.monitor import monitor
+from mysql.connector import connect,Error
+from typing import Annotated,List
+from langchain_core.tools import tool
+
+load_dotenv()
+
+# Load the configuration for convenient reuse later
+def get_db_config():
+    """Get database configuration from environment variables."""
+    config = {
+        "host": os.getenv("MYSQL_HOST", "localhost"),
+        "port": int(os.getenv("MYSQL_PORT", "3306")),
+        "user": os.getenv("MYSQL_USER"),
+        "password": os.getenv("MYSQL_PASSWORD"),
+        "database": os.getenv("MYSQL_DATABASE"),
+        "charset": os.getenv("MYSQL_CHARSET", "utf8mb4"),
+        "collation": os.getenv("MYSQL_COLLATION", "utf8mb4_unicode_ci"),
+        "autocommit": True,
+        "sql_mode": os.getenv("MYSQL_SQL_MODE", "TRADITIONAL")
+    }
+    # Remove None values (essential step)
+    config = {k: v for k, v in config.items() if v is not None}
+
+    # Extra: validate that the core configuration exists (optional but recommended)
+    required_keys = ["user", "password", "database"]
+    missing_keys = [k for k in required_keys if k not in config]
+    if missing_keys:
+        raise ValueError(f"Missing core database configuration: {', '.join(missing_keys)}")
+
+    return config
+
+
+# Define the tool that inspects the database tables
+"""
+[Core mysql.connector API notes (for connect/cursor)]
+1. The connect function:
+   - Purpose: establishes a connection to the MySQL database and returns a Connection object;
+   - Usage: connect(**config), where config is a dict containing host/user/password and so on;
+   - Context manager: using a with statement is recommended (with connect(**config) as conn) —
+     it closes the connection automatically and avoids resource leaks;
+   - Key attributes/methods:
+     - conn.cursor(): create a cursor object (the core object for executing SQL);
+     - conn.commit(): commit the transaction (not needed manually when autocommit=True);
+     - conn.close(): close the connection (done automatically by the with statement).
+2. The cursor object:
+   - Purpose: the core object for executing SQL statements and fetching results;
+   - Creation: conn.cursor();
+   - Context manager: with conn.cursor() as cursor — closes the cursor automatically;
+   - Key methods:
+     - cursor.execute(sql): execute a single SQL statement (SHOW TABLES/SELECT/INSERT, etc.);
+     - cursor.executemany(sql, params): execute a SQL statement in batch (e.g. bulk insert);
+     - cursor.close(): close the cursor (done automatically by the with statement).
+3. [Important] Parsing results after the cursor executes DQL/DML:
+   ▶ DQL (data query language — SELECT/SHOW): query operations that return a "result set"
+     - Key methods:
+       1. cursor.fetchall(): fetch all results (returns a list whose elements are tuples,
+          e.g. [(1, 'Zhang San'), (2, 'Li Si')]);
+       2. cursor.fetchone(): fetch one result (returns a tuple, e.g. (1, 'Zhang San'); call it
+          repeatedly to iterate through all results);
+       3. cursor.fetchmany(n): fetch the first n results (returns a list);
+       4. cursor.column_names: get the column names of the result set (a list, e.g. ['id', 'name']);
+     - Parsing tip: convert "column names + tuple results" into dicts for readability,
+       e.g. {'id': 1, 'name': 'Zhang San'}.
+   ▶ DML (data manipulation language — INSERT/UPDATE/DELETE): modification operations, no "result set"
+     - Key attributes:
+       1. cursor.rowcount: the number of affected rows (an integer — INSERT of 1 row returns 1,
+          UPDATE of 3 rows returns 3);
+       2. cursor.lastrowid: after an INSERT, returns the auto-increment ID of the new record
+          (only meaningful for tables with an auto-increment primary key);
+     - Parsing tip: use rowcount to judge whether the operation took effect, and lastrowid to get
+       the primary key of the newly inserted data.
+4. Error handling:
+   - Error: mysql.connector's dedicated exception class, catching every database operation exception
+     (connection failure, SQL syntax error, etc.);
+   - Recommended approach: catch it with try-except Error as e and return a friendly message.
+"""
+@tool
+def list_sql_tables() -> Annotated[str, "A comma-separated list of the available table names in the database"]:
+    """
+    List every available table in the configured MySQL database.
+    Core purpose:
+        Called when the AI agent needs to see which tables exist in the database, providing the
+        foundation for the SQL queries that follow.
+    Returns:
+        str: on success, "Available tables: table1, table2, ...";
+             an error message if configuration is missing;
+             the specific error message if execution fails.
+    Error handling:
+        Catches every Error raised while connecting to the database or executing SQL, and returns a
+        readable error message so the agent does not crash.
+    """
+    # Instrumentation: record the tool call (useful for analyzing how often tools are used)
+    monitor.report_tool("Database table listing tool")
+    # Get the database configuration
+    config = get_db_config()
+    try:
+        # Pre-check: make sure the required configuration (user, password, database name) is present
+        if not all([config.get("user"), config.get("password"), config.get("database")]):
+            return "Error: database configuration is missing (MYSQL_USER, MYSQL_PASSWORD, or MYSQL_DATABASE is not set)."
+        # Establish the database connection (the with statement manages the connection lifecycle — no manual close needed)
+        # ** is equivalent to connect(host="localhost", port=3306, user="root", password="123456", database="test_db")
+        with connect(**config) as conn:
+            # Create the cursor object (the core object for executing SQL and fetching results; the with statement closes it)
+            with conn.cursor() as cursor:
+                # Execute a DQL statement: query all table names in the database (SHOW TABLES counts as DQL)
+                cursor.execute("SHOW TABLES")
+                # ========== Parsing the DQL result ==========
+                # Fetch all query results (format: a list of tuples, e.g. [('user',), ('order',)])
+                tables = cursor.fetchall()
+                # Handle the case where the database has no tables
+                if not tables:
+                    return "No tables were found in the database."
+                # Extract the table names (take the first element of each tuple, giving a readable list of strings)
+                table_names = [table[0] for table in tables]
+                # Return the formatted list of table names
+                return f"Available tables: {', '.join(table_names)}"
+    # Catch every database-related exception (connection failure, SQL execution error, etc.)
+    except Error as e:
+        return f"Failed to list the tables: {str(e)}"
+
+
+@tool
+def get_table_data(
+        table_name: Annotated[str, "The name of the table whose data should be read"]
+) -> Annotated[str, "The first 100 rows of the table (CSV format)"]:
+    """
+    Read the first 100 rows of the specified MySQL table and return the result in CSV format.
+    """
+    # Instrumentation: record the tool call and the target table name
+    """
+    CSV data structure
+    1. Column separator: a comma (,) separates each column (a full-width comma will not do)
+    2. Row separator: a newline (\n) separates each row of data
+    3. Header (optional): the first line holds the column names (id,name,age) — optional but recommended
+    4. Data rows: the actual data starts on the second line; each row has the same number of fields as the header
+    5. Field types: every field is a string (numbers are stored as strings too)
+    """
+    monitor.report_tool("Database content browsing tool", {"Table being read": table_name})
+    # Get the database connection configuration
+    config = get_db_config()
+
+    try:
+        # Pre-check: make sure the database user, password, and database name are all configured
+        if not all([config.get("user"), config.get("password"), config.get("database")]):
+            return "Error: database configuration is missing (check the user, password, and database name)."
+
+        # Establish the database connection (with manages the lifecycle automatically — no manual close needed)
+        with connect(**config) as conn:
+            # Create the cursor (the core object for executing SQL and fetching results; with closes it automatically)
+            with conn.cursor() as cursor:
+                # This line performs basic safety sanitization on the supplied table name. It removes the
+                # characters commonly used in SQL injection (backticks and semicolons), then splits on
+                # whitespace and keeps only the first part — the effective core of the table name. For a
+                # malicious input like "users`; DROP TABLE orders;" the result becomes "users", avoiding the
+                # injection risk (basic protection only — combine it with a whitelist / parameterized queries
+                # for real safety).
+                # Basic safety sanitization: strip dangerous characters from the table name to reduce SQL-injection risk (basic protection only)
+                safe_table_name = table_name.replace("`", "").replace(";", "").split()[0]
+
+                # Run the query: read the first 100 rows of the specified table
+                cursor.execute(f"SELECT * FROM {safe_table_name} LIMIT 100")
+
+                # Validate the result: an empty cursor.description means the table is invalid / has no data
+                # cursor.description is the "result-set metadata" after the cursor executes SQL. Return type: tuple | None
+                # - Data present / table valid: returns a tuple of column information (one element per column)
+                # - No data / invalid table: returns None
+                if cursor.description is None:
+                    return f"Table {table_name} is empty or the table name is invalid."
+
+                # Extract the column names: get the table's field names from the cursor description
+                # Example cursor.description (for a `user` table):
+                # (name, type_code, display_size, internal_size, precision, scale, null_ok)
+                # (
+                #     ('id', 3, None, 11, 11, 0, False),   # first column: metadata for id (field name, type, length, ...)
+                #     ('name', 253, None, 20, 20, 0, True),# second column: metadata for name
+                #     ('age', 3, None, 11, 11, 0, True)    # third column: metadata for age
+                # )
+                # Code logic: iterate over each tuple in cursor.description and take the first element (the field name)
+                # desc[0] is the "field name" of each column tuple
+                # Data types:
+                #   cursor.description → tuple[tuples, ...]
+                #   desc → tuple
+                #   desc[0] → str
+                #   columns → list[str]
+                columns = [desc[0] for desc in cursor.description]
+                # Example result for columns: ['id', 'name', 'age'] (a list whose elements are column-name strings)
+
+                # Extract the data rows: fetch every row of the query result (a list of tuples)
+                # cursor.fetchall() retrieves all data rows produced by the SQL execution
+                # Data types:
+                #   rows → list[tuple, ...] (a list whose elements are tuples holding one row's field values)
+                rows = cursor.fetchall()
+                # Example result for rows: [(1, 'Zhang San', 25), (2, 'Li Si', 30)]
+
+                # Convert the data rows: turn each row tuple into a CSV-format string
+                # Core logic:
+                #   1. Iterate over each tuple (row) in rows
+                #   2. Use map(str, row) to convert every element of the tuple to a string (avoiding
+                #      errors when concatenating a mix of numbers and strings)
+                #   3. Use ",".join(...) to join the stringified field values with commas, forming a CSV row
+                # Data types:
+                #   row → tuple (e.g. (1, 'Zhang San', 25))
+                #   map(str, row) → iterator (e.g. ['1', 'Zhang San', '25'])
+                #   ",".join(...) → str (e.g. "1,Zhang San,25")
+                #   result → list[str]
+                """
+                # Example 1: convert every number in a list to a float
+                nums = [1, 2, 3]
+                result = map(float, nums)
+                print(list(result))  # output: [1.0, 2.0, 3.0]
+
+                # Convert every element of row to a string
+                processed = map(str, row)
+                # Convert to a list to see the result (an iterator must be listed to be visible)
+                print(list(processed))
+                # output: ['1', 'Zhang San', '25']
+                """
+                result = [",".join(map(str, row)) for row in rows]
+                # Example result: ['1,Zhang San,25', '2,Li Si,30']
+
+                # Build the CSV header: the column names joined by commas
+                # Core logic: join the columns list (['id', 'name', 'age']) into a comma-separated string
+                # Data types:
+                #   columns → list[str]
+                #   header → str
+                header = ",".join(columns)
+                # Example result for header: "id,name,age"
+
+                # Return the complete CSV data (header + data rows, one row per line)
+                # Core logic:
+                #   1. The header and the data rows are separated by a newline \n
+                #   2. The data rows are also separated by \n (result is a list, and "\n".join(result)
+                #      joins its elements with \n)
+                # Data types:
+                #   f"{header}\n" + "\n".join(result) → str (the complete CSV-format string)
+                return f"{header}\n" + "\n".join(result)
+                # Example of the final return value (a string):
+                # """
+                # id,name,age
+                # 1,Zhang San,25
+                # 2,Li Si,30
+                # """
+
+    # Catch database operation exceptions and return a friendly message
+    except Error as e:
+        # logger.error(f"Failed to read table {table_name}: {str(e)}")
+        return f"Failed to read table {table_name}: {str(e)}"
+
+
+@tool
+def execute_sql_query(
+        query: Annotated[str, "The SQL query statement to execute"]
+) -> Annotated[str, "The query result or a success message"]:
+    """Execute a custom SQL query against the MySQL database. Use it for complex queries, joins, or specific data retrieval."""
+    monitor.report_tool("Database query tool")
+    # Get the database connection configuration (user, password, database name, etc.)
+    config = get_db_config()
+    try:
+        # Pre-check: make sure the core database configuration (user, password, database name) is complete
+        if not all([config.get("user"), config.get("password"), config.get("database")]):
+            return "Error: database configuration is missing (check the user, password, and database name)."
+        # Establish the database connection (the with statement manages the lifecycle — no manual close needed)
+        with connect(**config) as conn:
+            # Create the cursor object (the core object for executing SQL and getting results / affected row counts)
+            with conn.cursor() as cursor:
+                # Execute the custom SQL statement that was passed in
+                cursor.execute(query)
+                # ========== Handle DQL vs. DML results differently ==========
+                # A non-empty cursor.description → this is a query statement (DQL: SELECT/SHOW, etc.)
+                if cursor.description is not None:
+                    # Extract the result's column names (used to build the returned header)
+                    columns = [desc[0] for desc in cursor.description]
+                    # Extract every row of the query result (a list of tuples)
+                    rows = cursor.fetchall()
+
+                    # Handle an empty result set (columns exist but there is no data)
+                    if not rows:
+                        return f"The query executed successfully but returned no data. Columns involved: {', '.join(columns)}"
+
+                    # Build the CSV-format return value (header + data rows)
+                    result_lines = []
+                    result_lines.append(",".join(columns))  # append the header
+                    for row in rows:
+                        # Stringify each row before joining with commas, avoiding type-concatenation errors
+                        result_lines.append(",".join(map(str, row)))
+
+                    # Return the complete CSV-format query result
+                    return "\n".join(result_lines)
+
+                # An empty cursor.description → this is a modification statement (DML: INSERT/UPDATE/DELETE, etc.)
+                else:
+                    # Return the outcome of the modification (the number of affected rows)
+                    return f"SQL executed successfully. Rows affected: {cursor.rowcount}"
+
+    # Catch every database operation exception and return an error message
+    except Error as e:
+        # logger.error(f"Failed to execute query: {str(e)}")  # enable this if a logging module is available
+        return f"Failed to execute the SQL: {str(e)}"
+```
+
+##### 4.3.2.3 Defining `database_query_agent`
+
+File: `agent/sub_agents/database_query_agent.py`
+
+```python
+from agent.prompts import sub_agents_config
+from tools.mysql_tools import list_sql_tables,get_table_data,execute_sql_query
+
+database_query_agent = {
+    "name":sub_agents_config["db"].get("name",""),
+    "description":sub_agents_config["db"].get("description",""),
+    "system_prompt":sub_agents_config["db"].get("system_prompt",""),
+    "tools": [list_sql_tables,get_table_data,execute_sql_query]
+}
+```
+
+#### 4.3.3 RAGFlow Knowledge Base Agent (`knowledge_base_agent`)
+
+##### 4.3.3.1 Filling in the Details
+
+* **Core responsibility**: retrieve the enterprise's private unstructured documents (regulations, technical documentation), answering in-depth questions of the form "what do our internal rules say?"
+
+* **Tech stack**: `RAGFlow API` + `Vector Database`.
+
+* **Agent description:**
+
+  ```
+  description: "The agent responsible for interacting with the RAGFlow knowledge base. It can query the list of available assistants and put questions to a specific assistant to obtain knowledge-base content."
+  ```
+
+* **Tool descriptions**:
+
+  * `get_assistant_list`: retrieves information about every chat assistant in RAGFlow and returns it as a combined string. Use this tool when you need to know which assistants are available.
+  * `create_ask_delete`: creates a new session, asks one question, then deletes the session and returns the answer. Use this tool when you need to put a question to a specific RAGFlow assistant.
+
+* **Prompt strategy**:
+
+  * **Dynamic discovery**: the prompt requires calling `get_assistant_list` first. Because the knowledge base can change (a new "2025 attendance policy" might be added), the agent needs to "look" at the current list before it can target precisely.
+
+  * **Saturation retrieval**: requiring "at least three different questions" overcomes the fragmentary nature of RAG retrieval — asking from multiple angles raises recall and ensures no key clause is missed.
+
+  * **Preserve the original semantics**: the prompt emphasizes "no summarizing" and requires "passing the raw information through." This avoids the distortion of a "telephone game," leaving the summarizing to the Main Agent.
+
+  * **Reference prompt:**
+
+    ```
+    You are a professional RAGFlow knowledge base assistant. You can query the list of currently
+    available RAG assistants and put questions to a specific assistant to obtain information from
+    the knowledge base.
+    The tools at your disposal are get_assistant_list (retrieve the assistant list) and
+    create_ask_delete (put a question to an assistant). Normally you retrieve the list first, find
+    a suitable assistant name, and only then ask.
+    You must frame your questions according to the assistant descriptions in the list. Do not force
+    a question that the assistant's description cannot cover — you will not get the answer you need.
+    When querying, ask from a higher-level perspective first; once you get an answer close to the
+    requirement, go deeper.
+    Ask at least three different questions.
+    Preserve all retrieved information — do not summarize. Pass the raw retrieved information on to
+    the next stage.
+    ```
+
+* **Execution strategy**: discover the knowledge bases → pick a target → ask from multiple angles → collect the chunks.
+
+* **Flowchart**:
+
+Responsible for retrieving the enterprise's private unstructured documents (regulations, technical documentation), answering in-depth questions of the form "what do our internal rules say?"
+
+```mermaid
+graph LR
+    classDef default fill:#e3f2fd,stroke:#1565c0,stroke-width:1px,color:#000;
+
+    Start[Receive task from<br/>Main Agent] --> Discovery[1. Call<br/>get_assistant_list]
+    Discovery --> List[Get the list of<br/>available knowledge bases]
+    List --> Select{2. Match a<br/>knowledge base assistant}
+    Select --> Plan["Devise the questioning strategy<br/>(at least 3 questions)"]
+    Plan --> LoopStart((Start the<br/>question loop))
+    LoopStart --> Ask[Call<br/>create_ask_delete]
+    Ask --> RAG((RAGFlow Server))
+    RAG --> Chunk[Get the<br/>knowledge chunk]
+    Chunk --> Check{All questions<br/>asked?}
+    Check -- No --> LoopStart
+    Check -- Yes --> RawData[Package the<br/>raw chunk information]
+    RawData --> End[Return to<br/>Main Agent]
+```
+
+```yaml
+ragflow:
+    name: "RAGFlow Knowledge Base Agent"
+    description: "The agent responsible for interacting with the RAGFlow knowledge base. It can query the list of available assistants and put questions to a specific assistant to obtain knowledge-base content."
+    system_prompt: |
+      You are a professional RAGFlow knowledge base assistant. You can query the list of currently
+      available RAG assistants and put questions to a specific assistant to obtain information from
+      the knowledge base.
+      The tools at your disposal are get_assistant_list (retrieve the assistant list) and
+      create_ask_delete (put a question to an assistant). Normally you retrieve the list first, find
+      a suitable assistant name, and only then ask.
+      You must frame your questions according to the assistant descriptions in the list. Do not force
+      a question that the assistant's description cannot cover — you will not get the answer you need.
+      When querying, ask from a higher-level perspective first; once you get an answer close to the
+      requirement, go deeper.
+      Ask at least three different questions.
+      Preserve all retrieved information — do not summarize. Pass the raw retrieved information on to
+      the next stage.
+```
+
+##### 4.3.3.2 RAGFlow Basics
+
+Covered by the external lesson (in the course materials).
+
+##### 4.3.3.3 Customizing the RAGFlow Tools
+
+**Step 1: define the RAGFlow API key**
+
+File: `.env`
+
+```ini
+RAGFLOW_API_URL=http://121.4.54.247
+RAGFLOW_API_KEY=your-ragflow-api-key
+```
+
+**Step 2: define and implement `ragflow_tools`**
+
+File: `tools/ragflow_tools.py`
+```python
+# Import core system modules
+import os
+import logging
+# Import the custom monitoring module (used to report tool-call logs)
+from api.monitor import monitor
+# Import the HTTP request library (used for health checks)
+import requests
+# Import the core RAGFlow SDK class (used to operate on RAGFlow assistants / knowledge bases)
+from ragflow_sdk import RAGFlow
+# Import the environment-variable loader (used to read configuration from the .env file)
+from dotenv import load_dotenv
+# Import the LangChain tool decorator (used to register a function as an agent-callable tool)
+from langchain_core.tools import tool
+from typing_extensions import Annotated
+
+# Initialize the logger (used to record the tool's runtime logs)
+logger = logging.getLogger(__name__)
+
+# Import type annotations (used to constrain function return/parameter types)
+from typing import Tuple, Optional
+
+
+def _load_ragflow_env() -> Tuple[Optional[str], Optional[str]]:
+    """
+    Load RAGFlow's environment variables (API key and service address).
+    Prefers the .env file in the current script's directory; if it does not exist, falls back to
+    the system environment variables.
+
+    Returns:
+        Tuple[Optional[str], Optional[str]]:
+            - first value: the RAGFlow API key (RAGFLOW_API_KEY)
+            - second value: the RAGFlow service address (RAGFLOW_API_URL)
+            - returns None if not configured
+    """
+    load_dotenv()
+
+    # Read the configuration from the environment variables
+    api_key = os.getenv("RAGFLOW_API_KEY")
+    base_url = os.getenv("RAGFLOW_API_URL")
+    return api_key, base_url
+
+
+@tool
+def get_assistant_list(
+    dummy_arg: Annotated[str, "No input parameter is required — just call it"] = "",
+) -> str:
+    """
+    [Tool function] Retrieve information about every chat assistant in RAGFlow.
+    When to use: called when the agent needs to confirm which assistants are currently available and
+    what knowledge-base scope each one is bound to.
+    Returns: a structured string (assistant name + description + associated knowledge bases).
+    """
+    # Instrumentation: record the tool call
+    monitor.report_tool("RAGFlow assistant list query")
+    api_key, base_url = _load_ragflow_env()
+
+    # Configuration check
+    if not api_key or not base_url:
+        return "Error: the RAGFlow environment variables are not configured (RAGFLOW_API_URL and RAGFLOW_API_KEY must be set)"
+
+    result = ""
+    try:
+        rag = RAGFlow(api_key=api_key, base_url=base_url)
+        # Retrieve every chat assistant (list_chats() with no arguments returns them all)
+        for assistant in rag.list_chats():
+            # Parse the names of the knowledge bases bound to the assistant (assistant.datasets is the list)
+            kb_names = []
+            if assistant.datasets and isinstance(assistant.datasets, list):
+                for dataset in assistant.datasets:
+                    if isinstance(dataset, dict) and "name" in dataset:
+                        kb_names.append(dataset["name"])
+
+            # Format the knowledge base names (show "none" if there are none)
+            kb_names_str = ", ".join(kb_names) if kb_names else "none"
+            # Assemble the assistant's information into a structured line
+            result += f"Assistant name: {assistant.name}; Description: {assistant.description}; Associated knowledge bases: {kb_names_str}\n"
+
+        # Strip the trailing newline
+        return result.rstrip("\n") if result else "No chat assistants were found"
+    except Exception as e:
+        return f"Failed to retrieve the assistant list: {str(e)}"
+
+
+@tool
+def create_ask_delete(
+    assistant_name: Annotated[str, "Required: the name of the target chat assistant"],
+    question: Annotated[str, "Required: the question to put to the assistant"],
+) -> str:
+    """
+    [Tool function] Put a single question to the specified RAGFlow assistant (a temporary session,
+    deleted as soon as it is used).
+    When to use: called when the agent needs a one-off query against an assistant and does not need
+    to keep the conversation history.
+    Characteristics: create a temporary session → receive the answer as a stream → delete the session
+    automatically, leaving no data behind.
+    """
+    # Instrumentation: record the question details
+    monitor.report_tool(
+        "RAGFlow assistant question tool",
+        {"Assistant name": assistant_name, "Query": question}
+    )
+    # Step 1: get the parameters
+    api_key, base_url = _load_ragflow_env()
+
+    # Step 2: the core question logic
+    try:
+        rag = RAGFlow(api_key=api_key, base_url=base_url)
+
+        # Filter for the target assistant by name (take the first match)
+        assistants = rag.list_chats(name=assistant_name)
+        if not assistants:
+            return f"Error: no chat assistant named '{assistant_name}' was found"
+        assistant = assistants[0]
+
+        session = None  # initialize the session object (used for deletion later)
+        try:
+            # Create a temporary session (a custom name makes it easy to recognize)
+            session = assistant.create_session(name="temp_session_for_single_ask")
+
+            # Ask with streaming (stream=True receives the answer piece by piece, avoiding a wait for the full result)
+            response_generator = session.ask(question, stream=True)
+
+            # Collect the streamed response (matching the SDK's format: part.content is one segment of the answer)
+            full_answer = ""
+            for part in response_generator:
+                if hasattr(part, "content") and part.content:
+                    full_answer = part.content  # overwrite with the full answer (the last stream segment holds the complete content)
+
+            # Instrumentation: record the answer that was returned
+            monitor.report_tool(
+                "RAGFlow assistant answer record",
+                {"Assistant name": assistant_name, "Question": question, "Answer": full_answer}
+            )
+
+            # Delete the temporary session automatically (important: prevents sessions from piling up)
+            if session and hasattr(session, "id"):
+                assistant.delete_sessions(ids=[session.id])
+
+            return full_answer if full_answer else "No answer was obtained from the assistant"
+
+        except Exception as e:
+            return f"The question failed: {str(e)}"
+
+    except Exception as e:
+        return f"The RAGFlow operation failed: {str(e)}"
+```
+
+##### 4.3.3.4 Defining `knowledge_base_agent`
+
+File: `agent/sub_agents/knowledge_base_agent.py`
+
+```python
+from agent.prompts import sub_agents_config
+from tools.ragflow_tools import get_assistant_list,create_ask_delete
+
+knowledge_base_agent = {
+    "name":sub_agents_config["ragflow"].get("name",""),
+    "description":sub_agents_config["ragflow"].get("description",""),
+    "system_prompt":sub_agents_config["ragflow"].get("system_prompt",""),
+    "tools": [get_assistant_list,create_ask_delete]
+}
+```
+
+### 4.4 Implementing the Main Agent
+
+#### 4.4.1 Defining the Tools
+
+Main Agent tools:
+
+1. **generate_markdown** — generates a standard Markdown document
+2. **convert_md_to_pdf** — converts Markdown into a PDF file
+3. **read_file_content** — reads an uploaded file and parses its content
+
+##### 4.4.1.1 The Uploaded-File Reading Tool
+
+File: `tools/upload_file_read_tool.py`
+
+```python
+import logging
 from pathlib import Path
-from typing import Optional
-from dotenv import load_dotenv, find_dotenv
-from langchain_core.messages import AIMessage
+from typing import Annotated, Optional
+
+from langchain_core.tools import tool
+from api.monitor import monitor
+from api.context import get_session_context
+from utils.path_utils import resolve_path
+
+# Try importing the optional dependencies so they load only when needed
+try:
+    import docx
+except ImportError:
+    docx = None
+
+try:
+    import pypdf
+except ImportError:
+    pypdf = None
+
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
+
+# def read_file_content(filename: str, instruction: str = "extract all content") -> str:
+#     """
+#     Read the content of the specified file. Supports Markdown (.md), Word (.docx), PDF (.pdf),
+#     and Excel (.xlsx/.xls).
+#     For Excel files, statistical information is provided automatically (head and describe).
+
+#     Args:
+#         filename: the name or path of the file to read (supports .md, .docx, .pdf, .xlsx, .xls)
+#         instruction: a specific instruction for what to extract (e.g. 'extract a summary', 'compute statistics')
+
+@tool
+def read_file_content(
+        filename: Annotated[str, "The name or path of the file to read (supports .md, .docx, .pdf, .xlsx, .xls)"],
+        instruction: Annotated[str, "A specific instruction for what to extract (e.g. 'extract a summary', 'compute statistics')"] = "extract all content"
+) -> str:
+    """
+    Read the content of the specified file. Supports Markdown (.md), Word (.docx), PDF (.pdf),
+    and Excel (.xlsx/.xls).
+    For Excel files, statistical information is provided automatically (head and describe).
+    """
+    monitor.report_tool("File content reading tool", {"filename": filename, "instruction": instruction})
+
+    # ====================== 1. Path resolution, rewritten with Path ======================
+    session_dir = get_session_context()
+    file_path = Path(resolve_path(filename, session_dir))  # convert to a Path object
+
+    # Check whether the file exists (replaces os.path.exists)
+    if not file_path.exists():
+        return f"Error: file '{filename}' does not exist (resolved path: {file_path})."
+
+    # Get the extension (replaces os.path.splitext, and lowercases it automatically)
+    ext = file_path.suffix.lower()
+
+    try:
+        if ext in ['.md', '.txt']:
+            # Path reads the text directly (replaces open + os.path)
+            return file_path.read_text(encoding='utf-8')
+
+        elif ext == '.docx':
+            if docx is None:
+                return "Error: the 'python-docx' library is not installed, so Word files cannot be read."
+            doc = docx.Document(str(file_path))  # convert to a string for docx
+            full_text = [para.text for para in doc.paragraphs]
+            return '\n'.join(full_text)
+
+        elif ext == '.pdf':
+            if pypdf is None:
+                return "Error: the 'pypdf' library is not installed, so PDF files cannot be read."
+            reader = pypdf.PdfReader(str(file_path))  # convert to a string for pypdf
+            text = "\n".join([page.extract_text() or "" for page in reader.pages])
+            return text
+
+        elif ext in ['.xlsx', '.xls']:
+            if pd is None:
+                return "Error: the 'pandas' library is not installed, so Excel files cannot be read."
+
+            try:
+                df = pd.read_excel(str(file_path))  # convert to a string for pandas
+            except Exception as e:
+                return f"Failed to read the Excel file: {str(e)}"
+
+            result = [
+                f"File: {filename}",
+                f"Rows: {len(df)}, columns: {len(df.columns)}",
+                f"Column names: {', '.join(df.columns.astype(str))}",
+                "\n[Preview of the first 5 rows]:",
+                df.head().to_string(index=False),
+                "\n[Statistical description]:",
+                df.describe().to_string()
+            ]
+            return "\n".join(result)
+
+        else:
+            # Try reading it as plain text
+            try:
+                return file_path.read_text(encoding='utf-8')
+            except UnicodeDecodeError:
+                return f"Error: unsupported file format '{ext}', and it could not be read as text."
+
+    except Exception as e:
+        return f"Error reading the file: {str(e)}"
+
+# ====================== Test entry point (exactly in the requested format) ======================
+if __name__ == '__main__':
+    # 1. Fix session_dir (just assign it — no mocking)
+    def get_session_context():
+        return "./test_session_123"
+
+    # 2. Define the test file paths
+    md_path = "sub_dir/test_file.md"
+    excel_path = "sub_dir/test_data.xlsx"
+
+    # 3. Test the call (start with the MD file, using the default instruction)
+    result = read_file_content.invoke({
+        "filename": md_path
+    })
+    print("===== Result of reading the MD file =====")
+    print(result)
+
+    # Optional: test the Excel file (just uncomment)
+    # result_excel = read_file_content.invoke({
+    #     "filename": excel_path,
+    #     "instruction": "compute statistics"
+    # })
+    # print("\n===== Result of reading the Excel file =====")
+    # print(result_excel)
+```
+
+##### 4.4.1.2 The Markdown Generation Tool
+
+File: `tools/markdown_tools.py`
+
+Dependencies: `pip install markdown pywin32`
+
+```python
+import logging
+from pathlib import Path
+
+try:
+    from typing import Annotated
+except ImportError:
+    from typing_extensions import Annotated
+from langchain_core.tools import tool
+from api.monitor import monitor
+from api.context import get_session_context
+from utils.path_utils import resolve_path
+
+
+# The Markdown generation tool
+@tool
+def generate_markdown(
+        content: Annotated[str, "The text content to write into the Markdown document"],
+        filename: Annotated[str, "The Markdown document's filename (with or without the .md extension)"],
+        path: Annotated[str, "The absolute path where the file should be saved"] = ""
+):
+    """Generate the corresponding Markdown (.md) file from the supplied text content"""
+    print(f"The path is {path}")
+    monitor.report_tool("Markdown document generation tool", {"Text content written": content})
+    if not filename.endswith('.md'):
+        filename += '.md'
+
+    # Get the session directory from the context
+    session_dir = get_session_context()
+    print(f"⚠️ session_dir obtained inside generate_markdown: {session_dir}")  # look here!
+
+    # --- Path cleanup and redirection logic ---
+    # Combine path and filename
+    if path and path != ".":
+        # Join with Path, then convert to a string for resolve_path
+        full_input_path = str(Path(path) / filename)
+    else:
+        full_input_path = filename
+    full_path_str = resolve_path(full_input_path, session_dir)
+    file_path = Path(full_path_str)
+
+    # Get the parent directory
+    parent_dir = file_path.parent
+
+    # Make sure the directory exists
+    print(f"[MarkdownTool] Debug: parent_dir={parent_dir}, filename={filename}, full_path={file_path}")
+
+    try:
+        if not parent_dir.exists():
+            parent_dir.mkdir(parents=True, exist_ok=True)
+            print(f"[MarkdownTool] Created directory: {parent_dir}")
+
+        # Write the text directly with Path
+        file_path.write_text(content, encoding='utf-8')
+
+        print(f"[MarkdownTool] Successfully wrote to: {file_path}")
+        return f"The Markdown file '{file_path}' was generated and saved successfully."
+    except Exception as e:
+        print(f"[MarkdownTool] Error writing file: {e}")
+        return f"Failed to generate the Markdown file: {str(e)}"
+
+
+# -------------------------- Test code (only this part changes — it pins session_dir to a fixed value) --------------------------
+if __name__ == "__main__":
+    # ========== Key point: override what get_session_context returns (test-only) ==========
+    # No mocking needed — just redefine the function and assign session_dir!
+    def get_session_context():
+        """Test-only: pin session_dir to a fixed initial value"""
+        return "./test_session_123"  # the session_dir initial value you want — change it freely
+
+    # ========== Minimal test logic (pass only path/filename; session_dir is already initialized) ==========
+    test_content = "# Test document\nThis is the test content after pinning session_dir to a fixed value"
+    test_filename = "test_file"  # no .md suffix — tests the auto-completion
+    test_path = "sub_dir"        # relative path
+
+    # Call the generation function
+    print("===== Starting the test (session_dir is set to ./test_session_123) =====")
+    result = generate_markdown.invoke({
+        "content": test_content,
+        "filename": test_filename,
+        "path": test_path
+    })
+
+    # Verify the result
+    print(f"\nCall result: {result}")
+    if "generated and saved successfully" in result:
+        file_path = Path(result.split("'")[1])
+        print(f"✅ Verification: file {file_path} {'exists' if file_path.exists() else 'does not exist'}")
+```
+
+##### 4.4.1.3 The Markdown-to-PDF Conversion Tool
+
+File: `tools/pdf_tools.py`
+
+```python
+import logging
+import sys
+from pathlib import Path
+try:
+    from typing import Annotated, Optional
+except ImportError:
+    from typing_extensions import Annotated, Optional
+
+from langchain_core.tools import tool
+from api.monitor import monitor
+from api.context import get_session_context
+from utils.path_utils import resolve_path
+from utils.word_converter import convert_md_to_pdf_via_word
+
+
+@tool
+def convert_md_to_pdf(
+        md_filename: Annotated[str, "The path of the Markdown document to convert (including the .md suffix)"],
+        pdf_filename: Annotated[Optional[str], "The output PDF file path (optional; defaults to the same name as the source)"] = None
+) -> str:
+    """
+    Convert a Markdown document to PDF (using the Word engine).
+    Key refinement: path handling and resource management are separated out, leaving only the basic
+    call at the Tool layer.
+    """
+    monitor.report_tool("Markdown-to-PDF tool")
+
+    try:
+        # 1. Path preprocessing
+        session_dir = get_session_context()
+        md_path = Path(md_filename).with_suffix('.md')
+        md_abs_path = Path(resolve_path(str(md_path), session_dir))
+
+        # 2. Check the source file
+        if not md_abs_path.exists():
+            return f"Error: file does not exist {md_abs_path}"
+
+        # 3. Determine the output path
+        if pdf_filename:
+            pdf_path = Path(pdf_filename).with_suffix('.pdf')
+            pdf_abs_path = Path(resolve_path(str(pdf_path), session_dir))
+        else:
+            pdf_abs_path = md_abs_path.with_suffix('.pdf')
+
+        # 4. Call the core conversion logic
+        return convert_md_to_pdf_via_word(md_abs_path, pdf_abs_path)
+
+    except Exception as e:
+        logging.error(f"Conversion failed: {e}", exc_info=True)
+        return f"Conversion failed: {str(e)}"
+
+
+if __name__ == '__main__':
+    # Test code
+    # Forcibly override get_session_context in the current module
+    get_session_context = lambda: "./test_session_123"
+
+    # Create the test file
+    Path("./test_session_123/sub_dir").mkdir(parents=True, exist_ok=True)
+    with open("./test_session_123/sub_dir/test_file.md", "w", encoding="utf-8") as f:
+        f.write("# Title\n\nTest content\n\n|A|B|\n|---|---|\n|1|2|")
+
+    print(convert_md_to_pdf.invoke({"md_filename": "sub_dir/test_file.md"}))
+```
+
+#### 4.4.2 Defining the Main Agent
+
+File: `agent/main_agent.py`
+
+```python
+from agent.sub_agents.knowledge_base_agent import knowledge_base_agent
+from agent.sub_agents.database_query_agent import database_query_agent
+from agent.sub_agents.network_search_agent import network_search_agent
+
+# Import the main_agent tools
+from tools.markdown_tools import generate_markdown
+from tools.pdf_tools import convert_md_to_pdf
+from tools.upload_file_read_tool import read_file_content
+
 from deepagents import create_deep_agent
 
 from agent.llm import model
 from agent.prompts import main_agent_config
-from agent.sub_agents.database_query_agent import database_query_agent
-from agent.sub_agents.knowledge_base_agent import knowledge_base_agent
-from agent.sub_agents.network_search_agent import network_search_agent
-from tools.markdown_tools import generate_markdown
-from tools.pdf_tools import convert_md_to_pdf
-from tools.upload_file_read_tool import read_file_content
-from api.context import set_session_context, reset_session_context, set_thread_context
+
 from api.monitor import monitor
+import asyncio
+import uuid
+import shutil
+from pathlib import Path
 
-load_dotenv(find_dotenv())
+from api.context import set_session_context, reset_session_context, set_thread_context
 
-project_root = Path(__file__).resolve().parents[1]
+from langchain_core.messages import AIMessage
 
-# 1. Assemble Subagent List
+from api.logger import AgentLogger, AgentLogCallbackHandler
+
+# 1. Assemble the multi-agent structure
 subagents_list = [
     knowledge_base_agent,
     database_query_agent,
     network_search_agent
 ]
 
-# 2. Build Main Deep Agent
+# Create the main agent
 main_agent = create_deep_agent(
     model=model,
     subagents=subagents_list,
     tools=[generate_markdown, convert_md_to_pdf, read_file_content],
     system_prompt=main_agent_config["system_prompt"]
 )
+```
 
+#### 4.4.3 Helper Functions
+
+Function 1: `_prepare_session_environment(thread_id: str)`
+
+```python
 def _prepare_session_environment(thread_id: str):
     """
-    Initializes isolated workspace directory and stages uploaded documents.
+    Initialize the session's runtime environment (the session folder, the relative path, and the
+    information about uploaded files).
+    Goals:
+    1. Create an isolated physical workspace.
+    2. Handle the files the user uploaded.
+    3. Produce the path context (prompt text) used by the agent and the front end.
+
+    Steps:
+    1. Create the absolute path: `project_root/output/session_{uuid}`.
+    2. Normalize the path: convert to POSIX style (`/`) for LLM and cross-platform compatibility.
+    3. File migration: copy files from `updated/session_{uuid}` into the working directory.
+    4. Build the prompt: generate the context text listing the uploaded files.
+
+    Returns:
+        tuple: (
+            session_dir_str (str): the absolute path of the physical working directory
+                                   (where this session's files are stored).
+            relative_session_dir (str): the path relative to the project root (used in the prompt).
+            uploaded_info (str): the file-list description injected into the prompt.
+        )
     """
+    # 1. [Create] Define and create the session's absolute output path
     session_dir = project_root / "output" / f"session_{thread_id}"
     session_dir.mkdir(parents=True, exist_ok=True)
+
+    # 2. [Normalize] Convert the path to POSIX style (so backslashes do not induce model hallucinations)
     session_dir_str = str(session_dir).replace("\\", "/")
+
+    # 3. [Relativize] Get the relative path (for display in the prompt, e.g. "output/session_123")
     relative_session_dir = str(session_dir.relative_to(project_root)).replace("\\", "/")
 
+    # 4. [Migrate] Check for and handle uploaded files
     upload_dir = project_root / "updated" / f"session_{thread_id}"
     uploaded_info = ""
+
     if upload_dir.exists():
         files = [f.name for f in upload_dir.iterdir() if f.is_file()]
+
         if files:
             for f in files:
+                # Core action: copy the file from the temporary upload area to the formal workspace
                 shutil.copy2(upload_dir / f, session_dir / f)
-            uploaded_info = ("\n    [Uploaded Files Available in Workspace]:\n" +
+
+            # 5. [Build] Generate the file-list prompt
+            uploaded_info = (f"\n    [Uploaded files] Loaded into the working directory:\n" +
                              "\n".join([f"    - {f}" for f in files]) +
-                             "\n    Please inspect these files using read_file_content.")
+                             "\n    Please use the tools to read and consult these files first.")
 
     return session_dir_str, relative_session_dir, uploaded_info
+```
 
+Function 2: `_process_stream_chunk(chunk)`
+
+```python
 def _process_stream_chunk(chunk):
     """
-    Parses stream chunks from LangGraph and pushes real-time events via monitor.
+    Handle the incremental state from LangGraph's streaming output (stream processing).
+    Goals:
+    1. Parse each of the agent's thoughts and actions.
+    2. Recognize the key events (tool call, subagent delegation, final reply).
+    3. Report the status to the front end in real time through the Monitor.
+    Core logic:
+    - Watch `tool_calls` -> log it, and if the call is 'task', report the subagent status.
+    - Watch `content` -> if there is no tool call, treat it as the agent's final reply.
+    Args:
+        chunk (dict): the incremental state dict, e.g. {"node_name": {"messages": [AIMessage(...)]}}
     """
+    # 1. [Record] Log the raw data so it can be traced later
+    # logger.log_main_chunk(chunk)
+
+    # 2. [Iterate] Parse each node's output (usually the 'agent' or 'tools' node)
     for node_name, state in chunk.items():
-        if not state or "messages" not in state:
-            continue
+        if not state or "messages" not in state: continue
+        # 3. [Extract] Get the latest message
         messages = state["messages"]
         if isinstance(messages, list) and messages:
             last_msg = messages[-1]
+            # 4. [Branch] Handle the AI message (AIMessage)
             if isinstance(last_msg, AIMessage):
+                # Case 1: the agent decided to call a tool
                 if last_msg.tool_calls:
                     for tool in last_msg.tool_calls:
+                        # Special case: a 'task' tool means work is being delegated to a subagent
                         if tool['name'] == 'task':
                             monitor.report_assistant(
-                                tool['args'].get('subagent_type', 'Specialist'),
+                                tool['args'].get('subagent_type', 'Agent'),
                                 {"desc": tool['args'].get('description')}
                             )
+                # Case 2: the agent produced its final answer
                 elif last_msg.content:
                     monitor.report_task_result(last_msg.content)
+```
 
-async def run_deep_agent(task_query: str, thread_id: Optional[str] = None):
-    """
-    Main asynchronous runtime execution entry.
-    """
-    if not thread_id:
-        thread_id = str(uuid.uuid4())
-    print(f"--- Launching DeepAgent Task (Thread: {thread_id}) ---")
+#### 4.4.4 The Execution Function
 
+```python
+# ====================== Core execution logic ======================
+async def run_deep_agent(task_query: str, thread_id: str = None):
+    """
+    The DeepAgents core execution entry point (agent execution runtime).
+
+    Goals:
+    1. Receive the user's natural-language task.
+    2. Prepare an isolated runtime environment (workspace).
+    3. Start the LangGraph agent and process every step in real time via streaming.
+    4. Guarantee context isolation and exception safety.
+
+    Steps:
+    1. ID initialization: make sure every task has a unique `thread_id`.
+    2. Environment preparation: create the directory, migrate files, generate the path information.
+    3. Context binding: bind `thread_id` and `session_dir` to the current thread (ContextVar).
+    4. Prompt construction: inject the environment information into the prompt.
+    5. Streaming execution: drive LangGraph and parse/report every chunk in real time.
+    6. Resource cleanup: reset the context when the task ends, whether it succeeded or failed.
+    """
+    # 1. [ID initialization] Make sure there is a unique session ID
+    if not thread_id: thread_id = str(uuid.uuid4())
+    print(f"--- Start Task: {task_query} (Thread: {thread_id}) ---")
+
+    # 2. [Environment preparation] Create the directory and handle uploaded files
     session_dir_str, relative_session_dir, uploaded_info = _prepare_session_environment(thread_id)
 
+    # 3. [Context binding] Initialize the ContextVars (crucial: isolates concurrent requests)
     thread_token = set_thread_context(thread_id)
     session_token = set_session_context(session_dir_str)
+    # Push the folder to the front end so it can later list every file under this session's directory
     monitor.report_session_dir(session_dir_str)
 
-    config = {"configurable": {"thread_id": thread_id}}
+    # 4. [Runtime configuration] The LangChain config (injects the memory key)
+    config = {
+        "configurable": {"thread_id": thread_id},  # used by MemorySaver to remember the context
+    }
+    # 5. [Prompt construction] Inject the environment constraints dynamically
     path_instruction = f"""
-    [Workspace Instructions]
-    Session Workspace: {relative_session_dir}
+    [Working environment instructions]
+    Working directory: {relative_session_dir}
     {uploaded_info}
 
     Rules:
-    1. Save all generated files into: '{relative_session_dir}/filename'
-    2. Use relative paths for deliverables.
-    3. Analyze any user-uploaded files first if relevant.
+    1. Newly generated files must be saved into the working directory: '{relative_session_dir}/filename'
+    2. Use relative paths; absolute paths are forbidden
+    3. If there are uploaded files, analyze their content first
     """
 
+    # 6. [Streaming execution] Start the agent loop
     try:
+        # astream: an async generator that emits the agent's thought fragments one by one, like a pipeline
         async for chunk in main_agent.astream(
-            {"messages": [{"role": "user", "content": task_query + path_instruction}]},
-            config=config
+                {"messages": [{"role": "user", "content": task_query + path_instruction}]},
+                config=config
         ):
+            # Process each fragment in real time (report to the front end)
             _process_stream_chunk(chunk)
         return "Done"
     except Exception as e:
-        print(f"[Execution Error] {e}")
-        monitor._emit("error", f"Task execution failed: {e}")
+        # 7. [Exception handling] Catch-all fallback
+        print(f"Error: {e}")
+        monitor._emit("error", f"Execution failed: {e}")
         return f"Error: {e}"
     finally:
-        reset_session_context(session_token, thread_token)
+        # 8. [Resource cleanup] The ContextVars must be reset, or thread-pool reuse will contaminate the context
+        if 'session_token' in locals():
+            reset_session_context(session_token, thread_token)
 ```
 
----
+#### 4.4.5 The Main Agent Prompt
 
-## 5. Web API & Services (`api/server.py`)
+**Key considerations for the Main Agent prompt:**
+
+1. Role definition: the intelligent team lead at Wohua Pharmaceutical, coordinating only the Network Search, Database Query, and RAGFlow assistants to complete tasks.
+
+2. Information-gathering rules
+
+   - External/background knowledge → the Network Search Agent, which may search deeply and repeatedly;
+   - Internal enterprise knowledge that does not circulate publicly → the RAGFlow Knowledge Base Agent;
+   - Internal enterprise product data → the Database Query Agent;
+   - When the boundary is unclear, call all three; move on to the next step only after complete information has been gathered.
+
+3. Mandatory working-directory requirements
+
+   - Every operation (creating/reading/saving files) is restricted to the absolute working directory the system specifies;
+   - When calling a subagent, that working-directory path must be communicated explicitly.
+
+4. Two categories of task handling
+
+   - No file generation requested: gather the information and report it directly to the user;
+   - File generation requested: hand it to the file-generation assistant only; do not produce the file yourself.
+
+5. Strict file-generation rules
+
+   - Only Markdown and PDF may be generated. A PDF must first be produced as Markdown and then converted via `convert_md_to_pdf`; never generate a format the user did not ask for;
+   - All information gathering must be finished before the file-generation tool is called. Never do search + generation in a single step, and never generate a file from placeholder content;
+   - Regardless of task complexity, the document must include a to-do list plan;
+   - The document content must be rich and comprehensive — at least 1,000 characters;
+   - When reporting progress/results, only say "successfully created"; never send the file path.
+
+6. The mandatory execution order (not to be violated)
+
+   ① Call the subagents first to gather complete information; ② only after the full information text is in hand, call the file-generation tool; ③ generate the file strictly in the format the user requested, following the steps in order.
+
+**The full prompt:**
+
+```
+main_agent:
+  system_prompt: |
+    You are the intelligent team lead at Wohua Pharmaceutical, responsible for coordinating three expert assistants to complete complex tasks.
+    Your team members are:
+    1. **Network Search Agent**
+    2. **Database Query Agent**
+    3. **RAGFlow Knowledge Base Agent**
+    Your workflow usually involves:
+    - Information gathering:
+    - For background and external knowledge, use the **Network Search Agent** to collect information broadly. When using it, questions may go from shallow to deep, and after obtaining results from the other assistants you may call the Network Search Agent again for deeper retrieval.
+    - For proprietary internal knowledge that does not circulate on the internet, use the **RAGFlow Knowledge Base Agent** to search internal knowledge.
+    - For internal product data and similar information, use the **Database Query Agent** to find the specific product information needed for data analysis and forecasting.
+    - You may try all three approaches; if the boundary is unclear, use all of them.
+    - Once you have the information, pass all of it as completely as possible to the file-generation assistant so that the answer is as thorough as possible.
+    - File generation:
+    - Following the user's instructions, you can use your own tools to generate files in Markdown, Word, and PDF formats. You do not need to tell your subagents where files are generated — all document generation is done by you.
+    Specific requirements for your work:
+    - Complete the task based on the user's needs and the list of assistants actually available to you.
+    - File operation directory: at the start of every task the system supplies a designated absolute path as the working directory.
+    - Mandatory: you must, and may only, create, read, and save files inside that working directory.
+    - Instruction handoff: when calling a subagent you must clearly communicate that working-directory path so they do not generate files elsewhere.
+    - When generating output documents, follow the user's generation requirements strictly; never produce a document that does not match what the user ultimately expects.
+    Your main task categories
+    - When the user does not explicitly say what kind of file to generate, obtain the required data through information gathering and report it directly to the user.
+    - When the user explicitly requires a file, it may only be handed to the file-generation assistant. You may not generate it yourself after gathering the information — you have no file-generation ability.
+    - File generation
+      You can generate Markdown and PDF documents, as follows:
+      For Markdown documents, the tool at your disposal is generate_markdown, which produces the corresponding Markdown file for the user's question.
+      For PDF documents, the tool at your disposal is convert_md_to_pdf, which converts the Markdown document you generated into a PDF.
+      For a Markdown document, just call the tool directly; for a PDF document, first generate the Markdown document, then convert it with the PDF tool to obtain the final PDF.
+      Generate documents according to the user's instructions; do not generate document types beyond what was requested — for example, when a PDF is requested, you may only generate Markdown first and then convert it to PDF.
+      Content requirements:
+      No matter how complex the task, you must produce a to-do list to plan it.
+      When you report the document's progress and outcome by message, you may not send the document's path — only notify the user that it was created successfully.
+      Write the document from the instructions you received and the knowledge you retrieved; the content must be rich and comprehensive, no fewer than 1,000 characters.
+        [Critical execution order]
+    1. You must call the subagents (Network Search Agent, Database Query Agent, etc.) first to gather information.
+    2. You are **absolutely forbidden** to call the file-generation tool (generate_markdown) before gathering information.
+    3. Generating a file with placeholder content such as "waiting for the subtask to finish" is strictly prohibited. You may only call generate_markdown once you genuinely hold the complete information text.
+    4. If you need to search first and then generate, do it in two steps: step one calls only the search tool; step two calls the generation tool based on the search results. Do not do both in a single step (the same tool-call list).
+```
+
+#### 4.4.6 The Test Function
 
 ```python
-import sys
-import uuid
-import asyncio
-import shutil
-from pathlib import Path
-from typing import List
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
-from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import uvicorn
-
-current_dir = Path(__file__).resolve().parent
-project_root = current_dir.parent
-if str(project_root) not in sys.path:
-    sys.path.append(str(project_root))
-
-from agent.main_agent import run_deep_agent
-from api.monitor import monitor, manager
-
-app = FastAPI(title="DeepAgents Research API")
-
-output_dir = project_root / "output"
-output_dir.mkdir(exist_ok=True)
-
-updated_dir = project_root / "updated"
-updated_dir.mkdir(exist_ok=True)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-class TaskRequest(BaseModel):
-    query: str
-    thread_id: str = None
-
-@app.post("/api/task")
-async def run_task(request: TaskRequest):
-    thread_id = request.thread_id or str(uuid.uuid4())
-    asyncio.create_task(run_deep_agent(request.query, thread_id))
-    return {"status": "started", "thread_id": thread_id}
-
-@app.post("/api/upload")
-async def upload_files(files: List[UploadFile] = File(...), thread_id: str = Form(...)):
-    target_dir = updated_dir / f"session_{thread_id}"
-    target_dir.mkdir(parents=True, exist_ok=True)
-    saved_files = []
-    for file in files:
-        file_path = target_dir / file.filename
-        with file_path.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        saved_files.append(file.filename)
-    return {"status": "uploaded", "files": saved_files}
-
-@app.get("/api/download")
-async def download_file(path: str):
-    try:
-        abs_path = Path(path).resolve()
-        output_abs = output_dir.resolve()
-        if not abs_path.is_relative_to(output_abs):
-            return {"error": "Access denied: file outside output directory"}
-    except Exception:
-        return {"error": "Invalid path"}
-
-    if not abs_path.exists():
-        return {"error": "File not found"}
-    return FileResponse(abs_path, filename=abs_path.name)
-
-@app.get("/api/files")
-async def list_files(path: str):
-    try:
-        abs_path = Path(path).resolve()
-        output_abs = output_dir.resolve()
-        if not abs_path.is_relative_to(output_abs):
-            return {"error": "Access denied"}
-    except Exception as e:
-        return {"error": f"Invalid path: {e}"}
-
-    if not abs_path.exists():
-        return {"error": "Directory does not exist"}
-
-    files = []
-    for file_path in abs_path.rglob("*"):
-        if file_path.is_file():
-            stat = file_path.stat()
-            files.append({
-                "name": file_path.name,
-                "type": "file",
-                "path": str(file_path),
-                "size": stat.st_size,
-                "mtime": stat.st_mtime
-            })
-    files.sort(key=lambda x: x.get("mtime", 0), reverse=True)
-    return {"files": files}
-
-@app.websocket("/ws/{thread_id}")
-async def websocket_endpoint(websocket: WebSocket, thread_id: str):
-    await manager.connect(websocket, thread_id)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            await websocket.send_json({"type": "pong", "message": f"Ack: {data}"})
-    except WebSocketDisconnect:
-        manager.disconnect(websocket, thread_id)
-    except Exception as e:
-        print(f"[WebSocket Error] {e}")
-        manager.disconnect(websocket, thread_id)
-
+# ====================== Local test entry point ======================
 if __name__ == "__main__":
-    uvicorn.run("api.server:app", host="0.0.0.0", port=8000, reload=True)
+    task = "Query the drug information in the database and generate a PDF file!"
+    asyncio.run(run_deep_agent(task))
 ```
+
+## 5. Web API Development and Testing
+1. Baseline server setup
+
+   File: `api/server.py`
+
+   ```python
+   import sys
+   import uuid
+   import asyncio
+   import uvicorn
+   from pathlib import Path
+   from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
+   from fastapi.responses import FileResponse
+   from fastapi.middleware.cors import CORSMiddleware
+   from pydantic import BaseModel
+   from typing import List
+   import shutil
+
+   # Add project root to sys.path
+   current_dir = Path(__file__).resolve().parent
+   project_root = current_dir.parent
+   if str(project_root) not in sys.path:
+       sys.path.append(str(project_root))
+
+   # Import agent runner and monitor
+   # Note: importing agent.main_agent initializes main_agent, which may take a few seconds
+   from agent.main_agent import run_deep_agent
+   from api.monitor import monitor, manager
+
+   app = FastAPI(title="DeepAgents API")
+
+   # Mount the output directory so the front end can access the generated static files.
+   # The output directory is assumed to live under the project root as `output`.
+   output_dir = project_root / "output"
+   output_dir.mkdir(exist_ok=True)
+   # app.mount("/outputs", StaticFiles(directory=str(output_dir)), name="outputs")
+
+   # Define the upload directory `updated`
+   updated_dir = project_root / "updated"
+   updated_dir.mkdir(exist_ok=True)
+
+   # Configure CORS
+   app.add_middleware(
+       CORSMiddleware,
+       allow_origins=["*"],
+       allow_credentials=True,
+       allow_methods=["*"],
+       allow_headers=["*"],
+   )
+
+   class TaskRequest(BaseModel):
+       query: str
+       thread_id: str = None
+   ```
+
+2. Implementing the task-start endpoint
+
+   ```python
+   @app.post("/api/task")
+   async def run_task(request: TaskRequest):
+       """
+       Agent task start endpoint (Run Agent Task).
+
+       Goals:
+       1. Receive the user's natural-language instruction.
+       2. Start the agent's execution logic asynchronously in the background.
+       3. Return the session ID so the front end can subscribe to live progress over WebSocket.
+
+       Steps:
+       1. Get or generate the thread_id.
+       2. Trigger the async task (asyncio.create_task).
+       3. Return the response immediately without blocking the HTTP thread.
+
+       Args:
+           request (TaskRequest): the request body containing the user query and an optional thread_id.
+       """
+       # 1. [ID initialization]
+       thread_id = request.thread_id or str(uuid.uuid4())
+
+       # 2. [Background execution] Run the agent asynchronously without blocking the main thread.
+       # Note: this simply fires it off with asyncio.create_task; main_agent handles the live push internally.
+       asyncio.create_task(run_deep_agent(request.query, thread_id))
+
+       # 3. [Immediate response]
+       return {"status": "started", "thread_id": thread_id}
+   ```
+
+3. The file upload endpoint
+
+   ```python
+   @app.post("/api/upload")
+   async def upload_files(files: List[UploadFile] = File(...), thread_id: str = Form(...)):
+       """
+       File upload endpoint.
+
+       Goals:
+       1. Receive one or more files uploaded by the user.
+       2. Save them into the `updated/session_{thread_id}` directory.
+       3. Make them available for the agent to read and analyze in subsequent tasks.
+
+       Args:
+           files (List[UploadFile]): the list of file objects.
+           thread_id (str): the associated task session ID.
+       """
+       # 1. [Directory preparation] Make sure the upload directory exists
+       target_dir = updated_dir / f"session_{thread_id}"
+       target_dir.mkdir(parents=True, exist_ok=True)
+
+       saved_files = []
+       # 2. [Save] Iterate over the files and write them out
+       for file in files:
+           file_path = target_dir / file.filename
+           # Write in binary mode to support every file format (images, PDFs, text, etc.).
+           # shutil.copyfileobj copies the file stream efficiently, avoiding loading a large file entirely into memory.
+           with file_path.open("wb") as buffer:
+               shutil.copyfileobj(file.file, buffer)
+           saved_files.append(file.filename)
+
+       # 3. [Response] Return the list of successfully saved files
+       return {"status": "uploaded", "files": saved_files}
+   ```
+
+4. The file download endpoint
+
+   ```python
+   @app.get("/api/download")
+   async def download_file(path: str):
+       """
+       File download endpoint.
+
+       Goals:
+       1. Download a file by its absolute path.
+       2. Apply strict security checks to prevent unauthorized access.
+
+       Args:
+           path (str): the file's absolute path (usually obtained from the list_files endpoint).
+       """
+       # 1. [Security check] Path resolution and authorization validation
+       try:
+           abs_path = Path(path).resolve()
+           output_abs = output_dir.resolve()
+
+           # The requested file must be inside the output directory
+           if not abs_path.is_relative_to(output_abs):
+                return {"error": "Access denied: only files under the output directory can be downloaded"}
+       except Exception:
+            return {"error": "Invalid path parameter"}
+       # 2. [Existence check]
+       if not abs_path.exists():
+           return {"error": "File does not exist"}
+
+       # 3. [Response] Return the file stream (the browser triggers the download automatically)
+       return FileResponse(abs_path, filename=abs_path.name)
+   ```
+
+5. The file-listing endpoint
+
+   ```python
+   @app.get("/api/files")
+   async def list_files(path: str):
+       """
+       File listing endpoint (file explorer).
+
+       Goals:
+       1. List every generated file under the specified directory.
+       2. Provide file metadata (size, timestamp, download link).
+       3. Apply strict security checks to prevent path-traversal attacks.
+
+       Args:
+           path (str): the absolute path of the target directory (must be under the output directory).
+       """
+       # 1. [Debug] Print the requested path
+       print(f"[DEBUG] File list requested: {path}")
+
+       try:
+           # 2. [Resolve] Get the absolute path object
+           abs_path = Path(path).resolve()
+           output_abs = output_dir.resolve()
+
+           # 3. [Security] Check whether the path escapes the boundary (path traversal check)
+           if not abs_path.is_relative_to(output_abs):
+               print(f"[ERROR] Access denied: {abs_path} is not under {output_abs}")
+               return {"error": "Access denied: only files under the output directory can be accessed"}
+
+       except Exception as e:
+           print(f"[ERROR] Path resolution failed: {e}")
+           return {"error": f"Invalid path: {e}"}
+
+       # 4. [Check] Does the directory exist?
+       if not abs_path.exists():
+           return {"error": "Directory does not exist"}
+
+       files = []
+       try:
+           # 5. [Traverse] Recursively find every file
+           for file_path in abs_path.rglob("*"):
+               if file_path.is_file():
+                   # Compute the relative path and build the download URL
+                   stat = file_path.stat()
+                   files.append({
+                       "name": file_path.name,
+                       "type": "file",
+                       "path": str(file_path),
+                       # "url": f"/outputs/{url_path}",
+                       "size": stat.st_size,
+                       "mtime": stat.st_mtime
+                   })
+
+       except Exception as e:
+           print(f"[ERROR] File traversal failed: {e}")
+           return {"error": str(e)}
+
+       # 6. [Sort] Order by modification time descending (newest first)
+       files.sort(key=lambda x: x.get("mtime", 0), reverse=True)
+       print(f"[DEBUG] Found {len(files)} files")
+       return {"files": files}
+   ```
+
+6. WebSocket real-time communication
+
+   ```python
+   @app.websocket("/ws/{thread_id}")
+   async def websocket_endpoint(websocket: WebSocket, thread_id: str):
+       """
+       The core WebSocket real-time communication endpoint.
+
+       Goals:
+       1. Establish a long-lived connection for two-way communication between server and front end.
+       2. Bind `thread_id` to achieve session-level message isolation.
+       3. Maintain a heartbeat (keep-alive) so the connection does not time out.
+
+       Steps:
+       1. Handshake: accept the WebSocket connection request.
+       2. Register: bind the connection instance to `monitor.manager`, associated with `thread_id`.
+       3. Loop: enter the message listening loop and handle heartbeats or commands from the front end.
+       4. Exceptions: catch disconnection exceptions and clean up resources.
+
+       Args:
+           websocket (WebSocket): the WebSocket connection instance.
+           thread_id (str): the unique identifier of the current session.
+       """
+       # 1. [Register] Establish the connection and bind it to the manager
+       await manager.connect(websocket, thread_id)
+
+       try:
+           # 2. [Loop] Keep the connection alive
+           while True:
+               # 3. [Listen] Receive messages from the front end (usually a ping heartbeat)
+               data = await websocket.receive_text()
+
+               # 4. [Respond] Reply with a pong message
+               await websocket.send_json({
+                   "type": "pong",
+                   "message": f"Server received: {data}"
+               })
+
+       except WebSocketDisconnect:
+           # 5. [Cleanup] The client disconnected on its own
+           manager.disconnect(websocket, thread_id)
+           print(f"[WebSocket] Client disconnected: {thread_id}")
+
+       except Exception as e:
+           # 6. [Exception] Disconnect when an error occurs
+           print(f"[WebSocket] Connection error: {e}")
+           manager.disconnect(websocket, thread_id)
+   ```
+
+7. Starting the server
+
+   ```python
+   if __name__ == "__main__":
+       uvicorn.run("api.server:app", host="0.0.0.0", port=8000, reload=True)
+   ```
 
 ---
-
-## 6. Verification & End-to-End Workflow
-
-### 6.1 Launch Backend Server
-```bash
-python api/server.py
-```
-*The FastAPI server will start on port `8000` with WebSocket support enabled.*
-
-### 6.2 Launch Frontend UI
-```bash
-cd ui
-npm run dev
-```
-*Open `http://localhost:5173` in your browser.*
-
-### 6.3 Example Research Workflow
-1. Input prompt: *"Analyze our inventory and recent sales of Ibuprofen and Amoxicillin in pharma_db, search the web for 2026 respiratory illness market trends, and compile a comprehensive PDF strategic briefing."*
-2. **Main Agent** parses the instruction and drafts an internal todo list.
-3. **Database Subagent** discovers `drugs`, `inventory`, and `sales_records` tables, pulls batch numbers and sales figures, and returns structured data.
-4. **Web Search Subagent** uses Google Search Grounding to identify external market demand and competitor dynamics.
-5. **Main Agent** combines all findings, generates a detailed Markdown report (`report.md`), converts it to PDF (`report.pdf`), and streams real-time completion status to the frontend.
-6. The user views the thinking trajectory live on the dashboard and downloads the generated PDF deliverable.
