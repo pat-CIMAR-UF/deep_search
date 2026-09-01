@@ -5,7 +5,7 @@ main_agent:
     Placeholder for now ~~~~~~~~~
 # Sub Agents Configuration
 sub_agents:
-  tavily:
+  gemini:
     name: "Network Search Agent"
     description: |
       The agent responsible for searching knowledge on the web. When data needs to be looked up online, it performs the retrieval and returns the search results.

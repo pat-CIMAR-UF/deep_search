@@ -20,6 +20,13 @@ _ = load_dotenv(find_dotenv())
 
 _MAX_ROWS = 100
 _READ_ONLY_PREFIXES = ("select", "show", "describe", "desc", "explain", "with")
+# 即使以只读关键字开头（如 WITH ... DELETE / SELECT ... INTO OUTFILE），出现这些关键字也视为写操作
+# Statements that start read-only (WITH ... DELETE, SELECT ... INTO OUTFILE) are still writes if these appear
+_WRITE_KEYWORDS = frozenset({
+    "insert", "update", "delete", "drop", "alter", "create", "truncate", "rename",
+    "grant", "revoke", "outfile", "dumpfile",
+})
+_STRING_LITERAL_RE = re.compile(r"'(?:[^'\\]|\\.)*'" + r'|"(?:[^"\\]|\\.)*"')
 
 
 def get_db_config():
@@ -52,7 +59,12 @@ def _is_read_only_query(query: str) -> bool:
     if not body or ";" in body:
         return False
     first = body.lstrip("(").split(None, 1)[0].lower()
-    return first in _READ_ONLY_PREFIXES
+    if first not in _READ_ONLY_PREFIXES:
+        return False
+    # 去掉字符串字面量后再扫描关键字，避免误判 WHERE name = 'delete' 之类的查询
+    # Strip string literals before scanning so WHERE name = 'delete' is not rejected
+    tokens = set(re.findall(r"[a-z_]+", _STRING_LITERAL_RE.sub("''", body).lower()))
+    return not (tokens & _WRITE_KEYWORDS)
 
 
 @tool

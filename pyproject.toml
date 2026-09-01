@@ -17,6 +17,17 @@ dependencies = [
     "markdown>=3.10.3",
     "mysql-connector-python>=26.7.0",
     "pydantic>=2.13.5",
+    "ragflow-sdk>=0.27.1",
+    "tavily-python>=0.8.0",
     "typing>=3.10.0.0",
     "weasyprint>=69.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
