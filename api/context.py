@@ -54,6 +54,19 @@ _session_dir_ctx: ContextVar[Optional[str]] = ContextVar("session_dir", default=
 # - Purpose: Track "who is currently executing the task".
 # - Scenario: When an Agent logs messages or sends updates to the frontend via WebSocket, it needs to know: "Am I currently serving User A or User B?" to prevent misdelivering messages.
 _thread_id_ctx: ContextVar[Optional[str]] = ContextVar("thread_id", default=None)
+_run_id_ctx: ContextVar[Optional[str]] = ContextVar("run_id", default=None)
+
+
+def get_run_context():
+    return _run_id_ctx.get()
+
+
+def set_run_context(run_id: str):
+    return _run_id_ctx.set(run_id)
+
+
+def reset_run_context(token):
+    _run_id_ctx.reset(token)
 
 
 def set_session_context(path: str):

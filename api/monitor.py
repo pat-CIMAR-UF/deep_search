@@ -2,7 +2,7 @@ import datetime
 import asyncio
 from typing import Any, Dict, Optional
 from fastapi import WebSocket
-from api.context import get_thread_context
+from api.context import get_thread_context, get_run_context
 
 # 尝试导入全局运行时（用于脚本模式下的流式输出） / Try to import global runtime (used for streaming output in script mode)
 try:
@@ -46,6 +46,7 @@ class ToolMonitor:
         payload = {
             "type": "monitor_event",
             "event": event_type,
+            "run_id": get_run_context(),
             "message": message,
             "data": data or {},
             "timestamp": datetime.datetime.now().isoformat()
@@ -143,7 +144,7 @@ class ConnectionManager:
         print(f"Client connected: {thread_id}")
 
     def disconnect(self, websocket: WebSocket, thread_id: str):
-        if thread_id in self.active_connections:
+        if self.active_connections.get(thread_id) is websocket:
             del self.active_connections[thread_id]
         print(f"Client disconnected: {thread_id}")
 

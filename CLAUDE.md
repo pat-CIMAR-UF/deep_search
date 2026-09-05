@@ -9,11 +9,12 @@ A DeepAgents-style research assistant for a mock pharmaceutical company: a main 
 (Gemini with Google Search grounding, or Tavily), read-only MySQL queries, and a RAGFlow
 knowledge base. Progress is pushed to a frontend over FastAPI WebSockets.
 
-**Current state:** the sub-agent specs, tools, monitor/context plumbing and RAGFlow demos exist
-and are tested. The main agent graph, the FastAPI app described in `api文档.md`, and a RAGFlow
-sub-agent wrapper are *not* wired up yet — `main.py` is a placeholder and `deepagents` is not a
-dependency. `Deep_Search_Project_Documentation.md` (and its Chinese twin `深度搜索项目文档.md`)
-is the design doc / tutorial the code follows; `api文档.md` is the target HTTP/WebSocket API.
+**Current state:** `agent/main_agent.py` builds a LangChain coordinator with exactly two
+delegation tools and the existing database/search specialist specs. `api/server.py` implements
+chat tasks, cancellation, snapshots, uploads/downloads, and serves the built Vue UI.
+`main.py` starts Uvicorn on loopback port 8000. RAGFlow demos remain separate and are not
+imported by the application. `deepagents` is not a dependency. `api文档.md` describes the
+implemented contract; the longer project documents remain design/tutorial references.
 
 ## Commands
 
@@ -21,6 +22,7 @@ Python 3.13 + [uv](https://docs.astral.sh/uv/). Always run through `uv run` so t
 
 ```bash
 uv sync                                   # install deps (incl. dev group: pytest)
+uv run main.py                            # UI/API at http://localhost:8000
 uv run pytest                             # full suite (~1s, fully mocked, no .env needed)
 uv run pytest tests/test_db_tools.py      # one file
 uv run pytest tests/test_db_tools.py -k read_only   # one test / pattern
@@ -29,7 +31,8 @@ uv run python tools/db_tools.py           # runs the __main__ smoke query agains
 ```
 
 There is no linter/formatter configured. Pytest config lives in `pyproject.toml`
-(`testpaths = ["tests"]`, `pythonpath = ["."]`).
+(`testpaths = ["tests"]`, `pythonpath = ["."]`). Build the frontend with `cd ui && npm ci && npm run build`.
+Vite development uses relative API URLs with `/api` and `/ws` proxies.
 
 Smoke-testing a tool against a live service (needs keys in `.env`):
 
@@ -57,6 +60,10 @@ exactly `name`, `description`, `system_prompt`, `tools` (the DeepAgents `subagen
 Text fields come from `prompt/prompts.yaml` under `sub_agents.<key>` (`gemini`, `db`, `ragflow`);
 tests assert the dict mirrors the YAML section, so never hard-code prompt text in Python.
 `agent/llm.py` builds the shared `ChatOpenAI` client pointing at a remote Qwen endpoint.
+`agent/main_agent.py` imports that model lazily, wraps each specialist in a delegation tool,
+and supports `auto`, `database`, and `internet` modes. Model selection can use `QWEN_MODEL`.
+Session state persists in `output/session_<id>/.state.json`; keep it and attachments git-ignored.
+Run one backend worker. The current session ID is a local capability, not account authentication.
 
 **Tools are LangChain `@tool` functions** in `tools/`. Both `gemini_tool.py` and `tavily_tool.py`
 expose a tool named `internet_search`; the search sub-agent currently imports the Gemini one.

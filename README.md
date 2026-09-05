@@ -3,6 +3,57 @@
 A DeepAgents-based research assistant: a main agent coordinates sub-agents for web search
 (Gemini + Google Search grounding, or Tavily) and structured database queries.
 
+## Run the UI and API
+
+The implemented application uses LangChain's coordinator/subagent pattern with exactly two
+specialists: **Database Query** and **Internet Search** (Gemini with Google Search grounding).
+RAGFlow is not imported, initialized, or required by the running application.
+
+From this project directory in WSL:
+
+```bash
+uv sync
+uv run main.py
+```
+
+Open **http://localhost:8000**. A built UI is included in the current local checkout.
+The server binds to loopback and serves the UI, HTTP API and WebSocket on the same port.
+This is a local, single-user app; session IDs separate conversations, not authenticated users.
+Run one server worker because active requests and WebSocket connections are managed in-process.
+
+To rebuild the UI, install Node.js 20.19+ (or 22.12+) and npm in the environment where you run it:
+
+```bash
+cd ui
+npm ci
+npm run build
+cd ..
+uv run main.py
+```
+
+For frontend development, keep the API running and use `cd ui && npm run dev` in another
+terminal. Open the URL printed by Vite. Its proxy forwards `/api` and `/ws` to port 8000.
+Restart the backend after creating the first production build.
+
+- **Auto** coordinates both specialists; the dropdown can restrict a request to one specialist.
+- Tool activity is delivered live. Status polling and WebSocket snapshots recover interrupted
+  connections. Refreshing restores the current conversation and its result.
+- **Stop request** cancels agent orchestration. An external read-only call already in flight
+  may finish in the background; its late events are ignored. Requests time out after five minutes.
+- Attach up to five UTF-8 TXT/MD/CSV/TSV/JSON/LOG/SQL files, at most 64 KB each and fewer than
+  99,000 characters total. Attachments are supplied directly as reference text; document/PDF
+  parsing and knowledge-base ingestion are not enabled.
+- Answers are saved as Markdown. The file sidebar lists attachments and reports for the
+  current conversation. Files and conversation state persist under git-ignored `output/`.
+- **New chat** starts a separate conversation. The browser remembers the current session ID.
+
+The existing `.env` supplies the services. Optional `QWEN_MODEL` overrides the default model.
+Check `GET /api/health` for application readiness; service connectivity is exercised when a
+request runs. No RAGFlow configuration is needed.
+
+Validation: `uv run pytest` uses mocked external services; `cd ui && npm run build` checks
+TypeScript and the production bundle. See `api文档.md` for the implemented API contract.
+
 ## Requirements
 
 - Python >= 3.13 with [uv](https://docs.astral.sh/uv/)

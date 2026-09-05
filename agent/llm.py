@@ -12,7 +12,9 @@ llm = ChatOpenAI(
 )
 '''
 llm = ChatOpenAI(
-    model="unsloth/Qwen3.8-27B-GGUF:UD-Q6_K_M",
+    model=os.getenv("QWEN_MODEL", "unsloth/Qwen3.8-27B-GGUF:UD-Q6_K_M"),
     base_url=os.environ["QWEN_REMOTE_BASE_URL"],
-    api_key=SecretStr(os.environ["QWEN_REMOTE_API_KEY"])
+    api_key=SecretStr(os.environ["QWEN_REMOTE_API_KEY"]),
+    timeout=120,
+    max_retries=1,
 )

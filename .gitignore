@@ -10,3 +10,6 @@ wheels/
 .venv
 
 **.env
+
+# Local conversations, attachments, and generated answers
+output/
