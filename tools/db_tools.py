@@ -69,11 +69,8 @@ def _is_read_only_query(query: str) -> bool:
 
 @tool
 def list_sql_tables() -> str:
-    """
-    查询当前库中所有可用的表！
-    作用：为了模型识别有哪些可用的表！方便进行后续的自定义sql查询
-    :return: 有表： 可用的表有：表1,表2,表3....  没有表: 没有可用的表   出现异常：查询出现异常：异常信息
-    """
+    """List available tables in the current database before constructing SQL queries.
+    Return table names, a no-tables message, or an error message."""
     monitor.report_tool(tool_name="database schema check: list_sql_tables()", args={})
 
     try:
@@ -96,22 +93,14 @@ def list_sql_tables() -> str:
 
 @tool
 def get_table_data(table_name: str) -> str:
-    """
-    查询指定表名的数据！当前工具调用之前，必须先调用list_sql_tables完成表名的校验！
-    此工具的作用：1.可以完成单表数据的查询 2. 可以为多表查询提供表结果信息（列名&数据格式）
-    :param table_name: 表名
-    :return: csv格式的数据（模拟表格数据格式）
-             1.第一行是列信息，列之间使用,（英文的逗号）分割
-             2.第二行开始是表数据，值之间也使用,(英文的逗号)分割
-             3.行和行之间使用\n分割
-             4.至多表数据查询100条
-             例如：
-                id,name,age\n -> 列头
-                1,张三,18\n
-                1,张三,18\n    -> 至多查询100条
-                1,张三,18\n
-                1,张三,18\n
-    """
+    """Read up to 100 rows from a table. Call list_sql_tables first to verify its name.
+    Use the column names and sample values to prepare single-table or joined queries.
+
+    Args:
+        table_name: Name of the table to inspect.
+
+    Returns:
+        Comma-separated columns and rows, with one record per line."""
     monitor.report_tool(tool_name="database schema check: get_table_data()", args={"table_name": table_name})
 
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", table_name or ""):
@@ -151,22 +140,14 @@ def get_table_data(table_name: str) -> str:
 
 @tool
 def execute_sql_query(query: str) -> str:
-    """
-    执行自定义查询sql语句！切记：执行之前，需要通过执行 list_sql_tables明确表名！执行get_table_data
-    明确表结构和数据格式！
-    :param query: 要执行的自定义sql语句
-    :return: csv格式的数据（模拟表格数据格式）
-             1.第一行是列信息，列之间使用,（英文的逗号）分割
-             2.第二行开始是表数据，值之间也使用,(英文的逗号)分割
-             3.行和行之间使用\n分割
-             4.至多表数据查询100条
-             例如：
-                id,name,age\n -> 列头
-                1,张三,18\n
-                1,张三,18\n    -> 至多查询100条
-                1,张三,18\n
-                1,张三,18\n
-    """
+    """Execute a custom read-only SQL query. Call list_sql_tables to confirm table names
+    and get_table_data to inspect column names and data formats first.
+
+    Args:
+        query: Read-only SQL statement to execute.
+
+    Returns:
+        Comma-separated columns and up to 100 rows, with one record per line."""
     # 埋点,调用工具了告诉前端哪个工具被调用了！！
     monitor.report_tool(tool_name="database schema check: execute_sql_query()", args={"query": query})
 

@@ -41,7 +41,7 @@ _client: genai.Client | None = None
 
 
 def _get_client() -> genai.Client:
-    """获取全局唯一的 Gemini 客户端 / Return the process-wide Gemini client (created on first use)."""
+    """Return the process-wide Gemini client (created on first use)."""
     global _client
     if _client is None:
         api_key = os.getenv("GEMINI_API_KEY")
