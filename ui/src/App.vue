@@ -1,332 +1,219 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick, computed } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
 import axios from 'axios'
 import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
-// Types
+interface LogItem { title: string; details: unknown; timestamp?: string }
+interface FileItem { name: string; path: string; size?: number }
 interface Message {
-  role: 'user' | 'ai' | 'system'
-  content: string
-  logs?: LogItem[]
-  files?: FileItem[]
-  timestamp?: number
+  role: 'user' | 'ai'; content: string; logs?: LogItem[]; files?: FileItem[];
+  attachments?: string[]; failed?: boolean
 }
-
-interface LogItem {
-  type: string
-  title: string
-  details: any
-  timestamp: string
+interface Snapshot {
+  thread_id: string; status: 'idle' | 'running' | 'completed' | 'error' | 'cancelled';
+  messages: Message[]; run_id: string | null; revision: number
 }
-
-interface FileItem {
-  name: string
-  path: string
-  url: string
-}
-
-// State
+const api = axios.create({ timeout: 15000 })
 const inputQuery = ref('')
 const messages = ref<Message[]>([])
-const status = ref<'idle' | 'running'>('idle')
-const socket = ref<WebSocket | null>(null)
-const currentSessionPath = ref('')
-const currentSessionUrl = ref('')
+const status = ref<Snapshot['status']>('idle')
+const submitting = ref(false)
+const cancelling = ref(false)
+const busy = computed(() => submitting.value || status.value === 'running')
+const agentMode = ref<'auto' | 'database' | 'internet'>('auto')
+const connected = ref(false)
+const errorMessage = ref('')
+const connectionError = ref('')
+const fileError = ref('')
 const messagesEndRef = ref<HTMLElement | null>(null)
 const isWelcomeScreen = computed(() => messages.value.length === 0)
 const isSidebarOpen = ref(false)
-const fileList = ref<any[]>([])
-// 生成一个持久的会话ID，如果页面不刷新，ID不变
-const currentThreadId = ref(crypto.randomUUID())
-
-// Helper: Scroll to bottom
-const scrollToBottom = async () => {
-  await nextTick()
-  if (messagesEndRef.value) {
-    messagesEndRef.value.scrollIntoView({ behavior: 'smooth' })
-  }
-}
-
-// Fetch Files
-const fetchFiles = async () => {
-  if (!currentSessionPath.value) return
-  try {
-    const res = await axios.get('http://localhost:8000/api/files', {
-      params: { path: currentSessionPath.value }
-    })
-    if (res.data.files) {
-      fileList.value = res.data.files.map((f: any) => ({
-        ...f,
-        // 使用新的下载 API，传入绝对路径
-        url: `http://localhost:8000/api/download?path=${encodeURIComponent(f.path)}`
-      }))
-    }
-  } catch (e) {
-    console.error('Failed to fetch files', e)
-  }
-}
-
-// WebSocket Connection
-const connectWebSocket = () => {
-  const ws = new WebSocket(`ws://localhost:8000/ws/${currentThreadId.value}`)
-
-  ws.onopen = () => {
-    console.log('WebSocket Connected')
-  }
-
-  ws.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data)
-      handleSocketMessage(data)
-    } catch (e) {
-      console.error('Error parsing WS message:', e)
-    }
-  }
-
-  ws.onclose = () => {
-    console.log('WebSocket Disconnected, retrying in 3s...')
-    setTimeout(connectWebSocket, 3000)
-  }
-
-  socket.value = ws
-}
-
-// Handle Incoming Messages
-const handleSocketMessage = (data: any) => {
-  const { type, event, message, data: eventData } = data
-
-  if (type === 'pong') return
-
-  let lastAiMsg = messages.value.slice().reverse().find(m => m.role === 'ai')
-  
-  if (event === 'session_created') {
-    currentSessionPath.value = eventData.path
-    const parts = eventData.path.split(/output[\\/]/)
-    if (parts.length > 1) {
-      currentSessionUrl.value = `http://localhost:8000/outputs/${parts[1].replace(/\\/g, '/')}`
-    }
-    isSidebarOpen.value = true
-    fetchFiles()
-  } else if (event === 'tool_start') {
-    // 触发文件列表刷新，以确保用户能看到生成的文件
-    if (currentSessionPath.value) {
-      // 延迟一点刷新，因为工具刚开始运行，文件可能还没生成
-      // 但如果是“写入文件”类工具，可能很快就有了
-      // 这里可以尝试立即刷新 + 延迟刷新
-      fetchFiles()
-      setTimeout(fetchFiles, 2000)
-    }
-
-    if (lastAiMsg) {
-      if (!lastAiMsg.logs) lastAiMsg.logs = []
-      lastAiMsg.logs.push({
-        type: 'tool',
-        title: `使用的工具： ${eventData.tool_name}...`,
-        details: eventData.args,
-        timestamp: new Date().toLocaleTimeString()
-      })
-      
-      if (eventData.args && eventData.args.filename && currentSessionUrl.value) {
-        if (!lastAiMsg.files) lastAiMsg.files = []
-        const fileUrl = `${currentSessionUrl.value}/${eventData.args.filename}`
-        // Avoid duplicates
-        if (!lastAiMsg.files.find(f => f.name === eventData.args.filename)) {
-           lastAiMsg.files.push({
-            name: eventData.args.filename,
-            path: eventData.args.filename,
-            url: fileUrl
-          })
-        }
-      }
-    }
-  } else if (event === 'assistant_call') {
-    // 同样刷新文件列表
-    if (currentSessionPath.value) {
-        fetchFiles()
-    }
-     if (lastAiMsg) {
-      if (!lastAiMsg.logs) lastAiMsg.logs = []
-      lastAiMsg.logs.push({
-        type: 'agent',
-        title: `正在使用助手： ${eventData.assistant_name}...`,
-        details: eventData.args,
-        timestamp: new Date().toLocaleTimeString()
-      })
-    }
-  } else if (event === 'task_result') {
-    if (lastAiMsg) {
-      lastAiMsg.content = eventData.result
-    } else {
-       messages.value.push({
-        role: 'ai',
-        content: eventData.result,
-        timestamp: Date.now()
-      })
-    }
-    status.value = 'idle'
-    fetchFiles()
-  } else if (event === 'error') {
-     messages.value.push({
-      role: 'system',
-      content: `Error: ${message}`,
-      timestamp: Date.now()
-    })
-    status.value = 'idle'
-  }
-  
-  scrollToBottom()
-}
-
-// Send Message
-const sendMessage = async () => {
-  if ((!inputQuery.value.trim() && selectedFiles.value.length === 0) || status.value === 'running') return
-
-  const query = inputQuery.value
-  inputQuery.value = ''
-  status.value = 'running'
-
-  messages.value.push({
-    role: 'user',
-    content: query,
-    timestamp: Date.now()
-  })
-
-  messages.value.push({
-    role: 'ai',
-    content: '', // Start empty, show "Thinking" via logs/status if needed, or placeholder
-    logs: [],
-    files: [],
-    timestamp: Date.now()
-  })
-
-  scrollToBottom()
-
-  // Handle File Upload
-  if (selectedFiles.value.length > 0) {
-    console.log('Uploading files:', selectedFiles.value)
-    
-    // Log to UI
-    const lastAiMsg = messages.value[messages.value.length - 1]
-    if (lastAiMsg && lastAiMsg.role === 'ai') {
-        if (!lastAiMsg.logs) lastAiMsg.logs = []
-        
-        const fileDetails = selectedFiles.value.map(f => ({ name: f.name, size: f.size }))
-        
-        lastAiMsg.logs.push({
-            type: 'info',
-            title: `Uploading ${selectedFiles.value.length} file(s)...`,
-            details: fileDetails,
-            timestamp: new Date().toLocaleTimeString()
-        })
-    }
-
-    // Actual Upload
-    try {
-        const formData = new FormData()
-        // Ensure thread_id is available
-        if (typeof currentThreadId !== 'undefined' && currentThreadId.value) {
-             formData.append('thread_id', currentThreadId.value)
-        } else {
-             // Fallback if no thread ID (should ideally not happen as initialized in state)
-             console.warn('No thread ID found for upload')
-        }
-
-        selectedFiles.value.forEach(file => {
-            console.log(`Appending file to FormData: name=${file.name}, size=${file.size}, type=${file.type}`)
-            formData.append('files', file)
-        })
-
-        await axios.post('http://127.0.0.1:8000/api/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        })
-        
-        // Clear files after successful upload
-        selectedFiles.value = []
-        
-        if (lastAiMsg && lastAiMsg.logs) {
-            lastAiMsg.logs.push({
-                type: 'success',
-                title: 'Files uploaded successfully',
-                details: null,
-                timestamp: new Date().toLocaleTimeString()
-            })
-        }
-
-    } catch (e: any) {
-        console.error('Upload failed', e)
-        if (lastAiMsg && lastAiMsg.logs) {
-            lastAiMsg.logs.push({
-                type: 'error',
-                title: 'File upload failed',
-                details: e.message || 'Unknown error',
-                timestamp: new Date().toLocaleTimeString()
-            })
-        }
-        // Don't stop task execution, but maybe warn user?
-    }
-  }
-
-  try {
-    const payload: any = { query }
-    // Only add thread_id if it exists and is not empty
-    if (typeof currentThreadId !== 'undefined' && currentThreadId.value) {
-      payload.thread_id = currentThreadId.value
-    }
-    console.log('Sending request payload:', payload)
-    const res = await axios.post('http://127.0.0.1:8000/api/task', payload)
-    
-    if (res.data && res.data.thread_id) {
-      currentThreadId.value = res.data.thread_id
-    }
-  } catch (error: any) {
-    console.error('Request failed:', error)
-    let errorMsg = 'Failed to send request.'
-    if (error.message) errorMsg += ` (${error.message})`
-    if (error.response && error.response.data) {
-        errorMsg += ` Server says: ${JSON.stringify(error.response.data)}`
-    }
-    
-    messages.value.push({
-      role: 'system',
-      content: errorMsg,
-      timestamp: Date.now()
-    })
-    status.value = 'idle'
-  }
-}
-
-// File Upload
+const fileList = ref<FileItem[]>([])
+const loadingFiles = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const selectedFiles = ref<File[]>([])
+const currentThreadId = ref(readThreadId())
+let socket: WebSocket | null = null
+let reconnectTimer: ReturnType<typeof setTimeout> | undefined
+let pollTimer: ReturnType<typeof setInterval> | undefined
+let heartbeatTimer: ReturnType<typeof setInterval> | undefined
+let disposed = false
+let revision = -1
+let polling = false
 
-const triggerFileUpload = () => {
-  fileInputRef.value?.click()
+function readThreadId(): string {
+  try {
+    const saved = localStorage.getItem('deep-search-thread')
+    if (saved && /^[A-Za-z0-9_-]{1,80}$/.test(saved)) return saved
+  } catch { /* Storage may be disabled in private browser contexts. */ }
+  return crypto.randomUUID()
 }
-
-const handleFileChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  if (target.files && target.files.length > 0) {
-    // Append new files to existing list
-    selectedFiles.value = [...selectedFiles.value, ...Array.from(target.files)]
-    console.log('Files selected:', selectedFiles.value)
-    // Reset input so same file can be selected again if needed
-    target.value = ''
+function saveThreadId() {
+  try { localStorage.setItem('deep-search-thread', currentThreadId.value) } catch { /* optional */ }
+}
+const scrollToBottom = async () => {
+  await nextTick()
+  messagesEndRef.value?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+}
+function downloadUrl(file: FileItem) {
+  return `/api/download?${new URLSearchParams({ thread_id: currentThreadId.value, path: file.path })}`
+}
+function describeError(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const detail = error.response?.data?.detail
+    if (typeof detail === 'string') return detail
+    if (Array.isArray(detail)) return detail.map(item => item.msg).join(' ')
+    if (!error.response) return 'Cannot reach the backend. Check that it is running, then retry.'
+  }
+  return 'The request failed. Please try again.'
+}
+const fetchFiles = async () => {
+  const thread = currentThreadId.value
+  loadingFiles.value = true
+  try {
+    const { data } = await api.get('/api/files', { params: { thread_id: thread } })
+    if (thread === currentThreadId.value) { fileList.value = data.files; fileError.value = '' }
+  } catch (error) {
+    if (thread === currentThreadId.value) fileError.value = describeError(error)
+  } finally { if (thread === currentThreadId.value) loadingFiles.value = false }
+}
+function applySnapshot(data: Snapshot) {
+  if (data.thread_id !== currentThreadId.value || submitting.value || data.revision < revision) return
+  const changed = data.revision > revision
+  const finished = status.value === 'running' && data.status !== 'running'
+  revision = data.revision
+  messages.value = data.messages
+  status.value = data.status
+  if (finished) void fetchFiles()
+  if (changed) void scrollToBottom()
+}
+async function syncState() {
+  if (polling || disposed) return
+  polling = true
+  const thread = currentThreadId.value
+  try {
+    const { data } = await api.get<Snapshot>(`/api/task/${thread}`)
+    if (thread === currentThreadId.value) { applySnapshot(data); connectionError.value = '' }
+  } catch (error) {
+    if (thread === currentThreadId.value) connectionError.value = describeError(error)
+  } finally { polling = false }
+}
+function connectWebSocket() {
+  if (disposed) return
+  const thread = currentThreadId.value
+  const url = new URL(`/ws/${thread}`, location.href)
+  url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const ws = new WebSocket(url)
+  socket = ws
+  ws.onopen = () => { if (socket === ws) { connected.value = true; void syncState() } }
+  ws.onmessage = ({ data }) => {
+    if (socket !== ws) return
+    try {
+      const payload = JSON.parse(data)
+      if (payload.type === 'snapshot') applySnapshot(payload.data)
+    } catch { /* The polling endpoint remains authoritative if an event is malformed. */ }
+  }
+  ws.onerror = () => ws.close()
+  ws.onclose = () => {
+    if (socket !== ws || disposed) return
+    connected.value = false
+    reconnectTimer = setTimeout(connectWebSocket, 3000)
   }
 }
-
-const removeFile = (index: number) => {
-  selectedFiles.value.splice(index, 1)
+function closeSocket() {
+  clearTimeout(reconnectTimer)
+  const previous = socket
+  socket = null
+  previous?.close()
+  connected.value = false
 }
-
-const renderMarkdown = (text: string) => {
-  if (!text) return '<span class="typing-indicator">Thinking...</span>'
-  return marked(text)
-}
-
-onMounted(() => {
+async function newChat() {
+  if (busy.value) return
+  closeSocket()
+  currentThreadId.value = crypto.randomUUID()
+  saveThreadId()
+  revision = -1
+  messages.value = []; fileList.value = []; selectedFiles.value = []
+  status.value = 'idle'; inputQuery.value = ''; errorMessage.value = ''; fileError.value = ''
+  connectionError.value = ''
+  isSidebarOpen.value = false
   connectWebSocket()
+  await syncState()
+}
+async function sendMessage() {
+  const query = inputQuery.value.trim()
+  if (!query || busy.value) return
+  errorMessage.value = ''
+  submitting.value = true
+  try {
+    let attachments: string[] = []
+    if (selectedFiles.value.length) {
+      const form = new FormData()
+      form.append('thread_id', currentThreadId.value)
+      selectedFiles.value.forEach(file => form.append('files', file))
+      const { data } = await api.post('/api/upload', form)
+      attachments = data.files
+    }
+    await api.post('/api/task', { query, thread_id: currentThreadId.value, mode: agentMode.value, attachments })
+    inputQuery.value = ''
+    selectedFiles.value = []
+    status.value = 'running'
+    submitting.value = false
+    await syncState()
+    void fetchFiles()
+  } catch (error) {
+    errorMessage.value = describeError(error)
+    // A timed-out POST may still have started a task. Reconcile before enabling another submission.
+    submitting.value = false
+    try {
+      const { data } = await api.get<Snapshot>(`/api/task/${currentThreadId.value}`)
+      applySnapshot(data)
+    } catch { /* Keep the draft and explain the connection failure. */ }
+  } finally { submitting.value = false }
+}
+async function stopTask() {
+  if (submitting.value || cancelling.value) return
+  cancelling.value = true
+  try {
+    const { data } = await api.post<Snapshot>(`/api/task/${currentThreadId.value}/cancel`)
+    applySnapshot(data)
+  } catch (error) { errorMessage.value = describeError(error) }
+  finally { cancelling.value = false }
+}
+function handleEnter(event: KeyboardEvent) {
+  if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+    event.preventDefault()
+    void sendMessage()
+  }
+}
+const triggerFileUpload = () => fileInputRef.value?.click()
+function handleFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const files = [...selectedFiles.value, ...Array.from(target.files ?? [])]
+  target.value = ''
+  if (files.length > 5 || files.some(file => file.size > 65536 || !/\.(txt|md|csv|tsv|json|log|sql)$/i.test(file.name))) {
+    errorMessage.value = 'Attach up to five UTF-8 text files, each 64 KB or smaller (TXT, MD, CSV, TSV, JSON, LOG, SQL).'
+    return
+  }
+  selectedFiles.value = files
+  errorMessage.value = ''
+}
+const removeFile = (index: number) => selectedFiles.value.splice(index, 1)
+const renderMarkdown = (text: string) => DOMPurify.sanitize(marked.parse(text, { async: false }))
+onMounted(() => {
+  saveThreadId()
+  connectWebSocket()
+  void syncState()
+  void fetchFiles()
+  pollTimer = setInterval(() => void syncState(), 3000)
+  heartbeatTimer = setInterval(() => { if (socket?.readyState === WebSocket.OPEN) socket.send('ping') }, 20000)
+})
+onUnmounted(() => {
+  disposed = true
+  closeSocket()
+  clearInterval(pollTimer)
+  clearInterval(heartbeatTimer)
 })
 </script>
 
@@ -334,11 +221,16 @@ onMounted(() => {
   <div class="app-container">
     <!-- Main Content -->
     <main class="main-content" :class="{ 'centered-layout': isWelcomeScreen }">
-      
+
+      <header class="app-toolbar">
+        <strong>Deep Search</strong>
+        <span class="connection-status" :class="{ online: connected }">{{ connected ? 'Live updates connected' : 'Reconnecting · polling for updates' }}</span>
+        <button class="folder-btn" @click="newChat" :disabled="busy">New chat</button>
+      </header>
       <!-- Sidebar Toggle Button -->
-      <button 
-        v-if="currentSessionPath && !isSidebarOpen" 
-        class="sidebar-toggle-btn" 
+      <button
+        v-if="!isWelcomeScreen && !isSidebarOpen"
+        class="sidebar-toggle-btn"
         @click="isSidebarOpen = true"
         title="Open File Sidebar"
       >
@@ -350,8 +242,8 @@ onMounted(() => {
       <!-- Welcome Screen -->
       <div v-if="isWelcomeScreen" class="welcome-screen">
         <div class="welcome-text">
-          <h1>Hello, User</h1>
-          <h2>How can I help you today?</h2>
+          <h1>Deep Search</h1>
+          <h2>What would you like to explore?</h2><p class="welcome-description">Query company data, search the internet, or combine both.</p>
         </div>
       </div>
 
@@ -359,10 +251,10 @@ onMounted(() => {
       <div v-else class="chat-scroll-area">
         <div class="chat-container">
           <div v-for="(msg, index) in messages" :key="index" class="message-wrapper" :class="msg.role">
-            
+
             <!-- User Message -->
             <div v-if="msg.role === 'user'" class="message-user">
-              <div class="msg-content">{{ msg.content }}</div>
+              <div class="msg-content">{{ msg.content }}<div v-if="msg.attachments?.length" class="attachment-names">{{ msg.attachments.map(path => path.split('/').pop()?.replace(/^[a-f0-9]{8}_/, '')).join(', ') }}</div></div>
             </div>
 
             <!-- AI Message -->
@@ -378,14 +270,14 @@ onMounted(() => {
                   </defs>
                 </svg>
               </div>
-              
+
               <div class="ai-content-wrapper">
                 <!-- Logs / Thinking Process -->
                 <div v-if="msg.logs && msg.logs.length > 0" class="process-section">
                   <details>
                     <summary>
-                      <span class="spinner" v-if="status === 'running' && index === messages.length - 1"></span>
-                      View thought process
+                      <span class="spinner" v-if="busy && index === messages.length - 1"></span>
+                      View agent activity
                     </summary>
                     <div class="process-steps">
                       <div v-for="(log, idx) in msg.logs" :key="idx" class="step-item">
@@ -402,11 +294,12 @@ onMounted(() => {
                 </div>
 
                 <!-- Text Content -->
-                <div class="markdown-body" v-html="renderMarkdown(msg.content)"></div>
+                <div v-if="!msg.content && busy && index === messages.length - 1" class="typing-indicator" role="status">Working on your request…</div>
+                <div class="markdown-body" :class="{ 'failed-answer': msg.failed }" v-html="renderMarkdown(msg.content)"></div>
 
                 <!-- Files -->
                 <div v-if="msg.files && msg.files.length > 0" class="files-grid">
-                  <a v-for="file in msg.files" :key="file.name" :href="file.url" target="_blank" class="file-card" :download="file.name">
+                  <a v-for="file in msg.files" :key="file.name" :href="downloadUrl(file)" class="file-card" :download="file.name">
                     <div class="file-icon">📄</div>
                     <div class="file-info">
                       <div class="file-name">{{ file.name }}</div>
@@ -429,42 +322,54 @@ onMounted(() => {
 
       <!-- Input Area -->
       <footer class="input-footer">
+        <div v-if="errorMessage || connectionError" class="error-banner" role="alert">{{ errorMessage || connectionError }} <button v-if="connectionError" class="folder-btn" @click="syncState">Retry connection</button></div>
+        <div class="composer-options">
+          <label for="agent-mode">Agent</label>
+          <select id="agent-mode" v-model="agentMode" :disabled="busy">
+            <option value="auto">Auto · both agents</option>
+            <option value="database">Database query</option>
+            <option value="internet">Internet search</option>
+          </select>
+          <span>Read-only database · public web search</span>
+        </div>
         <!-- File Preview Tab -->
         <div v-if="selectedFiles.length > 0" class="file-preview-container">
           <div v-for="(file, index) in selectedFiles" :key="index" class="file-preview-chip">
             <span class="file-preview-icon">📎</span>
             <span class="file-preview-name">{{ file.name }}</span>
-            <button class="file-remove-btn" @click="removeFile(index)" title="Remove file">×</button>
+            <button class="file-remove-btn" @click="removeFile(index)" :disabled="busy" title="Remove file" aria-label="Remove file">×</button>
           </div>
         </div>
 
-        <div class="input-container" :class="{ focused: status === 'running' }">
-          <input 
-            type="file" 
-            ref="fileInputRef" 
+        <div class="input-container" :class="{ focused: busy }">
+          <input
+            type="file"
+            ref="fileInputRef"
             multiple
-            style="display: none" 
-            @change="handleFileChange" 
+            accept=".txt,.md,.csv,.tsv,.json,.log,.sql"
+            style="display: none"
+            @change="handleFileChange"
           />
-          <button class="upload-btn" @click="triggerFileUpload" :disabled="status === 'running'" title="Upload file">
+          <button class="upload-btn" @click="triggerFileUpload" :disabled="busy" title="Attach UTF-8 text (up to 64 KB per file)" aria-label="Attach text files">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <textarea 
-            v-model="inputQuery" 
-            @keydown.enter.exact.prevent="sendMessage"
-            placeholder="Enter a prompt here"
-            :disabled="status === 'running'"
+          <textarea
+            v-model="inputQuery"
+            @keydown="handleEnter"
+            placeholder="Ask about company data or the web…" aria-label="Your question"
+            :disabled="busy"
           ></textarea>
-          <button class="send-btn" @click="sendMessage" :disabled="!inputQuery.trim() && status !== 'running'">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <button class="send-btn" @click="busy ? stopTask() : sendMessage()" :disabled="submitting || cancelling || (!busy && !inputQuery.trim())" :aria-label="busy ? 'Stop request' : 'Send message'" :title="busy ? 'Stop request' : 'Send message'">
+            <span v-if="busy" class="stop-icon">■</span>
+            <svg v-if="!busy" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
             </svg>
           </button>
         </div>
         <div class="footer-text">
-          DeepAgents may display inaccurate info, including about people, so double-check its responses.
+          Shift + Enter for a new line · Attach UTF-8 text files, up to 64 KB each · Answers save as Markdown
         </div>
       </footer>
     </main>
@@ -477,15 +382,17 @@ onMounted(() => {
             <button class="folder-btn" @click="fetchFiles" title="Refresh Files" style="padding: 4px 8px;">
                 ↻
             </button>
-            <button class="close-btn" @click="isSidebarOpen = false">×</button>
+            <button class="close-btn" aria-label="Close files" @click="isSidebarOpen = false">×</button>
         </div>
       </div>
       <div class="file-list">
-        <div v-if="fileList.length === 0" class="empty-files">
+        <div v-if="fileError" class="error-banner" role="alert">{{ fileError }}</div>
+        <div v-if="loadingFiles" class="empty-files" role="status">Loading files…</div>
+        <div v-else-if="fileList.length === 0" class="empty-files">
           No files generated yet.
         </div>
-        <div v-else v-for="file in fileList" :key="file.path" class="file-item">
-          <a :href="file.url" target="_blank" class="file-link" :download="file.name">
+        <div v-for="file in fileList" :key="file.path" class="file-item">
+          <a :href="downloadUrl(file)" class="file-link" :download="file.name">
             <span class="file-icon">📄</span>
             <span class="file-name-text">{{ file.name }}</span>
           </a>
@@ -1068,5 +975,49 @@ textarea {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+* { box-sizing: border-box; }
+.app-container { height: 100dvh; }
+.app-toolbar { display: flex; gap: 1rem; align-items: center; padding: 1rem 4rem 1rem 1.25rem; width: 100%; }
+.centered-layout .app-toolbar { position: absolute; top: 0; }
+.connection-status { color: #d8b775; font-size: .75rem; flex: 1; }
+.connection-status.online { color: #9bc9a4; }
+.welcome-description { color: var(--text-secondary); line-height: 1.6; }
+.welcome-text h2 { font-size: clamp(1.5rem, 4vw, 3rem); color: #9aa0a6; }
+.welcome-text h1 { font-size: clamp(2.5rem, 5vw, 3.5rem); }
+.composer-options { width: 100%; max-width: 800px; display: flex; align-items: center; gap: .75rem; color: var(--text-secondary); font-size: .8rem; flex-wrap: wrap; }
+select { background: var(--surface-dark); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: .5rem; font: inherit; }
+.error-banner { width: 100%; max-width: 800px; padding: .7rem; border: 1px solid #b66d6d; color: #ffc3c3; border-radius: 8px; font-size: .85rem; display: flex; gap: .5rem; align-items: center; }
+.error-banner .folder-btn { margin-left: auto; white-space: nowrap; }
+.main-content.centered-layout .input-footer { padding: 0 1.25rem 1.25rem; }
+.chat-scroll-area { min-height: 0; }
+.input-footer { flex-shrink: 0; }
+textarea { min-width: 0; height: 64px; max-height: 140px; }
+.msg-content { white-space: pre-wrap; overflow-wrap: anywhere; }
+.attachment-names { font-size: .75rem; opacity: .7; margin-top: .5rem; }
+.file-info { min-width: 0; }
+.file-name { overflow-wrap: anywhere; }
+.file-card { max-width: 100%; }
+.markdown-body { overflow-wrap: anywhere; overflow-x: auto; }
+.markdown-body table { border-collapse: collapse; display: block; overflow-x: auto; margin: 1rem 0; }
+.markdown-body th, .markdown-body td { border: 1px solid var(--border-color); padding: .6rem .8rem; text-align: left; }
+.markdown-body th { background: var(--surface-dark); }
+.markdown-body a { color: var(--accent-blue); }
+.markdown-body code { background: var(--surface-light); padding: .1rem .25rem; border-radius: 4px; }
+.failed-answer { color: #ffc3c3; }
+.spacer-bottom { height: 16px; }
+.footer-text { color: #9aa0a6; }
+button:disabled, select:disabled { opacity: .5; cursor: default; }
+button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 3px; }
+@media (max-width: 700px) {
+  .app-toolbar { gap: .5rem; padding-left: .75rem; }
+  .connection-status { font-size: .65rem; }
+  .welcome-screen { padding: 5rem 1rem 1rem; }
+  .input-footer { padding: .75rem; }
+  .composer-options > span { display: none; }
+  .file-sidebar { position: absolute; right: 0; top: 0; bottom: 0; width: min(320px, 90vw); z-index: 20; box-shadow: -12px 0 30px #0008; }
+  .message-user { max-width: 90%; }
+  .ai-content-wrapper { max-width: 100%; }
 }
 </style>
