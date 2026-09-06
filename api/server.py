@@ -24,6 +24,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_ROOT = Path(os.getenv("DEEP_SEARCH_OUTPUT_DIR", ROOT / "output")).resolve()
 TASK_TIMEOUT = 300
 TEXT_SUFFIXES = {".txt", ".md", ".csv", ".tsv", ".json", ".log", ".sql"}
+DOCUMENT_SUFFIXES = {".pdf", ".docx", ".xlsx", ".xls"}
+UPLOAD_SUFFIXES = TEXT_SUFFIXES | DOCUMENT_SUFFIXES
 sessions: dict[str, dict] = {}
 tasks: dict[str, asyncio.Task] = {}
 logger = logging.getLogger(__name__)
@@ -121,7 +123,7 @@ app = FastAPI(title="Deep Search", lifespan=lifespan)
 class TaskRequest(BaseModel):
     query: str = Field(max_length=20000)
     thread_id: str = Field(default_factory=lambda: str(uuid4()))
-    mode: Literal["auto", "database", "internet"] = "auto"
+    mode: Literal["auto", "database", "internet", "ragflow"] = "auto"
     attachments: list[str] = Field(default_factory=list, max_length=5)
 
     @field_validator("query")
@@ -143,7 +145,7 @@ def public_error(exc: Exception) -> str:
         return "This request timed out. Try a narrower question or check the model/search service."
     if isinstance(exc, KeyError):
         return "The model is not configured. Check QWEN_REMOTE_BASE_URL and QWEN_REMOTE_API_KEY in .env."
-    return "The agent could not complete this request. Check the model, search and database configuration, then try again."
+    return "The agent could not complete this request. Check the model, search, database and RAGFlow configuration, then try again."
 
 
 async def execute_task(request: TaskRequest, query: str, history: list[dict], run_id: str):
@@ -152,11 +154,14 @@ async def execute_task(request: TaskRequest, query: str, history: list[dict], ru
     thread_token = set_thread_context(request.thread_id)
     run_token = set_run_context(run_id)
     try:
+        before = {f["path"]: (f["mtime"], f["size"]) for f in (await list_files(request.thread_id))["files"]}
         async with asyncio.timeout(TASK_TIMEOUT):
             answer = await run_agent(query, history, request.mode)
         name = f"answer_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{run_id[:8]}.md"
         (session_dir(request.thread_id) / name).write_text(answer + "\n", encoding="utf-8")
-        state["messages"][-1].update(content=answer, files=[{"name": name, "path": name}])
+        generated = [f for f in (await list_files(request.thread_id))["files"]
+                     if before.get(f["path"]) != (f["mtime"], f["size"]) and not f["path"].startswith("uploads/")]
+        state["messages"][-1].update(content=answer, files=generated)
         state["status"] = "completed"
     except asyncio.CancelledError:
         state["status"] = "cancelled"
@@ -176,7 +181,7 @@ async def execute_task(request: TaskRequest, query: str, history: list[dict], ru
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "agents": ["database", "internet"], "ragflow": False}
+    return {"status": "ok", "agents": ["database", "internet", "ragflow"], "ragflow": True}
 
 
 @app.post("/api/task", status_code=202)
@@ -187,9 +192,13 @@ async def start_task(request: TaskRequest):
     attachments = []
     for name in request.attachments:
         path = checked_file(request.thread_id, name)
-        if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
-            raise HTTPException(400, "One of the attached text files is unavailable.")
-        attachments.append(f"\n<attachment name={json.dumps(path.name)}>\n{path.read_text(encoding='utf-8')}\n</attachment>")
+        if not path.is_file() or path.suffix.lower() not in UPLOAD_SUFFIXES:
+            raise HTTPException(400, "One of the attached files is unavailable.")
+        if path.suffix.lower() in TEXT_SUFFIXES:
+            content = path.read_text(encoding='utf-8')
+        else:
+            content = "Read this document using the read_file_content tool."
+        attachments.append(f"\n<attachment name={json.dumps(path.name)} path={json.dumps(name)}>\n{content}\n</attachment>")
     if sum(len(part) for part in attachments) > 100000:
         raise HTTPException(413, "Attachments must contain at most 100,000 characters in total.")
     history = [{"role": "assistant" if m["role"] == "ai" else "user", "content": m.get("agent_content", m["content"])}
@@ -255,28 +264,32 @@ async def upload_files(thread_id: str = Form(...), files: list[UploadFile] = Fil
         raise HTTPException(409, "Wait for the current request before uploading.")
     directory = session_dir(thread_id) / "uploads"
     if not 1 <= len(files) <= 5:
-        raise HTTPException(400, "Attach between one and five text files.")
+        raise HTTPException(400, "Attach between one and five files.")
     pending = []
     for file in files:
         name = (file.filename or "").replace("\\", "/").split("/")[-1]
-        if not name or name.startswith(".") or Path(name).suffix.lower() not in TEXT_SUFFIXES:
-            raise HTTPException(415, "Supported attachments: TXT, Markdown, CSV, TSV, JSON, LOG and SQL.")
-        content = await file.read(65537)
-        if len(content) > 65536:
-            raise HTTPException(413, "Each attachment must be 64 KB or smaller.")
-        try:
-            text = content.decode("utf-8-sig")
-        except UnicodeDecodeError:
-            raise HTTPException(415, "Attachments must use UTF-8 text encoding.")
-        if "\x00" in text:
-            raise HTTPException(415, "Binary attachments are not supported.")
-        pending.append((f"{uuid4().hex[:8]}_{name}", text))
-    if sum(len(content) for _, content in pending) > 99000:
-        raise HTTPException(413, "Attachments must contain fewer than 99,000 characters in total.")
+        suffix = Path(name).suffix.lower()
+        if not name or name.startswith(".") or suffix not in UPLOAD_SUFFIXES:
+            raise HTTPException(415, "Supported attachments: text, PDF, Word (.docx), and Excel (.xlsx/.xls).")
+        limit = 65536 if suffix in TEXT_SUFFIXES else 10 * 1024 * 1024
+        content = await file.read(limit + 1)
+        if len(content) > limit:
+            raise HTTPException(413, "Text attachments must be 64 KB or smaller; documents must be 10 MB or smaller.")
+        if suffix in TEXT_SUFFIXES:
+            try:
+                text = content.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                raise HTTPException(415, "Text attachments must use UTF-8 encoding.")
+            if "\x00" in text:
+                raise HTTPException(415, "Binary content is not valid in a text attachment.")
+            content = text.encode("utf-8")
+        pending.append((f"{uuid4().hex[:8]}_{name}", content, suffix))
+    if sum(len(content) for _, content, suffix in pending if suffix in TEXT_SUFFIXES) > 99000:
+        raise HTTPException(413, "Text attachments must contain fewer than 99,000 bytes in total.")
     directory.mkdir(exist_ok=True)
-    for name, text in pending:
-        (directory / name).write_text(text, encoding="utf-8")
-    return {"status": "uploaded", "files": [f"uploads/{name}" for name, _ in pending]}
+    for name, content, _ in pending:
+        (directory / name).write_bytes(content)
+    return {"status": "uploaded", "files": [f"uploads/{name}" for name, _, _ in pending]}
 
 
 @app.get("/api/files")

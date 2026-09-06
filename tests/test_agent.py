@@ -116,3 +116,30 @@ def test_internet_search_agent_uses_web_search_prompt_section():
 def test_subagent_names_are_unique():
     names = [database_query_agent["name"], internet_search_agent["name"]]
     assert len(set(names)) == len(names)
+
+
+def test_qwen_tool_roundtrip_omits_unsupported_agent_names():
+    import httpx
+    from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+    from agent.llm import QwenChatOpenAI
+    requests = []
+    def respond(request):
+        import json
+        payload = json.loads(request.content)
+        requests.append(payload)
+        assert all('name' not in m for m in payload['messages'] if m['role'] != 'tool')
+        assert payload['messages'][-1]['tool_call_id'] == 'call-1'
+        return httpx.Response(200, json={
+            'id': 'test', 'object': 'chat.completion', 'created': 0, 'model': 'qwen-test',
+            'choices': [{'index': 0, 'message': {'role': 'assistant', 'content': 'Tables found'}, 'finish_reason': 'stop'}],
+        })
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        model = QwenChatOpenAI(model='qwen-test', base_url='http://qwen.test/v1', api_key='test-key', http_client=client)
+        result = model.invoke([
+            HumanMessage(content='List tables'),
+            AIMessage(content='', name='Database Query Agent', tool_calls=[
+                {'name': 'list_sql_tables', 'args': {}, 'id': 'call-1', 'type': 'tool_call'}]),
+            ToolMessage(content='drugs', tool_call_id='call-1', name='list_sql_tables'),
+        ])
+    assert result.content == 'Tables found'
+    assert len(requests) == 1

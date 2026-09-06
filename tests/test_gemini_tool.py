@@ -46,6 +46,27 @@ def test_get_client_is_cached(monkeypatch, reset_client, test_env):
     ctor.assert_called_once_with(api_key=test_env["GEMINI_API_KEY"])
 
 
+def test_first_concurrent_searches_share_one_client(monkeypatch, reset_client, test_env):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+    import time
+
+    start = Barrier(8)
+    def create_client(**kwargs):
+        # Keep initialization in progress while the other workers request a client.
+        time.sleep(0.05)
+        return object()
+    constructor = MagicMock(side_effect=create_client)
+    monkeypatch.setattr(gemini_tool.genai, "Client", constructor)
+    def get_client(_):
+        start.wait(timeout=5)
+        return gemini_tool._get_client()
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        clients = list(pool.map(get_client, range(8)))
+    assert all(client is clients[0] for client in clients)
+    constructor.assert_called_once_with(api_key=test_env["GEMINI_API_KEY"])
+
+
 def test_default_model_from_env(test_env):
     assert gemini_tool.DEFAULT_MODEL == test_env["GEMINI_MODEL"]
 

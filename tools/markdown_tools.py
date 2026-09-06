@@ -13,7 +13,7 @@ if _PROJECT_ROOT not in sys.path:
 
 from api.monitor import monitor
 from api.context import get_session_context
-from utils.path_utils import resolve_path
+from tools.session_paths import resolve_path
 
 
 # Markdown生成工具

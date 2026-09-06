@@ -21,7 +21,7 @@ const status = ref<Snapshot['status']>('idle')
 const submitting = ref(false)
 const cancelling = ref(false)
 const busy = computed(() => submitting.value || status.value === 'running')
-const agentMode = ref<'auto' | 'database' | 'internet'>('auto')
+const agentMode = ref<'auto' | 'database' | 'internet' | 'ragflow'>('auto')
 const connected = ref(false)
 const errorMessage = ref('')
 const connectionError = ref('')
@@ -192,8 +192,12 @@ function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement
   const files = [...selectedFiles.value, ...Array.from(target.files ?? [])]
   target.value = ''
-  if (files.length > 5 || files.some(file => file.size > 65536 || !/\.(txt|md|csv|tsv|json|log|sql)$/i.test(file.name))) {
-    errorMessage.value = 'Attach up to five UTF-8 text files, each 64 KB or smaller (TXT, MD, CSV, TSV, JSON, LOG, SQL).'
+  if (files.length > 5 || files.some(file => {
+    const isText = /\.(txt|md|csv|tsv|json|log|sql)$/i.test(file.name)
+    const supported = isText || /\.(pdf|docx|xlsx|xls)$/i.test(file.name)
+    return !supported || file.size > (isText ? 65536 : 10 * 1024 * 1024)
+  })) {
+    errorMessage.value = 'Attach up to five files: UTF-8 text up to 64 KB, or PDF, Word and Excel up to 10 MB each.'
     return
   }
   selectedFiles.value = files
@@ -243,7 +247,7 @@ onUnmounted(() => {
       <div v-if="isWelcomeScreen" class="welcome-screen">
         <div class="welcome-text">
           <h1>Deep Search</h1>
-          <h2>What would you like to explore?</h2><p class="welcome-description">Query company data, search the internet, or combine both.</p>
+          <h2>What would you like to explore?</h2><p class="welcome-description">Query company data, search the web, and explore internal knowledge bases.</p>
         </div>
       </div>
 
@@ -326,11 +330,12 @@ onUnmounted(() => {
         <div class="composer-options">
           <label for="agent-mode">Agent</label>
           <select id="agent-mode" v-model="agentMode" :disabled="busy">
-            <option value="auto">Auto · both agents</option>
+            <option value="auto">Auto · all agents</option>
             <option value="database">Database query</option>
             <option value="internet">Internet search</option>
+            <option value="ragflow">Knowledge base</option>
           </select>
-          <span>Read-only database · public web search</span>
+          <span>Database · web search · knowledge base</span>
         </div>
         <!-- File Preview Tab -->
         <div v-if="selectedFiles.length > 0" class="file-preview-container">
@@ -346,11 +351,11 @@ onUnmounted(() => {
             type="file"
             ref="fileInputRef"
             multiple
-            accept=".txt,.md,.csv,.tsv,.json,.log,.sql"
+            accept=".txt,.md,.csv,.tsv,.json,.log,.sql,.pdf,.docx,.xlsx,.xls"
             style="display: none"
             @change="handleFileChange"
           />
-          <button class="upload-btn" @click="triggerFileUpload" :disabled="busy" title="Attach UTF-8 text (up to 64 KB per file)" aria-label="Attach text files">
+          <button class="upload-btn" @click="triggerFileUpload" :disabled="busy" title="Attach text (64 KB) or PDF, Word, Excel (10 MB)" aria-label="Attach files">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -369,7 +374,7 @@ onUnmounted(() => {
           </button>
         </div>
         <div class="footer-text">
-          Shift + Enter for a new line · Attach UTF-8 text files, up to 64 KB each · Answers save as Markdown
+          Shift + Enter for a new line · Text up to 64 KB · PDF, Word, Excel up to 10 MB · Answers save as Markdown
         </div>
       </footer>
     </main>

@@ -12,9 +12,27 @@ from langchain_core.tools import tool
 # 导入依赖
 from ragflow_sdk import RAGFlow #链接rag服务的客户端
 from ragflow.rag_config import _load_ragflow_env
+import requests
 
 # 创建一个ragflow的客户端
 ragflow_client = None
+
+
+class _RAGFlowClient(RAGFlow):
+    """Bound SDK requests so an offline service cannot occupy a worker forever."""
+
+    def _request(self, method, path, **kwargs):
+        return requests.request(method, self.api_url + path,
+                                headers=self.authorization_header, timeout=(10, 120), **kwargs)
+
+    def get(self, path, params=None, json=None):
+        return self._request("GET", path, params=params, json=json)
+
+    def post(self, path, json=None, stream=False, files=None):
+        return self._request("POST", path, json=json, stream=stream, files=files)
+
+    def delete(self, path, json):
+        return self._request("DELETE", path, json=json)
 
 
 def _get_client():
@@ -24,7 +42,7 @@ def _get_client():
         api_key, base_url = _load_ragflow_env()
         if not api_key or not base_url:
             raise ValueError("Set RAGFLOW_API_KEY and RAGFLOW_API_URL before using RAGFlow tools.")
-        ragflow_client = RAGFlow(api_key=api_key, base_url=base_url)
+        ragflow_client = _RAGFlowClient(api_key=api_key, base_url=base_url.rstrip("/"))
     return ragflow_client
 
 # 1. 查询现在知识库中有哪些聊天助手和对应知识库的信息 （方便我们知道rag可以给我们提供哪些数据）
@@ -53,9 +71,9 @@ def get_assistant_list() -> str:
         # 3. 查询聊天助手的知识库信息
         count_chat_info = "" #存储所有会话信息
         for chat in chat_list:
-            dataset_names = []
-            dataset_list = chat.datasets #当前聊天助手关联的知识库
-            if dataset_list and isinstance(dataset_list,list):
+            dataset_names = list(getattr(chat, "kb_names", None) or [])
+            dataset_list = getattr(chat, "datasets", None) #当前聊天助手关联的知识库
+            if not dataset_names and isinstance(dataset_list, list):
                 # 知识库的name
                 for dataset in dataset_list:
                     # print(dataset)
@@ -63,7 +81,7 @@ def get_assistant_list() -> str:
 
             # 拼接下当前助手的信息 + 知识库信息
             # 法律资源小助手  xxxxxx  关联知识库：xx、xxx、xxx
-            count_chat_info += f"assistant name:{chat.name}; description:{chat.description}; associated knowledge bases: {', '.join(dataset_names)} \n"
+            count_chat_info += f"assistant name:{chat.name}; description:{getattr(chat, 'description', '')}; associated knowledge bases: {', '.join(dataset_names)} \n"
         return count_chat_info
     except Exception as e:
         return f"Failed to query assistant information; no assistants available. Error: {str(e)}"
@@ -95,12 +113,27 @@ def create_ask_delete(chat_name: str, question: str) -> str:
             # 返回的提问结果是流式
             response = session.ask(question = question,stream=True)
             # 接收总结果
-            result = ""
+            answer_parts = []
+            source_names = []
             # 流的每一部分的对象 part
             for part in response:
                 # 数据存在对象中content上！！
                 # print(part.content)
-                result = part.content
+                if part.content:
+                    answer_parts.append(part.content)
+                references = getattr(part, "reference", None)
+                if isinstance(references, list):
+                    for reference in references:
+                        if not isinstance(reference, dict):
+                            continue
+                        name = reference.get("document_name") or reference.get("document_keyword")
+                        if name and name not in source_names:
+                            source_names.append(name)
+            result = "".join(answer_parts).strip()
+            if not result:
+                return "Question failed: RAGFlow returned an empty answer."
+            if source_names:
+                result += "\n\nSources:\n" + "\n".join(f"- {name}" for name in source_names)
             # 5. 关闭提问的会话
             # chat -> 关闭 -》  session
         finally:

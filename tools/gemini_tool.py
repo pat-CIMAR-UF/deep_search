@@ -15,6 +15,7 @@ from google.genai import types
 import os  # 系统路径/环境变量处理 / Env var handling
 import sys
 from pathlib import Path
+from threading import Lock
 from dotenv import load_dotenv, find_dotenv # 加载 .env 文件中的环境变量 / Load environment variables from .env
 
 # 直接以脚本方式运行时（python tools/gemini_tool.py），sys.path 里只有 tools/ 目录，
@@ -38,17 +39,21 @@ DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
 # 客户端延迟初始化：避免没有配置 API Key 时，导入模块就直接报错
 # Lazily initialised client: importing this module must not fail when the API key is missing
 _client: genai.Client | None = None
+_client_lock = Lock()
 
 
 def _get_client() -> genai.Client:
     """Return the process-wide Gemini client (created on first use)."""
     global _client
-    if _client is None:
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise RuntimeError("GEMINI_API_KEY is not set. Add it to your .env file.")
-        _client = genai.Client(api_key=api_key)
-    return _client
+    # Concurrent tools must retain one client; replacing it can close an in-flight request.
+    with _client_lock:
+        if _client is None:
+            api_key = os.getenv("GEMINI_API_KEY")
+            if not api_key:
+                raise RuntimeError("GEMINI_API_KEY is not set. Add it to your .env file.")
+            _client = genai.Client(api_key=api_key)
+        return _client
+
 
 
 # ======================== 定义一个网络搜索工具 ========================

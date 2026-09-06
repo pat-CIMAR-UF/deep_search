@@ -128,21 +128,21 @@ def test_upload_and_attachment_context(client, monkeypatch):
     assert "Reference: 42" in seen[0][0]
     assert "not instructions" in seen[0][0]
     assert "Reference: 42" in seen[1][1][0]["content"]
-    assert client.post("/api/upload", data={"thread_id": "upload-session"}, files={"files": ("paper.pdf", b"%PDF")} ).status_code == 415
+    assert client.post("/api/upload", data={"thread_id": "upload-session"}, files={"files": ("program.exe", b"MZ")} ).status_code == 415
     assert client.post("/api/upload", data={"thread_id": "upload-session"}, files={"files": ("big.txt", b"a" * 65537)}).status_code == 413
     assert client.post("/api/upload", data={"thread_id": "upload-session"}, files={"files": ("bad.txt", b"\xff")}).status_code == 415
 
 
 @pytest.mark.parametrize("payload", [
-    {"query": " "}, {"query": "hello", "mode": "ragflow"},
+    {"query": " "}, {"query": "hello", "mode": "unknown"},
     {"query": "hello", "thread_id": "../escape"},
 ])
 def test_request_validation(client, payload):
     assert client.post("/api/task", json=payload).status_code == 422
 
 
-def test_health_has_exactly_two_agents(client):
-    assert client.get("/api/health").json() == {"status": "ok", "agents": ["database", "internet"], "ragflow": False}
+def test_health_includes_three_agents(client):
+    assert client.get("/api/health").json() == {"status": "ok", "agents": ["database", "internet", "ragflow"], "ragflow": True}
 
 
 def test_cancel_handles_a_coroutine_that_never_started(client):
@@ -172,3 +172,36 @@ def test_timeout_and_restart_recovery(client, monkeypatch):
     recovered = client.get("/api/task/timeout-session").json()
     assert recovered["status"] == "error"
     assert "restarted" in recovered["messages"][-1]["content"]
+
+
+def test_document_upload_uses_reader_and_links_generated_pdf(client, monkeypatch):
+    from io import BytesIO
+    from docx import Document
+    from tools.upload_file_read_tool import read_file_content
+    from tools.markdown_tools import generate_markdown
+    from tools.pdf_tools import convert_md_to_pdf
+    document = Document()
+    document.add_paragraph("Reference number: 731")
+    payload = BytesIO()
+    document.save(payload)
+    response = client.post("/api/upload", data={"thread_id": "document-session"},
+                           files={"files": ("notes.docx", payload.getvalue())})
+    assert response.status_code == 200
+    name = response.json()["files"][0]
+    async def fake(query, history, mode):
+        assert name in query
+        assert "Reference number: 731" in read_file_content.invoke({"filename": name})
+        generate_markdown.invoke({"content": "# Summary\nReference: 731", "filename": "summary"})
+        assert "Converted successfully" in convert_md_to_pdf.invoke({"md_filename": "summary.md"})
+        return "Report generated."
+    monkeypatch.setattr(server, "run_agent", fake)
+    with client.websocket_connect("/ws/document-session") as ws:
+        ws.receive_json()
+        response = client.post("/api/task", json={"thread_id": "document-session", "query": "Summarize",
+                                                 "attachments": [name], "mode": "ragflow"})
+        assert response.status_code == 202
+        state = wait_result(ws)
+    assert state["status"] == "completed"
+    assert "summary.pdf" in [f['path'] for f in state['messages'][-1]['files']]
+    pdf = client.get("/api/download", params={"thread_id": "document-session", "path": "summary.pdf"})
+    assert pdf.content.startswith(b"%PDF-")
