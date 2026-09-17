@@ -1,0 +1,889 @@
+{
+  "run_at": "20260917T162918Z",
+  "questions_file": "evals/baseline_questions.jsonl",
+  "pricing": {
+    "coordinator": {
+      "note": "deepseek-flash (DeepSeek-V4.1-Flash) peak-hour list price, cache miss: $0.30 in / $1.20 out per 1M tokens. Off-peak is half; cache hits are ~$0.006 in.",
+      "input_per_million": 0.3,
+      "output_per_million": 1.2
+    },
+    "gemini": {
+      "note": "Gemini Flash-class list price assumption (verify against the current Google AI pricing page).",
+      "input_per_million": 0.3,
+      "output_per_million": 2.5
+    }
+  },
+  "summary": {
+    "questions": 20,
+    "errors": 0,
+    "latency_p50_s": 47.0,
+    "latency_p95_s": 193.99,
+    "latency_mean_s": 72.13,
+    "mean_input_tokens": 81152.0,
+    "mean_output_tokens": 7182.1,
+    "mean_gemini_tokens": 7350.8,
+    "mean_llm_calls": 12.2,
+    "mean_tool_calls": 18.8,
+    "mean_cost_usd": 0.04589,
+    "total_cost_usd": 0.9179
+  },
+  "by_route": {
+    "database": {
+      "questions": 6,
+      "errors": 0,
+      "latency_p50_s": 15.78,
+      "latency_p95_s": 17.99,
+      "latency_mean_s": 15.57,
+      "mean_input_tokens": 32306.0,
+      "mean_output_tokens": 2592.3,
+      "mean_gemini_tokens": 0.0,
+      "mean_llm_calls": 7.0,
+      "mean_tool_calls": 9.7,
+      "mean_cost_usd": 0.0128,
+      "total_cost_usd": 0.0768
+    },
+    "database+internet": {
+      "questions": 2,
+      "errors": 0,
+      "latency_p50_s": 56.47,
+      "latency_p95_s": 58.68,
+      "latency_mean_s": 56.47,
+      "mean_input_tokens": 69854.0,
+      "mean_output_tokens": 8335.0,
+      "mean_gemini_tokens": 6801.5,
+      "mean_llm_calls": 12.5,
+      "mean_tool_calls": 22.0,
+      "mean_cost_usd": 0.04301,
+      "total_cost_usd": 0.086
+    },
+    "database+ragflow": {
+      "questions": 1,
+      "errors": 0,
+      "latency_p50_s": 38.95,
+      "latency_p95_s": 38.95,
+      "latency_mean_s": 38.95,
+      "mean_input_tokens": 76454.0,
+      "mean_output_tokens": 6357.0,
+      "mean_gemini_tokens": 0.0,
+      "mean_llm_calls": 18.0,
+      "mean_tool_calls": 21.0,
+      "mean_cost_usd": 0.03056,
+      "total_cost_usd": 0.0306
+    },
+    "internet": {
+      "questions": 5,
+      "errors": 0,
+      "latency_p50_s": 49.57,
+      "latency_p95_s": 93.36,
+      "latency_mean_s": 61.22,
+      "mean_input_tokens": 50929.0,
+      "mean_output_tokens": 5645.0,
+      "mean_gemini_tokens": 7262.4,
+      "mean_llm_calls": 9.2,
+      "mean_tool_calls": 13.4,
+      "mean_cost_usd": 0.03631,
+      "total_cost_usd": 0.1815
+    },
+    "ragflow": {
+      "questions": 6,
+      "errors": 0,
+      "latency_p50_s": 124.63,
+      "latency_p95_s": 282.59,
+      "latency_mean_s": 148.53,
+      "mean_input_tokens": 159732.8,
+      "mean_output_tokens": 12806.2,
+      "mean_gemini_tokens": 16183.3,
+      "mean_llm_calls": 19.0,
+      "mean_tool_calls": 30.8,
+      "mean_cost_usd": 0.09049,
+      "total_cost_usd": 0.543
+    }
+  },
+  "results": [
+    {
+      "id": "db-01",
+      "question": "How many drugs are in our catalogue, and how many of them are capsules?",
+      "expected_route": [
+        "database"
+      ],
+      "tags": [
+        "count"
+      ],
+      "session_id": "baseline-20260917T162918Z-db-01",
+      "latency_s": 13.47,
+      "metrics": {
+        "input_tokens": 25380,
+        "output_tokens": 1715,
+        "llm_calls": 6,
+        "tool_calls": {
+          "aggregate_documents": 1,
+          "count_documents": 2,
+          "find_documents": 1,
+          "get_collection_schema": 1,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 1
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1
+        },
+        "gemini_calls": 0,
+        "gemini_input_tokens": 0,
+        "gemini_output_tokens": 0,
+        "total_tokens": 27095,
+        "tool_call_count": 8
+      },
+      "cost_usd": 0.009672,
+      "answer_chars": 1126,
+      "answer_preview": "No reference files were found in the working directory, so this answer is based entirely on the internal database.\n\n## Drug Catalogue Summary\n\n| Metric | Value |\n|---|---|\n| **Total drugs in catalogue** | **10** |\n| **Capsules** | **4** |\n\n## Dosage-form breakdown\n\n| Dosage form | Count |\n|---|---|\n",
+      "error": null
+    },
+    {
+      "id": "db-02",
+      "question": "What is the total quantity on hand across all inventory batches of Amoxicillin Capsules?",
+      "expected_route": [
+        "database"
+      ],
+      "tags": [
+        "aggregate",
+        "lookup"
+      ],
+      "session_id": "baseline-20260917T162918Z-db-02",
+      "latency_s": 13.02,
+      "metrics": {
+        "input_tokens": 30670,
+        "output_tokens": 1931,
+        "llm_calls": 7,
+        "tool_calls": {
+          "aggregate_documents": 1,
+          "find_documents": 2,
+          "get_collection_schema": 2,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 1
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1
+        },
+        "gemini_calls": 0,
+        "gemini_input_tokens": 0,
+        "gemini_output_tokens": 0,
+        "total_tokens": 32601,
+        "tool_call_count": 8
+      },
+      "cost_usd": 0.011518,
+      "answer_chars": 1161,
+      "answer_preview": "**Total quantity on hand: 25,000 capsules** (across 3 inventory batches)\n\nSource: internal `inventory` collection (field `quantity_on_hand`), joined to the `drugs` collection on `drug_id`.\n\n**Matched product**\n\n| Field | Value |\n|---|---|\n| Generic name | Amoxicillin Capsules |\n| drug_id | 1 |\n| Bra",
+      "error": null
+    },
+    {
+      "id": "db-03",
+      "question": "Which of our drugs has the highest total sales revenue, and what is that amount?",
+      "expected_route": [
+        "database"
+      ],
+      "tags": [
+        "aggregate",
+        "lookup"
+      ],
+      "session_id": "baseline-20260917T162918Z-db-03",
+      "latency_s": 15.41,
+      "metrics": {
+        "input_tokens": 33715,
+        "output_tokens": 2463,
+        "llm_calls": 7,
+        "tool_calls": {
+          "aggregate_documents": 1,
+          "count_documents": 2,
+          "find_documents": 2,
+          "get_collection_schema": 2,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 1
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1
+        },
+        "gemini_calls": 0,
+        "gemini_input_tokens": 0,
+        "gemini_output_tokens": 0,
+        "total_tokens": 36178,
+        "tool_call_count": 10
+      },
+      "cost_usd": 0.01307,
+      "answer_chars": 1845,
+      "answer_preview": "## Answer\n\nThe drug with the highest total sales revenue is **Lianhua Qingwen Capsules** (brand: **Lianhua Qingwen**, `drug_id = 10`), with total sales revenue of **1,200,000**.\n\n### Source: internal sales database (`sales_records`, joined to `drugs`)\n\n| Rank | Drug (generic) | Brand | drug_id | Tot",
+      "error": null
+    },
+    {
+      "id": "db-04",
+      "question": "Show total sales revenue by region, highest first.",
+      "expected_route": [
+        "database"
+      ],
+      "tags": [
+        "aggregate"
+      ],
+      "session_id": "baseline-20260917T162918Z-db-04",
+      "latency_s": 17.1,
+      "metrics": {
+        "input_tokens": 37095,
+        "output_tokens": 2672,
+        "llm_calls": 8,
+        "tool_calls": {
+          "aggregate_documents": 2,
+          "count_documents": 3,
+          "find_documents": 3,
+          "get_collection_schema": 1,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 1
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1
+        },
+        "gemini_calls": 0,
+        "gemini_input_tokens": 0,
+        "gemini_output_tokens": 0,
+        "total_tokens": 39767,
+        "tool_call_count": 12
+      },
+      "cost_usd": 0.014335,
+      "answer_chars": 1658,
+      "answer_preview": "## Total Sales Revenue by Region\n\nSource: internal `sales_records` collection (all 20 records; field `total_amount`, grouped by `region`).\n\n| # | Region | Total Revenue | Records |\n|---|--------|--------------:|--------:|\n| 1 | Nationwide | 1,000,000 | 1 |\n| 2 | Northeast China | 500,000 | 1 |\n| 3 |",
+      "error": null
+    },
+    {
+      "id": "db-05",
+      "question": "Which inventory batches expire before July 2027, and in which warehouses are they stored?",
+      "expected_route": [
+        "database"
+      ],
+      "tags": [
+        "filter",
+        "date"
+      ],
+      "session_id": "baseline-20260917T162918Z-db-05",
+      "latency_s": 18.29,
+      "metrics": {
+        "input_tokens": 32869,
+        "output_tokens": 4038,
+        "llm_calls": 7,
+        "tool_calls": {
+          "aggregate_documents": 1,
+          "count_documents": 3,
+          "find_documents": 1,
+          "get_collection_schema": 2,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 1
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1
+        },
+        "gemini_calls": 0,
+        "gemini_input_tokens": 0,
+        "gemini_output_tokens": 0,
+        "total_tokens": 36907,
+        "tool_call_count": 10
+      },
+      "cost_usd": 0.014706,
+      "answer_chars": 3891,
+      "answer_preview": "Here are the inventory batches that expire **before July 2027** (i.e., expiry date earlier than 2027‑07‑01), based on the internal inventory database.\n\n## Matching batches — 20 total\n\n| # | Batch / Lot | Drug (generic / brand) | Qty on hand | Expiry date | Warehouse |\n|---|---|---|---|---|---|\n| 1 |",
+      "error": null
+    },
+    {
+      "id": "db-06",
+      "question": "How many sales records do we have per sales department in East China?",
+      "expected_route": [
+        "database"
+      ],
+      "tags": [
+        "aggregate",
+        "filter"
+      ],
+      "session_id": "baseline-20260917T162918Z-db-06",
+      "latency_s": 16.14,
+      "metrics": {
+        "input_tokens": 34107,
+        "output_tokens": 2735,
+        "llm_calls": 7,
+        "tool_calls": {
+          "aggregate_documents": 2,
+          "count_documents": 1,
+          "find_documents": 3,
+          "get_collection_schema": 1,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 1
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1
+        },
+        "gemini_calls": 0,
+        "gemini_input_tokens": 0,
+        "gemini_output_tokens": 0,
+        "total_tokens": 36842,
+        "tool_call_count": 10
+      },
+      "cost_usd": 0.013514,
+      "answer_chars": 1807,
+      "answer_preview": "## Answer\n\nI queried the internal `sales_records` collection. Here's what I found — and one important caveat.\n\n### Key finding\nThe `sales_records` collection has **no sales‑department field**. The actual schema is:\n\n`sale_id`, `drug_id`, `sale_date`, `quantity_sold`, `unit_price`, `total_amount`, `c",
+      "error": null
+    },
+    {
+      "id": "kb-01",
+      "question": "According to the amoxicillin label in our knowledge base, what are the most common adverse reactions?",
+      "expected_route": [
+        "ragflow"
+      ],
+      "tags": [
+        "drug-label"
+      ],
+      "session_id": "baseline-20260917T162918Z-kb-01",
+      "latency_s": 35.57,
+      "metrics": {
+        "input_tokens": 36034,
+        "output_tokens": 3770,
+        "llm_calls": 10,
+        "tool_calls": {
+          "create_ask_delete": 3,
+          "get_assistant_list": 2,
+          "ls": 1,
+          "task": 2
+        },
+        "subagent_calls": {
+          "RAGFlow Agent": 2
+        },
+        "gemini_calls": 0,
+        "gemini_input_tokens": 0,
+        "gemini_output_tokens": 0,
+        "total_tokens": 39804,
+        "tool_call_count": 8
+      },
+      "cost_usd": 0.015334,
+      "answer_chars": 1402,
+      "answer_preview": "## 结论：未能获取内容——知识库检索失败\n\n我**无法回答**您的问题，因为针对内部知识库（RAGFlow）中阿莫西林说明书的查询未成功。服务返回了连接错误，因此**没有**返回任何说明书文本、不良反应列表、频率类别或百分比。我没有用外部知识或记忆来填补这一空缺。\n\n### 尝试了什么\n\n我向 **Drug Labels Assistant** 知识库助手（知识库：**Drug Labels**）发出了两次查询——一次是详细提问，一次是简化重试。两次尝试均失败：\n\n```\n**ERROR**: CONNECTION_ERROR - Connection error.\n\nSources:\n- ",
+      "error": null
+    },
+    {
+      "id": "kb-02",
+      "question": "What adult dosage does the amoxicillin label recommend for mild to moderate infections?",
+      "expected_route": [
+        "ragflow"
+      ],
+      "tags": [
+        "drug-label"
+      ],
+      "session_id": "baseline-20260917T162918Z-kb-02",
+      "latency_s": 104.49,
+      "metrics": {
+        "input_tokens": 119424,
+        "output_tokens": 9539,
+        "llm_calls": 16,
+        "tool_calls": {
+          "count_documents": 1,
+          "create_ask_delete": 1,
+          "find_documents": 3,
+          "get_assistant_list": 1,
+          "get_collection_schema": 1,
+          "glob": 1,
+          "internet_search": 13,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 3
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1,
+          "Network Search Agent": 1,
+          "RAGFlow Agent": 1
+        },
+        "gemini_calls": 13,
+        "gemini_input_tokens": 5155,
+        "gemini_output_tokens": 9379,
+        "total_tokens": 128963,
+        "tool_call_count": 26
+      },
+      "cost_usd": 0.072268,
+      "answer_chars": 4335,
+      "answer_preview": "## Answer\n\nFor **mild to moderate infections**, the amoxicillin label recommends an adult dose of **250 mg every 8 hours** *or* **500 mg every 12 hours**.\n\nThis applies to infections of the **ear/nose/throat, skin and skin structure, and genitourinary tract**. (Note: mild‑to‑moderate **lower respira",
+      "error": null
+    },
+    {
+      "id": "kb-03",
+      "question": "What contraindications does the nifedipine extended-release label list?",
+      "expected_route": [
+        "ragflow"
+      ],
+      "tags": [
+        "drug-label"
+      ],
+      "session_id": "baseline-20260917T162918Z-kb-03",
+      "latency_s": 111.73,
+      "metrics": {
+        "input_tokens": 124251,
+        "output_tokens": 11313,
+        "llm_calls": 18,
+        "tool_calls": {
+          "count_documents": 2,
+          "create_ask_delete": 2,
+          "find_documents": 3,
+          "get_assistant_list": 1,
+          "get_collection_schema": 1,
+          "internet_search": 12,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 3
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1,
+          "Network Search Agent": 1,
+          "RAGFlow Agent": 1
+        },
+        "gemini_calls": 12,
+        "gemini_input_tokens": 4497,
+        "gemini_output_tokens": 5845,
+        "total_tokens": 135564,
+        "tool_call_count": 26
+      },
+      "cost_usd": 0.066812,
+      "answer_chars": 5280,
+      "answer_preview": "## Contraindications on the nifedipine extended-release label\n\n**Short answer:** The US FDA labels for nifedipine extended-release products list essentially **one** contraindication — **known hypersensitivity to nifedipine** (or to a component of the tablet). Broader lists (cardiogenic shock, aortic",
+      "error": null
+    },
+    {
+      "id": "kb-04",
+      "question": "What storage conditions does the amoxicillin label specify?",
+      "expected_route": [
+        "ragflow"
+      ],
+      "tags": [
+        "drug-label"
+      ],
+      "session_id": "baseline-20260917T162918Z-kb-04",
+      "latency_s": 187.66,
+      "metrics": {
+        "input_tokens": 166425,
+        "output_tokens": 17486,
+        "llm_calls": 19,
+        "tool_calls": {
+          "count_documents": 4,
+          "create_ask_delete": 2,
+          "find_documents": 4,
+          "get_assistant_list": 1,
+          "get_collection_schema": 2,
+          "glob": 1,
+          "internet_search": 18,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 3
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1,
+          "Network Search Agent": 1,
+          "RAGFlow Agent": 1
+        },
+        "gemini_calls": 18,
+        "gemini_input_tokens": 7325,
+        "gemini_output_tokens": 10105,
+        "total_tokens": 183911,
+        "tool_call_count": 37
+      },
+      "cost_usd": 0.098371,
+      "answer_chars": 8225,
+      "answer_preview": "## Short answer\n\nI could not verify what **your** amoxicillin label specifies, because the internal document that would contain it could not be retrieved. Two of the three research routes are accounted for:\n\n| Route | Status | What it gave us |\n|---|---|---|\n| **Internal knowledge base** (Drug Label",
+      "error": null
+    },
+    {
+      "id": "kb-05",
+      "question": "What tools and hardware parts does the IKEA GONATT crib assembly manual list?",
+      "expected_route": [
+        "ragflow"
+      ],
+      "tags": [
+        "manual"
+      ],
+      "session_id": "baseline-20260917T162918Z-kb-05",
+      "latency_s": 314.23,
+      "metrics": {
+        "input_tokens": 274833,
+        "output_tokens": 24923,
+        "llm_calls": 30,
+        "tool_calls": {
+          "create_ask_delete": 7,
+          "get_assistant_list": 2,
+          "glob": 5,
+          "internet_search": 30,
+          "ls": 5,
+          "task": 5
+        },
+        "subagent_calls": {
+          "Network Search Agent": 3,
+          "RAGFlow Agent": 2
+        },
+        "gemini_calls": 30,
+        "gemini_input_tokens": 12703,
+        "gemini_output_tokens": 23570,
+        "total_tokens": 299756,
+        "tool_call_count": 54
+      },
+      "cost_usd": 0.175093,
+      "answer_chars": 3740,
+      "answer_preview": "## Answer: I could not retrieve the GONATT manual's tools/hardware list — and I won't guess at it\n\nI checked all three specialist sources. The document exists, but **no retrieval path returned its actual contents**, so I have no verified tools list or hardware/fittings list to give you. Here is the ",
+      "error": null
+    },
+    {
+      "id": "kb-06",
+      "question": "According to the Midea U air conditioner installation guide, what window opening sizes does the unit fit?",
+      "expected_route": [
+        "ragflow"
+      ],
+      "tags": [
+        "manual"
+      ],
+      "session_id": "baseline-20260917T162918Z-kb-06",
+      "latency_s": 137.53,
+      "metrics": {
+        "input_tokens": 237430,
+        "output_tokens": 9806,
+        "llm_calls": 21,
+        "tool_calls": {
+          "create_ask_delete": 3,
+          "get_assistant_list": 2,
+          "glob": 1,
+          "internet_search": 22,
+          "ls": 3,
+          "task": 3
+        },
+        "subagent_calls": {
+          "Network Search Agent": 1,
+          "RAGFlow Agent": 2
+        },
+        "gemini_calls": 22,
+        "gemini_input_tokens": 6464,
+        "gemini_output_tokens": 12057,
+        "total_tokens": 247236,
+        "tool_call_count": 34
+      },
+      "cost_usd": 0.115078,
+      "answer_chars": 1894,
+      "answer_preview": "## 回答：Midea U 空调的窗户开口尺寸\n\n**重要说明：我无法把以下数据作为已核实内容提供。** 有两个限制：\n\n- **内部知识库文档已找到，但无法读取。** RAGFlow 知识库 *空调安装*（助手：*空调安装助手*）确实包含文档 **`Midea U AC Installation Guide.pdf`**，但两次尝试均返回 `ERROR: CONNECTION_ERROR - Connection error.` 未返回任何文本。因此，**本回答中没有一个数字来自该指南**——这是服务故障，而非确认文档缺失。\n- **公开网络检索结果引用了该指南，但无法打开原始 PDF。**",
+      "error": null
+    },
+    {
+      "id": "web-01",
+      "question": "Who first developed amoxicillin, and in which decade was it introduced?",
+      "expected_route": [
+        "internet"
+      ],
+      "tags": [
+        "history"
+      ],
+      "session_id": "baseline-20260917T162918Z-web-01",
+      "latency_s": 39.32,
+      "metrics": {
+        "input_tokens": 44848,
+        "output_tokens": 5392,
+        "llm_calls": 10,
+        "tool_calls": {
+          "create_ask_delete": 2,
+          "get_assistant_list": 1,
+          "internet_search": 4,
+          "ls": 1,
+          "task": 2
+        },
+        "subagent_calls": {
+          "Network Search Agent": 1,
+          "RAGFlow Agent": 1
+        },
+        "gemini_calls": 4,
+        "gemini_input_tokens": 847,
+        "gemini_output_tokens": 2884,
+        "total_tokens": 50240,
+        "tool_call_count": 10
+      },
+      "cost_usd": 0.027389,
+      "answer_chars": 3376,
+      "answer_preview": "## Who developed amoxicillin, and when was it introduced?\n\n**Short answer:** Amoxicillin was developed by **Beecham Research Laboratories** (the research arm of Beecham Group Ltd., Brockham Park, Surrey, UK), with the key work attributed to British chemists **Anthony A. W. Long** and **John H. C. Na",
+      "error": null
+    },
+    {
+      "id": "web-02",
+      "question": "What is the mechanism of action of metformin?",
+      "expected_route": [
+        "internet"
+      ],
+      "tags": [
+        "pharmacology"
+      ],
+      "session_id": "baseline-20260917T162918Z-web-02",
+      "latency_s": 74.76,
+      "metrics": {
+        "input_tokens": 66804,
+        "output_tokens": 6590,
+        "llm_calls": 10,
+        "tool_calls": {
+          "create_ask_delete": 2,
+          "get_assistant_list": 1,
+          "internet_search": 11,
+          "ls": 1,
+          "task": 2
+        },
+        "subagent_calls": {
+          "Network Search Agent": 1,
+          "RAGFlow Agent": 1
+        },
+        "gemini_calls": 11,
+        "gemini_input_tokens": 2244,
+        "gemini_output_tokens": 9985,
+        "total_tokens": 73394,
+        "tool_call_count": 17
+      },
+      "cost_usd": 0.053585,
+      "answer_chars": 4763,
+      "answer_preview": "## Metformin — Mechanism of Action\n\n> **Sourcing note:** Your question is one of general pharmacology, so I consulted two specialists. The **internal knowledge base (RAGFlow)** could **not** be reached — the \"Drug Labels\" assistant failed with a `CONNECTION_ERROR` on two attempts, so **no internal d",
+      "error": null
+    },
+    {
+      "id": "web-03",
+      "question": "Which company originally developed atorvastatin (Lipitor), and in what year did the FDA approve it?",
+      "expected_route": [
+        "internet"
+      ],
+      "tags": [
+        "history"
+      ],
+      "session_id": "baseline-20260917T162918Z-web-03",
+      "latency_s": 44.42,
+      "metrics": {
+        "input_tokens": 32783,
+        "output_tokens": 4429,
+        "llm_calls": 6,
+        "tool_calls": {
+          "internet_search": 5,
+          "ls": 1,
+          "task": 1
+        },
+        "subagent_calls": {
+          "Network Search Agent": 1
+        },
+        "gemini_calls": 5,
+        "gemini_input_tokens": 466,
+        "gemini_output_tokens": 3447,
+        "total_tokens": 37212,
+        "tool_call_count": 7
+      },
+      "cost_usd": 0.023907,
+      "answer_chars": 3277,
+      "answer_preview": "## Atorvastatin (Lipitor) — Origin and FDA Approval\n\n**Short answer:** Atorvastatin was originally discovered and developed by **Parke-Davis**, the pharmaceutical research division of **Warner-Lambert**. The **U.S. FDA approved it in 1996** (as Lipitor).\n\n| Item | Detail |\n|---|---|\n| Original devel",
+      "error": null
+    },
+    {
+      "id": "web-04",
+      "question": "What drug class does oseltamivir belong to, and which influenza types does it treat?",
+      "expected_route": [
+        "internet"
+      ],
+      "tags": [
+        "pharmacology"
+      ],
+      "session_id": "baseline-20260917T162918Z-web-04",
+      "latency_s": 49.57,
+      "metrics": {
+        "input_tokens": 70907,
+        "output_tokens": 7466,
+        "llm_calls": 14,
+        "tool_calls": {
+          "aggregate_documents": 2,
+          "count_documents": 1,
+          "create_ask_delete": 2,
+          "find_documents": 4,
+          "get_assistant_list": 1,
+          "get_collection_schema": 1,
+          "glob": 1,
+          "internet_search": 8,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 3
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1,
+          "Network Search Agent": 1,
+          "RAGFlow Agent": 1
+        },
+        "gemini_calls": 8,
+        "gemini_input_tokens": 1979,
+        "gemini_output_tokens": 6235,
+        "total_tokens": 78373,
+        "tool_call_count": 25
+      },
+      "cost_usd": 0.046413,
+      "answer_chars": 4762,
+      "answer_preview": "## Oseltamivir (Tamiflu) — Drug Class and Influenza Types Treated\n\nI consulted three sources in parallel: the internal drug database, the internal RAGFlow knowledge base, and public web sources. Here's what each returned.\n\n### Quick answer\n\n- **Drug class:** An **antiviral**, specifically a **neuram",
+      "error": null
+    },
+    {
+      "id": "web-05",
+      "question": "What is the active ingredient of Smecta, and what is it used to treat?",
+      "expected_route": [
+        "internet"
+      ],
+      "tags": [
+        "pharmacology"
+      ],
+      "session_id": "baseline-20260917T162918Z-web-05",
+      "latency_s": 98.01,
+      "metrics": {
+        "input_tokens": 39303,
+        "output_tokens": 4348,
+        "llm_calls": 6,
+        "tool_calls": {
+          "internet_search": 6,
+          "ls": 1,
+          "task": 1
+        },
+        "subagent_calls": {
+          "Network Search Agent": 1
+        },
+        "gemini_calls": 6,
+        "gemini_input_tokens": 3328,
+        "gemini_output_tokens": 4897,
+        "total_tokens": 43651,
+        "tool_call_count": 8
+      },
+      "cost_usd": 0.030249,
+      "answer_chars": 2596,
+      "answer_preview": "## Smecta — Active Ingredient and Uses\n\n**Active ingredient:** **Diosmectite** (INN), also called *dioctahedral smectite* — a purified, naturally occurring **hydrated aluminium–magnesium silicate** clay (a layered phyllosilicate, structurally related to purified montmorillonite). It is not absorbed ",
+      "error": null
+    },
+    {
+      "id": "mix-01",
+      "question": "Compare the specifications of our Atorvastatin Calcium Tablets in the database with the Lipitor dosage strengths available on the market.",
+      "expected_route": [
+        "database",
+        "internet"
+      ],
+      "tags": [
+        "mixed"
+      ],
+      "session_id": "baseline-20260917T162918Z-mix-01",
+      "latency_s": 58.93,
+      "metrics": {
+        "input_tokens": 75374,
+        "output_tokens": 8255,
+        "llm_calls": 12,
+        "tool_calls": {
+          "count_documents": 3,
+          "find_documents": 4,
+          "get_collection_schema": 3,
+          "glob": 1,
+          "internet_search": 7,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 2
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1,
+          "Network Search Agent": 1
+        },
+        "gemini_calls": 7,
+        "gemini_input_tokens": 2170,
+        "gemini_output_tokens": 4855,
+        "total_tokens": 83629,
+        "tool_call_count": 22
+      },
+      "cost_usd": 0.045307,
+      "answer_chars": 6159,
+      "answer_preview": "## Atorvastatin Calcium Tablets (Internal) vs. Lipitor (Public Market) — Specification Comparison\n\n**No attached reference files were found** in the working directory (`ls`/`glob` both returned nothing), so this is based entirely on (a) the internal MongoDB business database and (b) public web sourc",
+      "error": null
+    },
+    {
+      "id": "mix-02",
+      "question": "Which of our Antibiotic drugs has the largest inventory, and what does the amoxicillin label in our knowledge base say about storage?",
+      "expected_route": [
+        "database",
+        "ragflow"
+      ],
+      "tags": [
+        "mixed"
+      ],
+      "session_id": "baseline-20260917T162918Z-mix-02",
+      "latency_s": 38.95,
+      "metrics": {
+        "input_tokens": 76454,
+        "output_tokens": 6357,
+        "llm_calls": 18,
+        "tool_calls": {
+          "aggregate_documents": 2,
+          "count_documents": 1,
+          "create_ask_delete": 4,
+          "find_documents": 3,
+          "get_assistant_list": 2,
+          "get_collection_schema": 2,
+          "glob": 2,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 3
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1,
+          "RAGFlow Agent": 2
+        },
+        "gemini_calls": 0,
+        "gemini_input_tokens": 0,
+        "gemini_output_tokens": 0,
+        "total_tokens": 82811,
+        "tool_call_count": 21
+      },
+      "cost_usd": 0.030565,
+      "answer_chars": 2888,
+      "answer_preview": "## Answer\n\n### 1. Antibiotic drug with the largest inventory ✅ (from internal database)\n\n**Amoxicillin Capsules (brand: Amoxin, drug_id 1)** holds the largest antibiotic inventory: **25,000 units on hand** across 3 batches — more than double the runner-up.\n\nOnly **2** drugs carry the `therapeutic_ar",
+      "error": null
+    },
+    {
+      "id": "mix-03",
+      "question": "Using our sales records, which region bought the most Oseltamivir Phosphate Capsules, and what is the publicly recommended treatment duration for influenza with oseltamivir?",
+      "expected_route": [
+        "database",
+        "internet"
+      ],
+      "tags": [
+        "mixed",
+        "governance"
+      ],
+      "session_id": "baseline-20260917T162918Z-mix-03",
+      "latency_s": 54.01,
+      "metrics": {
+        "input_tokens": 64334,
+        "output_tokens": 8415,
+        "llm_calls": 13,
+        "tool_calls": {
+          "aggregate_documents": 2,
+          "count_documents": 1,
+          "create_ask_delete": 2,
+          "find_documents": 3,
+          "get_assistant_list": 1,
+          "get_collection_schema": 3,
+          "internet_search": 5,
+          "list_collections": 1,
+          "ls": 1,
+          "task": 3
+        },
+        "subagent_calls": {
+          "Database Query Agent": 1,
+          "Network Search Agent": 1,
+          "RAGFlow Agent": 1
+        },
+        "gemini_calls": 5,
+        "gemini_input_tokens": 2332,
+        "gemini_output_tokens": 4246,
+        "total_tokens": 72749,
+        "tool_call_count": 22
+      },
+      "cost_usd": 0.040713,
+      "answer_chars": 4632,
+      "answer_preview": "## Answer\n\nTwo parts: an **internal** sales question (from our MongoDB business records) and a **public** clinical question (from web sources).\n\n---\n\n### 1. Which region bought the most Oseltamivir Phosphate Capsules? — *Internal records*\n\n**Northeast China** bought the most, both by quantity and by",
+      "error": null
+    }
+  ]
+}

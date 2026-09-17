@@ -25,40 +25,54 @@ Day 14 write-up and the resume bullets.
   and Gemini grounding token capture in `tools/gemini_tool.py`.
 - Baseline harness: `evals/baseline_questions.jsonl` (20 questions: 6 database, 6 knowledge
   base, 5 web, 3 mixed), `evals/pricing.yaml`, `evals/run_baseline.py` → `evals/baseline.json`.
-- Test suite: 235 → 245 tests, all mocked.
+- Coordinator provider switch: `LLM_PROVIDER=deepseek|qwen` in `agent/llm.py`; `.env` now uses
+  DeepSeek `deepseek-flash` because the Cloudflare quick tunnel to the local Qwen server dropped
+  twice during the day.
+- Test suite: 235 → 247 tests, all mocked.
 
-**Baseline (before any evaluation-driven change)** — run 20260917T162918Z, `evals/baseline.json`
+**Baseline (before any evaluation-driven change)** — run 20260917T175553Z, `evals/baseline.json`
 
-Coordinator: DeepSeek `deepseek-flash` (the self-hosted Qwen tunnel was too unreliable to
-measure; switched today). 20/20 questions completed without a harness error; total estimated
-cost $0.92.
+Coordinator: DeepSeek `deepseek-flash` (switched today; the self-hosted Qwen tunnel was too
+unreliable to measure). 20/20 questions completed with no harness error; total estimated cost
+$0.92 for the run.
 
 | route | n | errors | p50 s | p95 s | mean tokens | mean tool calls | mean cost $ |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| database | 6 | 0 | 15.78 | 17.99 | 34898 | 9.7 | 0.0128 |
-| ragflow | 6 | 0 | 124.63 | 282.59 | 172539 | 30.8 | 0.0905 |
-| internet | 5 | 0 | 49.57 | 93.36 | 56574 | 13.4 | 0.0363 |
-| mixed | 3 | 0 | 54.01 | 58.93 | 79730 | 21.7 | 0.0389 |
-| all | 20 | 0 | 47.0 | 193.99 | 88334 | 18.8 | 0.0459 |
+| database | 6 | 0 | 21.2 | 30.5 | 43,522 | 12.7 | 0.0165 |
+| ragflow | 6 | 0 | 125.2 | 166.0 | 134,630 | 24.8 | 0.0727 |
+| internet | 5 | 0 | 42.5 | 72.9 | 52,826 | 13.0 | 0.0349 |
+| mixed | 3 | 0 | 93.7 | 172.4 | 133,703 | 23.3 | 0.0702 |
+| all | 20 | 0 | 42.2 | 172.5 | 86,708 | 18.0 | 0.0460 |
+
+A first attempt (`evals/baseline_20260917_ragflow_down.json`, 16:29 UTC) ran while RAGFlow's
+chat assistants still pointed at the dead Qwen endpoint: retrieval worked but every answer
+stream carried `CONNECTION_ERROR`, so all six kb questions came back as honest "no content"
+answers and the coordinator fanned out to the other specialists (ragflow p95 283 s, 173k
+tokens). The assistants were re-pointed at `deepseek-flash` inside RAGFlow and the full set
+re-run; the table above is the "before" for the sprint.
 
 Observations that Days 2–5 should turn into graded metrics:
-- **Knowledge-base retrieval failed on every kb question.** RAGFlow answered `get_assistant_list`
-  and retrieval found the right document (the amoxicillin label PDF appears in the sources),
-  but the answer stream carried `**ERROR**: CONNECTION_ERROR`: RAGFlow's own chat model
-  backend is unreachable (the assistants point at an LLM endpoint that is down, likely the same
-  local server the coordinator just moved off). The RAGFlow Agent therefore reported honestly
-  that it had no document text, and the coordinator then fanned out to the web and database
-  agents looking for the same facts. That fan-out is why `ragflow` is the slowest and most
-  expensive route (p95 283 s, 173k tokens). Root cause to fix before Day 2's golden set.
-- **Routing over-fans-out.** 11/20 runs invoked exactly the expected specialists; 9/20 invoked
-  extra ones (typically the RAGFlow Agent on web questions, or the web agent on kb questions).
-  No run missed an expected specialist. This is the routing-accuracy baseline for Day 3.
-- **Database route is tight**: 6/6 correct on spot check, ~16 s, ~10 tool calls, ~$0.013.
-- Every run includes one `ls` call from the coordinator's built-in filesystem tools (scratch
-  space); a candidate for the Day 5 context-engineering pass.
+- **Routing over-fans-out.** 12/20 runs invoked exactly the expected specialists; 8/20 invoked
+  extra ones (web + database agents on kb questions, RAGFlow + database on web questions). No
+  run missed an expected specialist. Extra fan-out is the main driver of latency and cost:
+  the three kb questions that stayed on RAGFlow alone or nearly so (kb-01, mix-02) took 20–26 s;
+  the ones that fanned out took 100–173 s. This is the routing-accuracy baseline for Day 3.
+- **Knowledge-base answers are grounded when RAGFlow is healthy**: kb-01 to kb-04 cite the label
+  PDF with dosage, contraindication, and storage details. kb-05 (IKEA crib manual) still fails,
+  as expected: the manual is diagrams and its indexed text is part labels only. kb-06 (Midea AC)
+  was answered from public web sources, not the knowledge base — a routing/provenance miss to
+  grade (the answer should come from the installation guide).
+- **Database route is tight**: 6/6 correct on spot check, ~21 s, ~13 tool calls, ~$0.017.
+- **Mixed database+web questions are the slowest** (mix-01 172 s, 210k input tokens, 31 tool
+  calls) because both specialists run in sequence and the coordinator re-verifies.
+- Every one of the 20 runs includes an `ls` call from the coordinator's built-in filesystem
+  tools; pure overhead for research questions and a Day 5 context-engineering candidate.
+- Log noise: the Gemini SDK warns "Direct use of automatic function calling (AFC) in
+  Models.generate_content is not recommended" on every web search; harmless, silence on Day 5.
 
 Cost assumptions (`evals/pricing.yaml`): DeepSeek `deepseek-flash` peak-hour cache-miss list
-price for the coordinator; Gemini Flash-class list price for grounding tokens. Both are editable and recorded in `baseline.json`.
+price for the coordinator; Gemini Flash-class list price for grounding tokens. Both are editable
+and recorded in `baseline.json`.
 
 **Azure and tooling**
 - Azure CLI logged in; subscription "CROO Cloud Services" (Enabled). Budget alert deliberately
@@ -80,8 +94,8 @@ price for the coordinator; Gemini Flash-class list price for grounding tokens. B
    Day 3 scorecard before renaming; the article notes naming effects vary by model.
 
 **Pending / carry-over**
-- Point the three RAGFlow chat assistants at a reachable chat model (RAGFlow → Model providers,
-  e.g. DeepSeek), then re-run the kb questions: `uv run python evals/run_baseline.py --ids kb-01 kb-02 kb-03 kb-04 kb-05 kb-06 --output evals/baseline_kb_rerun.json`.
+- RAGFlow still has the stale `qwen-remote` model provider registered (unused); remove it when
+  convenient so nothing can fall back to it.
 - Budget alert once the subscription is settled.
 - Enable secret scanning + push protection when the repo goes public.
 - Enable Docker Desktop WSL integration before Day 6.
