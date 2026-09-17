@@ -1,3 +1,11 @@
+"""Coordinator chat model on an OpenAI-compatible endpoint, selected by LLM_PROVIDER.
+
+Providers:
+- ``deepseek`` — DeepSeek API (https://api.deepseek.com); DEEPSEEK_API_KEY, optional DEEPSEEK_MODEL
+  (default ``deepseek-flash``, served by DeepSeek-V4.1-Flash).
+- ``qwen`` — a self-hosted OpenAI-compatible server; QWEN_REMOTE_BASE_URL, QWEN_REMOTE_API_KEY,
+  optional QWEN_MODEL.
+"""
 from dotenv import load_dotenv, find_dotenv
 import os
 from pydantic import SecretStr
@@ -5,8 +13,13 @@ from langchain_openai import ChatOpenAI
 
 _ = load_dotenv(find_dotenv())
 
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+DEFAULT_DEEPSEEK_MODEL = "deepseek-flash"
+DEFAULT_QWEN_MODEL = "unsloth/Qwen3.8-27B-GGUF:UD-Q6_K_M"
+
+
 class QwenChatOpenAI(ChatOpenAI):
-    """Omit agent labels that this OpenAI-compatible endpoint rejects."""
+    """Omit agent labels that OpenAI-compatible endpoints may reject."""
 
     def _get_request_payload(self, input_, *, stop=None, **kwargs):
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
@@ -16,11 +29,36 @@ class QwenChatOpenAI(ChatOpenAI):
         return payload
 
 
-llm = QwenChatOpenAI(
-    model=os.getenv("QWEN_MODEL", "unsloth/Qwen3.8-27B-GGUF:UD-Q6_K_M"),
-    base_url=os.environ["QWEN_REMOTE_BASE_URL"],
-    api_key=SecretStr(os.environ["QWEN_REMOTE_API_KEY"]),
-    timeout=120,
-    max_retries=1,
-    stream_usage=True,  # usage_metadata on streamed responses, consumed by agent.metrics
-)
+def provider_settings(provider: str | None = None) -> dict:
+    """Resolve model, base URL, and API key for the configured provider."""
+    provider = (provider or os.getenv("LLM_PROVIDER", "qwen")).strip().lower()
+    if provider == "deepseek":
+        return {
+            "provider": provider,
+            "model": os.getenv("DEEPSEEK_MODEL", DEFAULT_DEEPSEEK_MODEL),
+            "base_url": os.getenv("DEEPSEEK_BASE_URL", DEEPSEEK_BASE_URL),
+            "api_key": os.environ["DEEPSEEK_API_KEY"],
+        }
+    if provider == "qwen":
+        return {
+            "provider": provider,
+            "model": os.getenv("QWEN_MODEL", DEFAULT_QWEN_MODEL),
+            "base_url": os.environ["QWEN_REMOTE_BASE_URL"],
+            "api_key": os.environ["QWEN_REMOTE_API_KEY"],
+        }
+    raise ValueError(f"Unknown LLM_PROVIDER '{provider}'. Use 'deepseek' or 'qwen'.")
+
+
+def build_llm(provider: str | None = None) -> QwenChatOpenAI:
+    settings = provider_settings(provider)
+    return QwenChatOpenAI(
+        model=settings["model"],
+        base_url=settings["base_url"],
+        api_key=SecretStr(settings["api_key"]),
+        timeout=120,
+        max_retries=1,
+        stream_usage=True,  # usage_metadata on streamed responses, consumed by agent.metrics
+    )
+
+
+llm = build_llm()

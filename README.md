@@ -41,7 +41,7 @@ to public search; retrieved content is treated as data, not instructions.
 
 Requirements: Python 3.13+ with [uv](https://docs.astral.sh/uv/), Node.js >= 22.13 (runs
 `mongodb-mcp-server`), a MongoDB Atlas cluster, a RAGFlow instance, and API keys for the
-coordinator model and Gemini.
+coordinator model (DeepSeek by default) and Gemini.
 
 ```bash
 git clone https://github.com/pat-CIMAR-UF/deep_search.git && cd deep_search
@@ -81,7 +81,9 @@ variable:
 
 | Variable | Purpose |
 |---|---|
-| `QWEN_REMOTE_BASE_URL`, `QWEN_REMOTE_API_KEY`, `QWEN_MODEL` | Coordinator model on an OpenAI-compatible endpoint |
+| `LLM_PROVIDER` | Coordinator model provider: `deepseek` (default in `.env.example`) or `qwen` |
+| `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` | DeepSeek API (default model `deepseek-flash`) |
+| `QWEN_REMOTE_BASE_URL`, `QWEN_REMOTE_API_KEY`, `QWEN_MODEL` | Self-hosted OpenAI-compatible coordinator when `LLM_PROVIDER=qwen` |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | Web search specialist (Google Search grounding) |
 | `RAGFLOW_API_URL`, `RAGFLOW_API_KEY` | Knowledge-base specialist |
 | `MONGODB_URI`, `MONGODB_DATABASE` | Business database (Atlas `mongodb+srv://` string with `/pharma_db`) |

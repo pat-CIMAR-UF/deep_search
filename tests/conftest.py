@@ -18,6 +18,8 @@ if str(PROJECT_ROOT) not in sys.path:
 # Dummy configuration. python-dotenv does not override variables that are
 # already set, so these win over whatever is in .env.
 _TEST_ENV = {
+    "LLM_PROVIDER": "qwen",
+    "DEEPSEEK_API_KEY": "test-deepseek-key",
     "QWEN_REMOTE_BASE_URL": "http://qwen.test/v1",
     "QWEN_REMOTE_API_KEY": "test-qwen-key",
     "GEMINI_API_KEY": "test-gemini-key",

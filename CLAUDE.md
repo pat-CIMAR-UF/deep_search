@@ -46,7 +46,9 @@ Vue changes before expecting them to appear in the UI served by FastAPI.
 Configuration comes from the git-ignored project `.env`, loaded with
 `load_dotenv(find_dotenv())`; `.env.example` lists every variable. Never print, copy into documentation, or commit credentials.
 
-- Coordinator: `QWEN_REMOTE_BASE_URL`, `QWEN_REMOTE_API_KEY`, optional `QWEN_MODEL`.
+- Coordinator: `LLM_PROVIDER` selects `deepseek` (`DEEPSEEK_API_KEY`, optional `DEEPSEEK_MODEL`,
+  default `deepseek-flash`) or `qwen` (`QWEN_REMOTE_BASE_URL`, `QWEN_REMOTE_API_KEY`, optional
+  `QWEN_MODEL`). `agent/llm.py` builds one `QwenChatOpenAI` for either; `build_llm()` is the factory.
 - Gemini search: `GEMINI_API_KEY`, optional `GEMINI_MODEL`.
 - Tavily alternative: `TAVILY_API_KEY`. The active search specialist uses Gemini.
 - Business database: `MONGODB_URI` (Atlas `mongodb+srv://` string with `/pharma_db`), optional
@@ -141,8 +143,8 @@ Compatibility details in `tools/ragflow_tools.py` must be preserved:
 
 ## Model and tool compatibility
 
-`agent/llm.py` uses `QwenChatOpenAI`, a `ChatOpenAI` subclass for the configured compatible
-endpoint. It removes `name` from non-tool request messages because the endpoint rejects
+`agent/llm.py` uses `QwenChatOpenAI`, a `ChatOpenAI` subclass used for both DeepSeek and the
+self-hosted Qwen endpoint. It removes `name` from non-tool request messages because the endpoint rejects
 DeepAgents' assistant-name metadata. Preserve tool calls and their IDs.
 
 `tools/gemini_tool.py` initializes its process-wide client under `_client_lock`.

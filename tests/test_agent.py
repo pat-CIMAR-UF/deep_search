@@ -190,3 +190,25 @@ def test_prompts_module_prints_every_agent_when_run_as_script(capsys):
     for key in ("gemini", "db", "ragflow"):
         assert f"------Sub Agent: {key}------" in out
         assert prompts.sub_agents_content[key]["name"] in out
+
+
+# ------------------------------------------------------------ providers --
+def test_build_llm_deepseek_provider(monkeypatch):
+    from agent.llm import build_llm, provider_settings, DEEPSEEK_BASE_URL
+
+    monkeypatch.setenv("LLM_PROVIDER", "deepseek")
+    monkeypatch.delenv("DEEPSEEK_MODEL", raising=False)
+    settings = provider_settings()
+    assert settings["model"] == "deepseek-flash" and settings["base_url"] == DEEPSEEK_BASE_URL
+    model = build_llm()
+    assert model.model_name == "deepseek-flash"
+    assert model.openai_api_base == DEEPSEEK_BASE_URL
+    assert model.openai_api_key.get_secret_value() == "test-deepseek-key"
+    assert build_llm("qwen").openai_api_base == "http://qwen.test/v1"
+
+
+def test_build_llm_rejects_unknown_provider():
+    from agent.llm import provider_settings
+
+    with pytest.raises(ValueError, match="Unknown LLM_PROVIDER"):
+        provider_settings("claude")
