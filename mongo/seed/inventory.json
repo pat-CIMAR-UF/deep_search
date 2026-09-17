@@ -1,0 +1,392 @@
+[
+  {
+    "inventory_id": 1,
+    "drug_id": 1,
+    "batch_number": "MY-250101-A",
+    "quantity_on_hand": 5000,
+    "warehouse_location": "Beijing Warehouse 1 - Zone A",
+    "production_date": {
+      "$date": "2025-01-01T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 2,
+    "drug_id": 1,
+    "batch_number": "MY-250615-B",
+    "quantity_on_hand": 8000,
+    "warehouse_location": "Beijing Warehouse 2 - Zone B",
+    "production_date": {
+      "$date": "2025-06-15T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-06-14T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 3,
+    "drug_id": 1,
+    "batch_number": "MY-251120-C",
+    "quantity_on_hand": 12000,
+    "warehouse_location": "Tianjin Warehouse 1 - Zone A",
+    "production_date": {
+      "$date": "2025-11-20T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-11-19T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 4,
+    "drug_id": 2,
+    "batch_number": "MY-250101-A",
+    "quantity_on_hand": 2000,
+    "warehouse_location": "Tianjin Warehouse 2 - Cold Storage",
+    "production_date": {
+      "$date": "2025-01-01T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 5,
+    "drug_id": 2,
+    "batch_number": "MY-250615-B",
+    "quantity_on_hand": 15000,
+    "warehouse_location": "Beijing Warehouse 1 - Zone C",
+    "production_date": {
+      "$date": "2025-06-15T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-06-14T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 6,
+    "drug_id": 2,
+    "batch_number": "MY-251120-C",
+    "quantity_on_hand": 30000,
+    "warehouse_location": "Tianjin Warehouse 1 - Zone A",
+    "production_date": {
+      "$date": "2025-11-20T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-11-19T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 7,
+    "drug_id": 3,
+    "batch_number": "MY-250101-A",
+    "quantity_on_hand": 3000,
+    "warehouse_location": "Beijing Warehouse 2 - Zone B",
+    "production_date": {
+      "$date": "2025-01-01T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 8,
+    "drug_id": 3,
+    "batch_number": "MY-250615-B",
+    "quantity_on_hand": 4500,
+    "warehouse_location": "Tianjin Warehouse 2 - Zone B",
+    "production_date": {
+      "$date": "2025-06-15T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-06-14T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 9,
+    "drug_id": 3,
+    "batch_number": "MY-251120-C",
+    "quantity_on_hand": 6000,
+    "warehouse_location": "Beijing Warehouse 1 - Zone A",
+    "production_date": {
+      "$date": "2025-11-20T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-11-19T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 10,
+    "drug_id": 4,
+    "batch_number": "MY-250101-A",
+    "quantity_on_hand": 1000,
+    "warehouse_location": "Tianjin Warehouse 1 - High-Value Zone",
+    "production_date": {
+      "$date": "2025-01-01T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 11,
+    "drug_id": 4,
+    "batch_number": "MY-250615-B",
+    "quantity_on_hand": 2500,
+    "warehouse_location": "Beijing Warehouse 2 - High-Value Zone",
+    "production_date": {
+      "$date": "2025-06-15T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-06-14T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 12,
+    "drug_id": 4,
+    "batch_number": "MY-251120-C",
+    "quantity_on_hand": 4000,
+    "warehouse_location": "Tianjin Warehouse 2 - High-Value Zone",
+    "production_date": {
+      "$date": "2025-11-20T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-11-19T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 13,
+    "drug_id": 5,
+    "batch_number": "MY-250101-A",
+    "quantity_on_hand": 500,
+    "warehouse_location": "Beijing Warehouse 1 - Emergency Drug Zone",
+    "production_date": {
+      "$date": "2025-01-01T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 14,
+    "drug_id": 5,
+    "batch_number": "MY-250615-B",
+    "quantity_on_hand": 5000,
+    "warehouse_location": "Tianjin Warehouse 1 - Emergency Drug Zone",
+    "production_date": {
+      "$date": "2025-06-15T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-06-14T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 15,
+    "drug_id": 5,
+    "batch_number": "MY-251120-C",
+    "quantity_on_hand": 20000,
+    "warehouse_location": "Beijing Warehouse 2 - Emergency Drug Zone",
+    "production_date": {
+      "$date": "2025-11-20T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-11-19T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 16,
+    "drug_id": 6,
+    "batch_number": "MY-250101-A",
+    "quantity_on_hand": 2000,
+    "warehouse_location": "Tianjin Warehouse 2 - Cool Storage",
+    "production_date": {
+      "$date": "2025-01-01T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 17,
+    "drug_id": 6,
+    "batch_number": "MY-250615-B",
+    "quantity_on_hand": 3500,
+    "warehouse_location": "Beijing Warehouse 2 - Cool Storage",
+    "production_date": {
+      "$date": "2025-06-15T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-06-14T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 18,
+    "drug_id": 6,
+    "batch_number": "MY-251120-C",
+    "quantity_on_hand": 5000,
+    "warehouse_location": "Tianjin Warehouse 1 - Cool Storage",
+    "production_date": {
+      "$date": "2025-11-20T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-11-19T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 19,
+    "drug_id": 7,
+    "batch_number": "MY-250101-A",
+    "quantity_on_hand": 4000,
+    "warehouse_location": "Beijing Warehouse 1 - General Drug Zone",
+    "production_date": {
+      "$date": "2025-01-01T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 20,
+    "drug_id": 7,
+    "batch_number": "MY-250615-B",
+    "quantity_on_hand": 8000,
+    "warehouse_location": "Tianjin Warehouse 2 - General Drug Zone",
+    "production_date": {
+      "$date": "2025-06-15T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-06-14T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 21,
+    "drug_id": 7,
+    "batch_number": "MY-251120-C",
+    "quantity_on_hand": 12000,
+    "warehouse_location": "Beijing Warehouse 2 - General Drug Zone",
+    "production_date": {
+      "$date": "2025-11-20T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-11-19T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 22,
+    "drug_id": 8,
+    "batch_number": "MY-250101-A",
+    "quantity_on_hand": 1500,
+    "warehouse_location": "Tianjin Warehouse 1 - Chronic Disease Zone",
+    "production_date": {
+      "$date": "2025-01-01T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 23,
+    "drug_id": 8,
+    "batch_number": "MY-250615-B",
+    "quantity_on_hand": 3000,
+    "warehouse_location": "Beijing Warehouse 1 - Chronic Disease Zone",
+    "production_date": {
+      "$date": "2025-06-15T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-06-14T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 24,
+    "drug_id": 8,
+    "batch_number": "MY-251120-C",
+    "quantity_on_hand": 5000,
+    "warehouse_location": "Tianjin Warehouse 2 - Chronic Disease Zone",
+    "production_date": {
+      "$date": "2025-11-20T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-11-19T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 25,
+    "drug_id": 9,
+    "batch_number": "MY-250101-A",
+    "quantity_on_hand": 2000,
+    "warehouse_location": "Beijing Warehouse 2 - Ambient Zone",
+    "production_date": {
+      "$date": "2025-01-01T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 26,
+    "drug_id": 9,
+    "batch_number": "MY-250615-B",
+    "quantity_on_hand": 4500,
+    "warehouse_location": "Tianjin Warehouse 1 - Ambient Zone",
+    "production_date": {
+      "$date": "2025-06-15T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-06-14T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 27,
+    "drug_id": 9,
+    "batch_number": "MY-251120-C",
+    "quantity_on_hand": 7000,
+    "warehouse_location": "Beijing Warehouse 1 - Ambient Zone",
+    "production_date": {
+      "$date": "2025-11-20T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-11-19T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 28,
+    "drug_id": 10,
+    "batch_number": "MY-250101-A",
+    "quantity_on_hand": 10000,
+    "warehouse_location": "Tianjin Warehouse 2 - Epidemic Prevention Zone",
+    "production_date": {
+      "$date": "2025-01-01T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-01-01T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 29,
+    "drug_id": 10,
+    "batch_number": "MY-250615-B",
+    "quantity_on_hand": 50000,
+    "warehouse_location": "Beijing Warehouse 2 - Epidemic Prevention Zone",
+    "production_date": {
+      "$date": "2025-06-15T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-06-14T00:00:00Z"
+    }
+  },
+  {
+    "inventory_id": 30,
+    "drug_id": 10,
+    "batch_number": "MY-251120-C",
+    "quantity_on_hand": 100000,
+    "warehouse_location": "Tianjin Warehouse 1 - Epidemic Prevention Zone",
+    "production_date": {
+      "$date": "2025-11-20T00:00:00Z"
+    },
+    "expiry_date": {
+      "$date": "2027-11-19T00:00:00Z"
+    }
+  }
+]

@@ -10,3 +10,9 @@ wheels/
 .venv
 
 **.env
+
+# Local conversations, attachments, and generated answers
+output/
+
+# Personal sprint plan (kept local)
+15-Day_Agentic_AI_FDE_Sprint.md

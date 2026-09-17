@@ -1,0 +1,112 @@
+[
+  {
+    "drug_id": 1,
+    "generic_name": "Amoxicillin Capsules",
+    "brand_name": "Amoxin",
+    "approval_number": "H20051234",
+    "specifications": "0.25g*24 capsules",
+    "dosage_form": "Capsule",
+    "manufacturer": "Our Pharmaceutical Co.",
+    "therapeutic_area": "Antibiotic",
+    "description": "Used to treat upper respiratory tract infections, urogenital infections, and others caused by susceptible bacteria."
+  },
+  {
+    "drug_id": 2,
+    "generic_name": "Ibuprofen Sustained-Release Capsules",
+    "brand_name": "Fenbid",
+    "approval_number": "H10900089",
+    "specifications": "0.3g*20 capsules",
+    "dosage_form": "Capsule",
+    "manufacturer": "Our Pharmaceutical Co.",
+    "therapeutic_area": "Analgesic/Antipyretic",
+    "description": "Used to relieve mild to moderate pain such as headache, joint pain, migraine, toothache, muscle pain, neuralgia, and dysmenorrhea. Also used for fever caused by the common cold or influenza."
+  },
+  {
+    "drug_id": 3,
+    "generic_name": "Metformin Hydrochloride Tablets",
+    "brand_name": "Glucophage",
+    "approval_number": "H20023345",
+    "specifications": "0.5g*48 tablets",
+    "dosage_form": "Tablet",
+    "manufacturer": "Our Pharmaceutical Co.",
+    "therapeutic_area": "Diabetes",
+    "description": "First-line treatment for type 2 diabetes patients not adequately controlled by diet alone, especially those who are obese."
+  },
+  {
+    "drug_id": 4,
+    "generic_name": "Atorvastatin Calcium Tablets",
+    "brand_name": "Lipitor",
+    "approval_number": "H20055567",
+    "specifications": "20mg*7 tablets",
+    "dosage_form": "Tablet",
+    "manufacturer": "Our Pharmaceutical Co.",
+    "therapeutic_area": "Cardiovascular",
+    "description": "For patients with primary hypercholesterolemia, including familial hypercholesterolemia (heterozygous) or mixed hyperlipidemia."
+  },
+  {
+    "drug_id": 5,
+    "generic_name": "Oseltamivir Phosphate Capsules",
+    "brand_name": "Tamiflu",
+    "approval_number": "H20090123",
+    "specifications": "75mg*10 capsules",
+    "dosage_form": "Capsule",
+    "manufacturer": "Our Pharmaceutical Co.",
+    "therapeutic_area": "Antiviral",
+    "description": "For the treatment of influenza A and B in adults and children aged 1 year and older."
+  },
+  {
+    "drug_id": 6,
+    "generic_name": "Ceftriaxone Sodium for Injection",
+    "brand_name": "Rocephin",
+    "approval_number": "H10920012",
+    "specifications": "1.0g/vial",
+    "dosage_form": "Injection",
+    "manufacturer": "Our Pharmaceutical Co.",
+    "therapeutic_area": "Antibiotic",
+    "description": "For lower respiratory tract, urinary tract, and biliary infections caused by susceptible pathogens, as well as intra-abdominal infections, pelvic infections, skin and soft tissue infections, bone and joint infections, sepsis, meningitis, and more."
+  },
+  {
+    "drug_id": 7,
+    "generic_name": "Montmorillonite Powder",
+    "brand_name": "Smecta",
+    "approval_number": "H20000456",
+    "specifications": "3g*10 sachets",
+    "dosage_form": "Powder",
+    "manufacturer": "Our Pharmaceutical Co.",
+    "therapeutic_area": "Digestive System",
+    "description": "For acute and chronic diarrhea in adults and children."
+  },
+  {
+    "drug_id": 8,
+    "generic_name": "Nifedipine Controlled-Release Tablets",
+    "brand_name": "Adalat",
+    "approval_number": "H20100345",
+    "specifications": "30mg*30 tablets",
+    "dosage_form": "Tablet",
+    "manufacturer": "Our Pharmaceutical Co.",
+    "therapeutic_area": "Hypertension",
+    "description": "1. Hypertension. 2. Coronary heart disease — chronic stable angina (exertional angina)."
+  },
+  {
+    "drug_id": 9,
+    "generic_name": "Aspirin Enteric-Coated Tablets",
+    "brand_name": "Bayaspirin",
+    "approval_number": "J20130078",
+    "specifications": "100mg*30 tablets",
+    "dosage_form": "Tablet",
+    "manufacturer": "Our Pharmaceutical Co.",
+    "therapeutic_area": "Cardiovascular",
+    "description": "Reduces the risk of onset in patients with suspected acute myocardial infarction; prevents recurrence of myocardial infarction."
+  },
+  {
+    "drug_id": 10,
+    "generic_name": "Lianhua Qingwen Capsules",
+    "brand_name": "Lianhua Qingwen",
+    "approval_number": "Z20040063",
+    "specifications": "0.35g*24 capsules",
+    "dosage_form": "Capsule",
+    "manufacturer": "Our Pharmaceutical Co.",
+    "therapeutic_area": "TCM / Cold & Flu",
+    "description": "Clears heat-toxin and disperses lung heat. Used to treat influenza with heat-toxin attacking the lung, presenting as fever or high fever, chills, muscle aches, nasal congestion and runny nose, cough, headache, dry and sore throat."
+  }
+]
