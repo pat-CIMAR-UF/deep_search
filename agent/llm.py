@@ -22,4 +22,5 @@ llm = QwenChatOpenAI(
     api_key=SecretStr(os.environ["QWEN_REMOTE_API_KEY"]),
     timeout=120,
     max_retries=1,
+    stream_usage=True,  # usage_metadata on streamed responses, consumed by agent.metrics
 )

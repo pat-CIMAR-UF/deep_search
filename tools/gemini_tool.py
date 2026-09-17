@@ -27,6 +27,7 @@ if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 # 自定义模块：工具调用埋点监控 / Custom module: tool-call monitoring
+from api.context import get_run_metrics  # noqa: E402
 from api.monitor import monitor  # noqa: E402  (必须在 sys.path 设置之后导入 / must come after the sys.path setup)
 
 # ======================== 初始化配置 ========================
@@ -82,6 +83,12 @@ def internet_search(
             tools=[{"google_search": {}}],
         ),
     )
+
+    # 评估运行时记录 Gemini 用量（与协调器模型分开计费）/ Record Gemini usage for evaluation runs (billed separately)
+    metrics = get_run_metrics()
+    usage = getattr(response, "usage_metadata", None)
+    if metrics is not None and usage is not None:
+        metrics.add_gemini_usage(getattr(usage, "prompt_token_count", 0), getattr(usage, "candidates_token_count", 0))
 
     # 解析溯源信息（可能为空，例如模型判断无需检索）/ Parse grounding metadata (may be absent when the model skips search)
     search_queries: list[str] = []

@@ -13,7 +13,8 @@ from agent.subagents.knowledge_base_agent import knowledge_base_agent
 from agent.subagents.database_query_agent import database_query_agent
 from agent.subagents.internet_search_agent import internet_search_agent
 from api.monitor import monitor
-from api.context import (get_session_context, get_thread_context, set_session_context,
+from agent.metrics import UsageCallbackHandler
+from api.context import (get_run_metrics, get_session_context, get_thread_context, set_session_context,
                          reset_session_context, set_thread_context)
 from tools.markdown_tools import generate_markdown
 from tools.pdf_tools import convert_md_to_pdf
@@ -88,6 +89,10 @@ async def run_deep_agent(task_query, session_id, history=None, mode="auto") -> s
         if history is not None:
             messages = [RemoveMessage(id=REMOVE_ALL_MESSAGES), *history[-40:], *messages]
         config = {"configurable": {"thread_id": session_id}, "recursion_limit": 80}
+        metrics = get_run_metrics()
+        if metrics is not None:
+            # Evaluation runs opt in; callbacks reach the sub-agent graphs, so specialist usage counts too.
+            config["callbacks"] = [UsageCallbackHandler(metrics)]
         answer = ""
         async for chunk in get_main_agent().astream(
             {"messages": messages}, config=config, stream_mode="updates",

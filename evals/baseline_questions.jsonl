@@ -1,0 +1,20 @@
+{"id": "db-01", "question": "How many drugs are in our catalogue, and how many of them are capsules?", "mode": "auto", "expected_route": ["database"], "tags": ["count"]}
+{"id": "db-02", "question": "What is the total quantity on hand across all inventory batches of Amoxicillin Capsules?", "mode": "auto", "expected_route": ["database"], "tags": ["aggregate", "lookup"]}
+{"id": "db-03", "question": "Which of our drugs has the highest total sales revenue, and what is that amount?", "mode": "auto", "expected_route": ["database"], "tags": ["aggregate", "lookup"]}
+{"id": "db-04", "question": "Show total sales revenue by region, highest first.", "mode": "auto", "expected_route": ["database"], "tags": ["aggregate"]}
+{"id": "db-05", "question": "Which inventory batches expire before July 2027, and in which warehouses are they stored?", "mode": "auto", "expected_route": ["database"], "tags": ["filter", "date"]}
+{"id": "db-06", "question": "How many sales records do we have per sales department in East China?", "mode": "auto", "expected_route": ["database"], "tags": ["aggregate", "filter"]}
+{"id": "kb-01", "question": "According to the amoxicillin label in our knowledge base, what are the most common adverse reactions?", "mode": "auto", "expected_route": ["ragflow"], "tags": ["drug-label"]}
+{"id": "kb-02", "question": "What adult dosage does the amoxicillin label recommend for mild to moderate infections?", "mode": "auto", "expected_route": ["ragflow"], "tags": ["drug-label"]}
+{"id": "kb-03", "question": "What contraindications does the nifedipine extended-release label list?", "mode": "auto", "expected_route": ["ragflow"], "tags": ["drug-label"]}
+{"id": "kb-04", "question": "What storage conditions does the amoxicillin label specify?", "mode": "auto", "expected_route": ["ragflow"], "tags": ["drug-label"]}
+{"id": "kb-05", "question": "What tools and hardware parts does the IKEA GONATT crib assembly manual list?", "mode": "auto", "expected_route": ["ragflow"], "tags": ["manual"]}
+{"id": "kb-06", "question": "According to the Midea U air conditioner installation guide, what window opening sizes does the unit fit?", "mode": "auto", "expected_route": ["ragflow"], "tags": ["manual"]}
+{"id": "web-01", "question": "Who first developed amoxicillin, and in which decade was it introduced?", "mode": "auto", "expected_route": ["internet"], "tags": ["history"]}
+{"id": "web-02", "question": "What is the mechanism of action of metformin?", "mode": "auto", "expected_route": ["internet"], "tags": ["pharmacology"]}
+{"id": "web-03", "question": "Which company originally developed atorvastatin (Lipitor), and in what year did the FDA approve it?", "mode": "auto", "expected_route": ["internet"], "tags": ["history"]}
+{"id": "web-04", "question": "What drug class does oseltamivir belong to, and which influenza types does it treat?", "mode": "auto", "expected_route": ["internet"], "tags": ["pharmacology"]}
+{"id": "web-05", "question": "What is the active ingredient of Smecta, and what is it used to treat?", "mode": "auto", "expected_route": ["internet"], "tags": ["pharmacology"]}
+{"id": "mix-01", "question": "Compare the specifications of our Atorvastatin Calcium Tablets in the database with the Lipitor dosage strengths available on the market.", "mode": "auto", "expected_route": ["database", "internet"], "tags": ["mixed"]}
+{"id": "mix-02", "question": "Which of our Antibiotic drugs has the largest inventory, and what does the amoxicillin label in our knowledge base say about storage?", "mode": "auto", "expected_route": ["database", "ragflow"], "tags": ["mixed"]}
+{"id": "mix-03", "question": "Using our sales records, which region bought the most Oseltamivir Phosphate Capsules, and what is the publicly recommended treatment duration for influenza with oseltamivir?", "mode": "auto", "expected_route": ["database", "internet"], "tags": ["mixed", "governance"]}

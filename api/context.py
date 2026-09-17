@@ -113,3 +113,25 @@ def reset_session_context(session_token, thread_token=None):
     _session_dir_ctx.reset(session_token)
     if thread_token:
         _thread_id_ctx.reset(thread_token)
+
+
+# =================================================================================================
+# 运行指标 / Run metrics
+# 评估脚本在调用 run_deep_agent 之前设置一个 RunMetrics，运行期间由回调和工具填充；
+# API 路径不设置它，因此默认关闭，不影响正常请求。
+# Evaluation scripts set a RunMetrics before calling run_deep_agent; callbacks and tools fill
+# it during the run. The API path never sets it, so it is off by default.
+# =================================================================================================
+_run_metrics_ctx: ContextVar[Optional["RunMetrics"]] = ContextVar("run_metrics", default=None)
+
+
+def set_run_metrics(metrics):
+    return _run_metrics_ctx.set(metrics)
+
+
+def get_run_metrics():
+    return _run_metrics_ctx.get()
+
+
+def reset_run_metrics(token):
+    _run_metrics_ctx.reset(token)
