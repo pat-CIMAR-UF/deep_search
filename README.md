@@ -58,7 +58,8 @@ TypeScript and the production bundle. See `api文档.md` for the implemented API
 ## Requirements
 
 - Python >= 3.13 with [uv](https://docs.astral.sh/uv/)
-- MySQL 8 (for the database query agent)
+- Node.js >= 22.13 (runs `mongodb-mcp-server` for the database query agent)
+- A MongoDB database: the project uses a MongoDB Atlas cluster
 
 ```bash
 uv sync
@@ -75,86 +76,69 @@ GEMINI_MODEL=gemini-3.7-flash
 QWEN_REMOTE_BASE_URL=...
 QWEN_REMOTE_API_KEY=...
 
-# Database (section 4.3.2.2)
-MYSQL_HOST=127.0.0.1
-MYSQL_PORT=3306
-MYSQL_USER=deepagents
-MYSQL_PASSWORD=your-password
-MYSQL_DATABASE=pharma_db
+# MongoDB (queried through mongodb-mcp-server, read-only)
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster-host>/pharma_db
+MONGODB_DATABASE=pharma_db
+# Optional: how to launch the MCP server (defaults: the global `mongodb-mcp-server`
+# binary if installed, otherwise `npx -y mongodb-mcp-server@3`)
+# MONGODB_MCP_COMMAND=mongodb-mcp-server
+# MONGODB_MCP_ARGS=
 ```
 
 ## Database setup
 
-The seed data is `sql/company_data.sql` — a mock pharmaceutical business database with three
-tables: `drugs` (10 rows), `inventory` (30 batches) and `sales_records` (20 orders).
+The seed data lives in `mongo/seed/*.json` — a mock pharmaceutical business database with three
+collections: `drugs` (10 documents), `inventory` (30 batches) and `sales_records` (20 orders).
+The Database Query Agent never talks to MongoDB directly: it calls the official
+[`mongodb-mcp-server`](https://github.com/mongodb-js/mongodb-mcp-server) over stdio, which the
+backend spawns once per process with `MDB_MCP_READ_ONLY=true`.
 
-### 1. Install and start MySQL
+### 1. Install Node.js and the MCP server
 
-On Ubuntu / WSL:
-
-```bash
-sudo apt-get update && sudo apt-get install -y mysql-server
-sudo service mysql start
-```
-
-### 2. Create the database and application user
-
-Replace `<password>` with the value you put in `MYSQL_PASSWORD`:
+On Ubuntu / WSL (via [nvm](https://github.com/nvm-sh/nvm)):
 
 ```bash
-sudo mysql -e "
-CREATE DATABASE IF NOT EXISTS pharma_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'deepagents'@'localhost'  IDENTIFIED BY '<password>';
-CREATE USER IF NOT EXISTS 'deepagents'@'127.0.0.1' IDENTIFIED BY '<password>';
-GRANT ALL PRIVILEGES ON pharma_db.* TO 'deepagents'@'localhost';
-GRANT ALL PRIVILEGES ON pharma_db.* TO 'deepagents'@'127.0.0.1';
-FLUSH PRIVILEGES;"
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+. ~/.nvm/nvm.sh && nvm install 22 && nvm alias default 22
+npm install -g mongodb-mcp-server@3
+mongodb-mcp-server --version
 ```
+
+Start the backend from a shell where `node` is on `PATH` (a new terminal after installing nvm).
+
+### 2. Create the Atlas database user and network access
+
+In MongoDB Atlas: *Database Access* → add a user (for example `deepagents`) with **readWrite** on
+`pharma_db` (seeding needs write access; the app itself is read-only through the MCP server),
+and *Network Access* → add your current public IP. Copy the `mongodb+srv://` connection string
+into `MONGODB_URI` in `.env`, including `/pharma_db` as the default database.
 
 ### 3. Load the seed data
 
 ```bash
-set -a; . ./.env; set +a
-mysql -h"$MYSQL_HOST" -P"$MYSQL_PORT" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" < sql/company_data.sql
+uv run python scripts/seed_mongo.py
 ```
 
-Expected result: 10 drugs, 30 inventory rows, 20 sales records.
-
-```bash
-mysql -h"$MYSQL_HOST" -P"$MYSQL_PORT" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "
-SELECT 'drugs' t, COUNT(*) n FROM drugs
-UNION ALL SELECT 'inventory',     COUNT(*) FROM inventory
-UNION ALL SELECT 'sales_records', COUNT(*) FROM sales_records;"
-```
+Expected output: `drugs: 10 documents`, `inventory: 30 documents`, `sales_records: 20 documents`.
+The script drops and recreates the three collections and their indexes, so it is safe to re-run.
 
 ### 4. Viewing the data
 
-Interactive shell:
+Any MongoDB client works — `mongosh "$MONGODB_URI"`, MongoDB Compass, or the Atlas Data Explorer.
+Example aggregations the agent typically runs:
 
-```bash
-set -a; . ./.env; set +a
-mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"
+```javascript
+db.inventory.aggregate([{ $group: { _id: "$drug_id", stock: { $sum: "$quantity_on_hand" } } },
+                        { $sort: { stock: -1 } }])
+db.sales_records.aggregate([{ $group: { _id: "$region", orders: { $sum: 1 }, revenue: { $sum: "$total_amount" } } },
+                            { $sort: { revenue: -1 } }])
 ```
 
-Then `SHOW TABLES;`, `DESCRIBE inventory;`, `SELECT * FROM drugs\G`.
-
-One-off queries (`--table` draws the boxed output, `--vertical` prints one field per line):
+Quick check through the same tools the agent uses:
 
 ```bash
-M="mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE --table"
-
-$M -e "SELECT drug_id, generic_name, brand_name, therapeutic_area FROM drugs;"
-$M -e "SELECT d.generic_name, SUM(i.quantity_on_hand) AS stock
-       FROM drugs d JOIN inventory i USING(drug_id) GROUP BY 1 ORDER BY stock DESC;"
-$M -e "SELECT region, COUNT(*) AS orders, SUM(total_amount) AS revenue
-       FROM sales_records GROUP BY 1 ORDER BY revenue DESC;"
+uv run python -c "from tools.mongo_tools import list_collections; print(list_collections.invoke({}))"
 ```
-
-A GUI (MySQL Workbench, DBeaver) also works — connect to `localhost:3306` with the `.env`
-credentials. From Windows against a WSL2 server, `localhost` is forwarded automatically.
-
-> **WSL note:** systemd does not start services automatically, so run `sudo service mysql start`
-> again after each WSL restart.
 
 ## Project layout
 
@@ -168,9 +152,12 @@ api/
   context.py                 # per-request session/thread context (ContextVar)
   monitor.py                 # tool-call progress reporting (WebSocket / console)
 prompt/prompts.yaml          # main-agent and sub-agent prompts
-sql/company_data.sql         # mock pharmaceutical database seed data
+mongo/seed/*.json            # mock pharmaceutical database seed data
+scripts/seed_mongo.py        # loads mongo/seed into MongoDB
 tools/
   gemini_tool.py             # internet_search via Gemini + Google Search grounding
+  mcp_client.py              # persistent stdio session to mongodb-mcp-server
+  mongo_tools.py             # read-only MongoDB tools for the database agent
   tavily_tool.py             # internet_search via Tavily
 utils/                       # path resolution, Markdown -> PDF conversion
 ```

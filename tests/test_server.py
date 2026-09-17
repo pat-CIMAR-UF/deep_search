@@ -33,7 +33,7 @@ def test_run_replay_followup_and_download(client, monkeypatch):
 
     async def fake(query, history, mode):
         calls.append((query, history, mode, get_thread_context(), get_session_context(), get_run_context()))
-        monitor._emit("tool_start", "Querying sales", {"tool_name": "execute_sql_query"})
+        monitor._emit("tool_start", "Querying sales", {"tool_name": "aggregate_documents"})
         await asyncio.sleep(0)
         return "| Region | Sales |\n|---|---|\n| East | 123 |"
 
@@ -205,3 +205,241 @@ def test_document_upload_uses_reader_and_links_generated_pdf(client, monkeypatch
     assert "summary.pdf" in [f['path'] for f in state['messages'][-1]['files']]
     pdf = client.get("/api/download", params={"thread_id": "document-session", "path": "summary.pdf"})
     assert pdf.content.startswith(b"%PDF-")
+
+
+# ------------------------------------------------------------- error mapping --
+def test_public_error_messages_never_include_exception_text():
+    secret = RuntimeError("https://provider.test/v1?key=SECRET")
+    assert "SECRET" not in server.public_error(secret)
+    assert server.public_error(secret).startswith("The agent could not complete")
+    assert "timed out" in server.public_error(TimeoutError())
+    assert "timed out" in server.public_error(asyncio.TimeoutError())
+    configuration = server.public_error(KeyError("QWEN_REMOTE_BASE_URL"))
+    assert "not configured" in configuration and "QWEN_REMOTE_API_KEY" in configuration
+
+
+# --------------------------------------------------------- request validation --
+def test_request_limits_and_defaults(client, monkeypatch):
+    async def fake(query, history, mode):
+        return "ok"
+    monkeypatch.setattr(server, "run_agent", fake)
+    assert client.post("/api/task", json={"query": "x" * 20001}).status_code == 422
+    assert client.post("/api/task", json={"query": "hi", "attachments": [f"uploads/{i}.txt" for i in range(6)]}).status_code == 422
+    response = client.post("/api/task", json={"query": "  padded  "})
+    assert response.status_code == 202
+    thread_id = response.json()["thread_id"]
+    assert len(thread_id) == 36 and thread_id.count("-") == 4
+    with client.websocket_connect(f"/ws/{thread_id}") as ws:
+        state = wait_result(ws)
+    assert state["messages"][0]["content"] == "padded"
+    assert state["messages"][-1]["content"] == "ok"
+
+
+def test_attachment_references_are_validated(client, tmp_path):
+    uploads = server.session_dir("attach-session") / "uploads"
+    uploads.mkdir()
+    (uploads / "program.exe").write_bytes(b"MZ")
+    outside = server.session_dir("other-session") / "uploads"
+    outside.mkdir()
+    (outside / "notes.txt").write_text("private", encoding="utf-8")
+    post = lambda names: client.post("/api/task", json={"query": "Read", "thread_id": "attach-session", "attachments": names})
+    assert post(["uploads/missing.txt"]).status_code == 400
+    assert post(["uploads/program.exe"]).status_code == 400
+    assert post(["../session_other-session/uploads/notes.txt"]).status_code == 403
+    assert post([".state.json"]).status_code == 403
+    assert client.get("/api/task/attach-session").json()["status"] == "idle"
+
+
+def test_attachment_context_total_size_limit(client):
+    uploads = server.session_dir("large-session") / "uploads"
+    uploads.mkdir()
+    for name in ("a.txt", "b.txt"):
+        (uploads / name).write_text("x" * 60000, encoding="utf-8")
+    response = client.post("/api/task", json={"query": "Read", "thread_id": "large-session",
+                                              "attachments": ["uploads/a.txt", "uploads/b.txt"]})
+    assert response.status_code == 413
+    assert client.get("/api/task/large-session").json()["status"] == "idle"
+
+
+def test_websocket_rejects_invalid_thread_ids(client):
+    from starlette.websockets import WebSocketDisconnect
+    with pytest.raises(WebSocketDisconnect) as info:
+        with client.websocket_connect("/ws/" + "a" * 81):
+            pass
+    assert info.value.code == 1008
+
+
+def test_cancel_without_running_task_returns_current_state(client):
+    assert client.post("/api/task/idle-session/cancel").json()["status"] == "idle"
+    assert client.get("/api/task/idle-session").json()["revision"] == 0
+
+
+def test_download_missing_file_is_404(client):
+    assert client.get("/api/download", params={"thread_id": "empty-session", "path": "nope.md"}).status_code == 404
+
+
+# ------------------------------------------------------------------- uploads --
+def test_upload_is_rejected_while_a_request_is_running(client, monkeypatch):
+    async def slow(*args):
+        await asyncio.sleep(60)
+    monkeypatch.setattr(server, "run_agent", slow)
+    client.post("/api/task", json={"query": "Long", "thread_id": "busy-session"})
+    response = client.post("/api/upload", data={"thread_id": "busy-session"}, files={"files": ("n.txt", b"x")})
+    assert response.status_code == 409
+    client.post("/api/task/busy-session/cancel")
+
+
+def test_upload_validation_rules(client):
+    upload = lambda files: client.post("/api/upload", data={"thread_id": "rules-session"}, files=files)
+    assert upload([("files", (f"f{i}.txt", b"x")) for i in range(6)]).status_code == 400
+    assert upload({"files": ("nul.txt", b"abc\x00def")}).status_code == 415
+    assert upload({"files": (".hidden.txt", b"x")}).status_code == 415
+    assert upload({"files": ("noext", b"x")}).status_code == 415
+    assert upload([("files", ("a.txt", b"a" * 50000)), ("files", ("b.txt", b"b" * 50000))]).status_code == 413
+    assert upload({"files": ("big.pdf", b"%PDF-" + b"0" * (10 * 1024 * 1024))}).status_code == 413
+    assert (server.session_dir("rules-session") / "uploads").exists() is False
+
+
+def test_upload_sanitizes_names_and_normalizes_text(client):
+    response = client.post("/api/upload", data={"thread_id": "names-session"}, files=[
+        ("files", ("dir/../evil.txt", b"\xef\xbb\xbfwith bom")),
+        ("files", ("C:\\Users\\me\\notes.md", b"# notes")),
+        ("files", ("report.docx", b"PK\x03\x04binary")),
+    ])
+    assert response.status_code == 200
+    names = response.json()["files"]
+    assert [n.split("/", 1)[1].split("_", 1)[1] for n in names] == ["evil.txt", "notes.md", "report.docx"]
+    assert all(n.startswith("uploads/") and len(n.split("/")[1].split("_")[0]) == 8 for n in names)
+    stored = server.session_dir("names-session") / names[0]
+    assert stored.read_bytes() == b"with bom"
+    assert (server.session_dir("names-session") / names[2]).read_bytes() == b"PK\x03\x04binary"
+    listed = client.get("/api/files", params={"thread_id": "names-session"}).json()["files"]
+    assert sorted(f["path"] for f in listed) == sorted(names)
+
+
+# --------------------------------------------------------- state bookkeeping --
+def test_history_excludes_failed_answers_and_uses_agent_content(client, monkeypatch):
+    seen = []
+    attempts = {"n": 0}
+
+    async def flaky(query, history, mode):
+        attempts["n"] += 1
+        seen.append(list(history))
+        if attempts["n"] == 1:
+            raise RuntimeError("first attempt fails")
+        return "Second answer"
+    monkeypatch.setattr(server, "run_agent", flaky)
+    uploads = server.session_dir("history-session") / "uploads"
+    uploads.mkdir()
+    (uploads / "ref.txt").write_text("Reference: 7", encoding="utf-8")
+    with client.websocket_connect("/ws/history-session") as ws:
+        ws.receive_json()
+        client.post("/api/task", json={"query": "First", "thread_id": "history-session", "attachments": ["uploads/ref.txt"]})
+        assert wait_result(ws)["status"] == "error"
+        client.post("/api/task", json={"query": "Second", "thread_id": "history-session"})
+        assert wait_result(ws)["status"] == "completed"
+    assert seen[0] == []
+    assert [m["role"] for m in seen[1]] == ["user"]
+    assert "Reference: 7" in seen[1][0]["content"] and seen[1][0]["content"].startswith("First")
+    state = client.get("/api/task/history-session").json()
+    assert state["messages"][0]["content"] == "First"
+    assert state["messages"][0]["attachments"] == ["uploads/ref.txt"]
+    assert state["messages"][1]["failed"] is True
+
+
+def test_message_history_is_capped_at_one_hundred(client, monkeypatch):
+    async def fake(query, history, mode):
+        return "ok"
+    monkeypatch.setattr(server, "run_agent", fake)
+    state = server.get_session("cap-session")
+    state["messages"] = [{"role": "user", "content": f"m{i}"} for i in range(100)]
+    with client.websocket_connect("/ws/cap-session") as ws:
+        ws.receive_json()
+        client.post("/api/task", json={"query": "New", "thread_id": "cap-session"})
+        final = wait_result(ws)
+    assert len(final["messages"]) == 100
+    assert final["messages"][0]["content"] == "m2"
+    assert final["messages"][-2]["content"] == "New"
+
+
+def test_live_events_cap_logs_and_ignore_other_runs(client):
+    state = server.get_session("events-session")
+    state.update(run_id="run-A", status="running", messages=[{"role": "ai", "content": "", "logs": []}])
+
+    async def exercise():
+        for i in range(105):
+            await server.hub.send_to_thread({"run_id": "run-A", "event": "tool_start", "message": f"step {i}",
+                                             "data": {"i": i}, "timestamp": "t"}, "events-session")
+        await server.hub.send_to_thread({"run_id": "run-B", "event": "tool_start", "message": "stale"}, "events-session")
+        await server.hub.send_to_thread({"run_id": "run-A", "event": "task_result", "message": "done"}, "events-session")
+
+    asyncio.run(exercise())
+    logs = state["messages"][-1]["logs"]
+    assert len(logs) == 100
+    assert logs[0]["title"] == "step 5" and logs[-1] == {"title": "step 104", "details": {"i": 104}, "timestamp": "t"}
+    assert state["revision"] == 106
+
+
+def test_snapshot_drops_sockets_that_fail_to_send(client):
+    class DeadSocket:
+        async def send_json(self, data):
+            raise RuntimeError("connection closed")
+
+    dead = DeadSocket()
+    server.hub.active_connections["dead-session"] = dead
+    asyncio.run(server.hub.snapshot("dead-session"))
+    assert "dead-session" not in server.hub.active_connections
+
+
+def test_restored_state_gets_a_revision_and_lists_files_newest_first(client):
+    directory = server.session_dir("restore-session")
+    (directory / ".state.json").write_text(
+        '{"thread_id": "restore-session", "run_id": null, "status": "completed", "messages": []}', encoding="utf-8")
+    assert client.get("/api/task/restore-session").json()["revision"] == 0
+    (directory / "old.md").write_text("old", encoding="utf-8")
+    (directory / "nested").mkdir()
+    (directory / "nested" / "new.md").write_text("new", encoding="utf-8")
+    (directory / ".hidden.md").write_text("hidden", encoding="utf-8")
+    import os
+    os.utime(directory / "old.md", (1_600_000_000, 1_600_000_000))
+    os.utime(directory / "nested" / "new.md", (1_700_000_000, 1_700_000_000))
+    files = client.get("/api/files", params={"thread_id": "restore-session"}).json()["files"]
+    assert [f["path"] for f in files] == ["nested/new.md", "old.md"]
+    assert files[0] == {"name": "new.md", "path": "nested/new.md", "size": 3, "mtime": 1_700_000_000.0, "type": "file"}
+
+
+def test_generated_files_exclude_uploads_written_during_the_run(client, monkeypatch):
+    async def fake(query, history, mode):
+        directory = Path(get_session_context())
+        (directory / "uploads").mkdir(exist_ok=True)
+        (directory / "uploads" / "scratch.txt").write_text("not a report", encoding="utf-8")
+        (directory / "report.md").write_text("# Report", encoding="utf-8")
+        return "Done"
+    monkeypatch.setattr(server, "run_agent", fake)
+    with client.websocket_connect("/ws/generated-session") as ws:
+        ws.receive_json()
+        client.post("/api/task", json={"query": "Report", "thread_id": "generated-session"})
+        state = wait_result(ws)
+    paths = sorted(f["path"] for f in state["messages"][-1]["files"])
+    assert "report.md" in paths
+    assert any(p.startswith("answer_") for p in paths)
+    assert not any(p.startswith("uploads/") for p in paths)
+
+
+def test_shutdown_cancels_running_requests(tmp_path, monkeypatch):
+    monkeypatch.setattr(server, "OUTPUT_ROOT", tmp_path.resolve())
+    server.sessions.clear()
+    server.tasks.clear()
+
+    async def slow(*args):
+        await asyncio.sleep(60)
+    monkeypatch.setattr(server, "run_agent", slow)
+    with TestClient(server.app) as client:
+        assert client.post("/api/task", json={"query": "Long", "thread_id": "shutdown-session"}).status_code == 202
+        assert "shutdown-session" in server.tasks
+    assert server.tasks == {}
+    state = server.sessions["shutdown-session"]
+    assert state["status"] == "cancelled"
+    assert state["messages"][-1] == {"role": "ai", "content": "Request stopped.", "logs": [], "files": [],
+                                     "run_id": state["run_id"], "failed": True}
+    server.sessions.clear()

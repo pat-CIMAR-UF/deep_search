@@ -81,9 +81,11 @@ def _assert_subagent_shape(spec):
 def test_database_query_agent_shape():
     _assert_subagent_shape(database_query_agent)
     assert [t.name for t in database_query_agent["tools"]] == [
-        "list_sql_tables",
-        "get_table_data",
-        "execute_sql_query",
+        "list_collections",
+        "get_collection_schema",
+        "find_documents",
+        "aggregate_documents",
+        "count_documents",
     ]
 
 
@@ -131,15 +133,60 @@ def test_qwen_tool_roundtrip_omits_unsupported_agent_names():
         assert payload['messages'][-1]['tool_call_id'] == 'call-1'
         return httpx.Response(200, json={
             'id': 'test', 'object': 'chat.completion', 'created': 0, 'model': 'qwen-test',
-            'choices': [{'index': 0, 'message': {'role': 'assistant', 'content': 'Tables found'}, 'finish_reason': 'stop'}],
+            'choices': [{'index': 0, 'message': {'role': 'assistant', 'content': 'Collections found'}, 'finish_reason': 'stop'}],
         })
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
         model = QwenChatOpenAI(model='qwen-test', base_url='http://qwen.test/v1', api_key='test-key', http_client=client)
         result = model.invoke([
-            HumanMessage(content='List tables'),
+            HumanMessage(content='List collections'),
             AIMessage(content='', name='Database Query Agent', tool_calls=[
-                {'name': 'list_sql_tables', 'args': {}, 'id': 'call-1', 'type': 'tool_call'}]),
-            ToolMessage(content='drugs', tool_call_id='call-1', name='list_sql_tables'),
+                {'name': 'list_collections', 'args': {}, 'id': 'call-1', 'type': 'tool_call'}]),
+            ToolMessage(content='drugs', tool_call_id='call-1', name='list_collections'),
         ])
-    assert result.content == 'Tables found'
+    assert result.content == 'Collections found'
     assert len(requests) == 1
+
+
+# -------------------------------------------------- knowledge base subagent --
+def test_knowledge_base_agent_shape_and_prompt_section():
+    from agent.subagents.knowledge_base_agent import knowledge_base_agent
+    from tools.ragflow_tools import create_ask_delete, get_assistant_list
+
+    _assert_subagent_shape(knowledge_base_agent)
+    assert knowledge_base_agent["tools"] == [get_assistant_list, create_ask_delete]
+    section = prompts.sub_agents_content["ragflow"]
+    assert knowledge_base_agent["name"] == section["name"]
+    assert knowledge_base_agent["description"] == section["description"]
+    assert knowledge_base_agent["system_prompt"] == section["system_prompt"]
+
+
+def test_all_three_specialist_names_are_unique_and_referenced_by_coordinator_prompt():
+    from agent.subagents.knowledge_base_agent import knowledge_base_agent
+
+    names = [database_query_agent["name"], internet_search_agent["name"], knowledge_base_agent["name"]]
+    assert len(set(names)) == 3
+    coordinator_prompt = prompts.main_agent_content["system_prompt"]
+    for name in names:
+        assert f'"{name}"' in coordinator_prompt, name
+
+
+def test_specialists_map_modes_to_subagent_specs():
+    from agent import main_agent
+    from agent.subagents.knowledge_base_agent import knowledge_base_agent
+
+    assert main_agent.SPECIALISTS == {
+        "database": database_query_agent,
+        "internet": internet_search_agent,
+        "ragflow": knowledge_base_agent,
+    }
+
+
+def test_prompts_module_prints_every_agent_when_run_as_script(capsys):
+    import runpy
+
+    runpy.run_path(str(prompts.yaml_file_path.parents[1] / "agent" / "prompts.py"), run_name="__main__")
+    out = capsys.readouterr().out
+    assert "------Main Agent------" in out
+    for key in ("gemini", "db", "ragflow"):
+        assert f"------Sub Agent: {key}------" in out
+        assert prompts.sub_agents_content[key]["name"] in out

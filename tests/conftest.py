@@ -1,6 +1,6 @@
 """Shared fixtures for the deep_search unit-test harness.
 
-All external services (MySQL, Gemini, Tavily, RAGFlow, the Qwen chat model) are
+All external services (MongoDB MCP, Gemini, Tavily, RAGFlow, the Qwen chat model) are
 mocked. Dummy credentials are injected *before* any project module is imported
 so that import-time configuration (agent.llm, tools.*, ragflow.*) never touches
 real secrets and does not depend on a .env file being present.
@@ -23,11 +23,8 @@ _TEST_ENV = {
     "GEMINI_API_KEY": "test-gemini-key",
     "GEMINI_MODEL": "gemini-test-model",
     "TAVILY_API_KEY": "tvly-test-key",
-    "MYSQL_HOST": "db.test",
-    "MYSQL_PORT": "3307",
-    "MYSQL_USER": "test_user",
-    "MYSQL_PASSWORD": "test_password",
-    "MYSQL_DATABASE": "test_db",
+    "MONGODB_URI": "mongodb://mongo.test:27017",
+    "MONGODB_DATABASE": "test_db",
     "RAGFLOW_API_KEY": "ragflow-test-key",
     "RAGFLOW_API_URL": "http://ragflow.test:9380",
 }
@@ -56,77 +53,41 @@ def monitor_calls(monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
-# Fake MySQL connection
+# Fake MongoDB MCP session
 # --------------------------------------------------------------------------- #
-class FakeCursor:
-    def __init__(self, rows=(), description=None, execute_error=None):
-        self.rows = list(rows)
-        self.description = description
-        self.execute_error = execute_error
-        self.executed: list[str] = []
-        self.fetchmany_size = None
+def make_tool_result(structured=None, text=None, is_error=False):
+    """Build a CallToolResult like the one mongodb-mcp-server returns."""
+    from mcp.types import CallToolResult, TextContent
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc):
-        return False
-
-    def execute(self, sql, params=None):
-        self.executed.append(sql)
-        if self.execute_error is not None:
-            raise self.execute_error
-
-    def fetchall(self):
-        return list(self.rows)
-
-    def fetchmany(self, size=1):
-        self.fetchmany_size = size
-        return self.rows[:size]
-
-
-class FakeConnection:
-    def __init__(self, cursor):
-        self._cursor = cursor
-        self.closed = False
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc):
-        self.closed = True
-        return False
-
-    def cursor(self, *args, **kwargs):
-        return self._cursor
+    content = [TextContent(type="text", text=text)] if text is not None else []
+    return CallToolResult(content=content, structured_content=structured, is_error=is_error)
 
 
 @pytest.fixture
-def fake_db(monkeypatch):
-    """Install a fake ``mysql.connector.connect`` into tools.db_tools.
+def fake_mcp(monkeypatch):
+    """Replace ``tools.mongo_tools.call_mcp_tool`` with a recorder.
 
-    Returns an ``install(...)`` callable that configures the fake and returns a
-    handle exposing the cursor and the connection kwargs that were used.
+    Returns an ``install(...)`` callable that configures the canned result (or the
+    exception to raise) and returns a handle exposing the recorded ``calls`` as
+    ``(tool_name, arguments)`` tuples.
     """
-    import tools.db_tools as db_tools
+    import tools.mongo_tools as mongo_tools
 
     class Handle:
-        cursor: FakeCursor
-        connection: FakeConnection | None = None
-        connect_kwargs: dict | None = None
+        calls: list[tuple[str, dict]]
 
-    def install(rows=(), description=None, execute_error=None, connect_error=None):
+    def install(structured=None, text=None, is_error=False, error=None):
         handle = Handle()
-        handle.cursor = FakeCursor(rows=rows, description=description, execute_error=execute_error)
+        handle.calls = []
+        result = make_tool_result(structured=structured, text=text, is_error=is_error)
 
-        def _connect(**kwargs):
-            handle.connect_kwargs = kwargs
-            if connect_error is not None:
-                raise connect_error
-            handle.connection = FakeConnection(handle.cursor)
-            return handle.connection
+        def _call(name, arguments, timeout=None):
+            handle.calls.append((name, dict(arguments)))
+            if error is not None:
+                raise error
+            return result
 
-        monkeypatch.setattr(db_tools, "connect", _connect)
+        monkeypatch.setattr(mongo_tools, "call_mcp_tool", _call)
         return handle
 
     return install

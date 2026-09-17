@@ -19,6 +19,7 @@ from agent.main_agent import run_agent
 from api.context import (set_session_context, set_thread_context, reset_session_context,
                          set_run_context, reset_run_context)
 from api.monitor import ConnectionManager
+from tools.mcp_client import shutdown as shutdown_mongo_mcp
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_ROOT = Path(os.getenv("DEEP_SEARCH_OUTPUT_DIR", ROOT / "output")).resolve()
@@ -115,6 +116,7 @@ async def lifespan(app: FastAPI):
         task.cancel()
     await asyncio.gather(*running, return_exceptions=True)
     hub.active_connections.clear()
+    await asyncio.to_thread(shutdown_mongo_mcp)
 
 
 app = FastAPI(title="Deep Search", lifespan=lifespan)

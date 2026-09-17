@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 A research assistant for a mock pharmaceutical company. A streaming DeepAgents coordinator
 uses three specialists: public web search through Gemini with Google Search grounding,
-read-only MySQL queries, and RAGFlow document retrieval. It can also read uploaded files and
+read-only MongoDB queries through `mongodb-mcp-server`, and RAGFlow document retrieval. It can also read uploaded files and
 produce downloadable Markdown and PDF reports. FastAPI serves the Vue UI, HTTP API, and
 WebSocket progress updates on `http://localhost:8000`.
 
@@ -23,7 +23,9 @@ to use the project's environment and dependencies.
 uv sync                                      # install application and dev dependencies
 uv run main.py                               # start UI/API on localhost:8000
 uv run pytest                                # automated suite; external services are mocked
-uv run pytest tests/test_db_tools.py          # database-tool regressions
+uv run pytest tests/test_mongo_tools.py       # MongoDB-tool regressions (fake MCP session)
+uv run pytest tests/test_mcp_client.py        # persistent MCP session lifecycle
+uv run python scripts/seed_mongo.py           # load mongo/seed/*.json into MongoDB (needs MONGODB_URI)
 uv run pytest tests/test_gemini_tool.py        # search and concurrent-client regressions
 uv run pytest tests/test_main_agent.py        # actual graph with a scripted model
 uv run pytest tools/test_new_tools.py         # file and RAGFlow-tool regressions
@@ -47,16 +49,20 @@ Configuration comes from the git-ignored project `.env`, loaded with
 - Coordinator: `QWEN_REMOTE_BASE_URL`, `QWEN_REMOTE_API_KEY`, optional `QWEN_MODEL`.
 - Gemini search: `GEMINI_API_KEY`, optional `GEMINI_MODEL`.
 - Tavily alternative: `TAVILY_API_KEY`. The active search specialist uses Gemini.
-- Business database: `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`,
-  `MYSQL_DATABASE`; additional charset/collation/SQL-mode options are in `tools/db_tools.py`.
+- Business database: `MONGODB_URI` (Atlas `mongodb+srv://` string with `/pharma_db`), optional
+  `MONGODB_DATABASE` (default `pharma_db`), optional `MONGODB_MCP_COMMAND` / `MONGODB_MCP_ARGS`
+  (default: the global `mongodb-mcp-server` binary if on PATH, else `npx -y mongodb-mcp-server@3`).
+  The server needs Node.js >= 22.13; in WSL it is installed through nvm, so start the backend
+  from a shell where `node` is on PATH.
 - Knowledge retrieval: `RAGFLOW_API_URL`, `RAGFLOW_API_KEY`. The configured local endpoint
   verified on 2026-09-06 is `http://localhost:9380`; use the key belonging to that instance.
 - Session storage: optional `DEEP_SEARCH_OUTPUT_DIR`, defaulting to the project `output/`.
 
-The MySQL seed file is `sql/company_data.sql`, containing `drugs`, `inventory`, and
-`sales_records`. See `README.md` for setup. If the local MySQL service is stopped in WSL,
-start it with `sudo service mysql start`. RAGFlow's own storage is separate from these
-business tables; do not treat a RAGFlow document upload as a MySQL business-data update.
+The seed data is `mongo/seed/{drugs,inventory,sales_records}.json` (Extended JSON, integer
+`drug_id` keys for `$lookup`), loaded by `scripts/seed_mongo.py` (pymongo, dev dependency).
+The app targets the Atlas cluster `yiqunpersonal`, database `pharma_db`. See `README.md` for
+setup. RAGFlow's own storage is separate from these business collections; do not treat a
+RAGFlow document upload as a MongoDB business-data update.
 
 `GET /api/health` reports registered application capabilities, including `ragflow: true`.
 It does not test provider connectivity, authentication, or whether assistants are configured.
@@ -146,9 +152,22 @@ raising `RuntimeError: Cannot send a request, as the client has been closed.`
 Only initialization is locked; searches can still run concurrently. Tests cover this race.
 
 Tools are LangChain `@tool` functions. Gemini and Tavily both expose `internet_search`, but
-`internet_search_agent.py` currently imports Gemini. `db_tools.py` validates simple table
-names, rejects multiple/write SQL statements with its read-only guard, and caps returned
-rows at 100. Use SQL aggregates for totals instead of treating previews as complete data.
+`internet_search_agent.py` currently imports Gemini.
+
+**MongoDB goes through MCP, not a driver.** `tools/mcp_client.py` spawns one
+`mongodb-mcp-server` per process over stdio and keeps it alive on a dedicated thread with its
+own event loop (anyio cancel scopes must be entered and exited in the same task). Sync tools
+call `call_mcp_tool()`, which injects `connectionId: "preconfigured"` (required by server 3.x)
+and marshals into that loop; only initialization is locked, transport failures respawn once,
+and `shutdown()` runs from the FastAPI lifespan. The child gets an explicit environment
+(`MDB_MCP_READ_ONLY=true`, write/atlas/connect tools disabled, 100-document cap, telemetry off);
+it does not inherit the parent env, so forward proxies explicitly. `tools/mongo_tools.py`
+exposes `list_collections`, `get_collection_schema`, `find_documents`, `aggregate_documents`,
+and `count_documents`; each validates collection names and JSON arguments in Python, rejects
+`$out`/`$merge`, and clamps `limit` to 100 before calling MCP. The `count` server tool takes
+`query`, not `filter`. Prefer `structured_content` from results; the text blocks wrap documents
+in `<untrusted-user-data-…>` tags. Use `$group` aggregations for totals instead of treating a
+capped result as complete data. The app never uses `pymongo`; it is only for the seed script.
 
 Executable tool modules insert the project root into `sys.path` before importing project
 modules so they also work as scripts. Tool imports must tolerate missing API credentials;
@@ -190,7 +209,8 @@ are saved as Markdown, and newly generated reports are included in the response'
 ## Validation and troubleshooting
 
 Automated tests mock external services. `tests/conftest.py` injects dummy credentials before
-project imports and supplies `fake_db` and `monitor_calls` fixtures. Preserve that isolation;
+project imports and supplies `fake_mcp`, `make_tool_result`, and `monitor_calls` fixtures;
+`tests/test_mcp_client.py` replaces `mcp.Client` with a fake and never spawns Node. Preserve that isolation;
 unit tests must not query real databases or paid services. File tests perform actual local
 Word/Excel reading and WeasyPrint PDF generation in temporary directories.
 
@@ -202,7 +222,7 @@ Useful separate live checks with configured services:
 
 ```bash
 uv run python -c "from tools.ragflow_tools import get_assistant_list; print(get_assistant_list.invoke({}))"
-uv run python -c "from tools.db_tools import list_sql_tables; print(list_sql_tables.invoke({}))"
+uv run python -c "from tools.mongo_tools import list_collections; print(list_collections.invoke({}))"
 ```
 
 For the generic "agent could not complete" error, inspect the failed conversation's latest
