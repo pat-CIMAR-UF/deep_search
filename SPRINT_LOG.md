@@ -27,29 +27,38 @@ Day 14 write-up and the resume bullets.
   base, 5 web, 3 mixed), `evals/pricing.yaml`, `evals/run_baseline.py` → `evals/baseline.json`.
 - Test suite: 235 → 245 tests, all mocked.
 
-**Baseline (before any evaluation-driven change)**
+**Baseline (before any evaluation-driven change)** — run 20260917T162918Z, `evals/baseline.json`
 
-Pending: the coordinator endpoint (Cloudflare quick tunnel) and RAGFlow were offline when the
-harness was ready. A one-question smoke run confirmed the harness records failures cleanly
-(0.7 s, `OpenAIConnectionError`). Run when both services are up:
-
-```bash
-uv run python evals/run_baseline.py
-```
-
-Then paste the printed summary table here.
+Coordinator: DeepSeek `deepseek-flash` (the self-hosted Qwen tunnel was too unreliable to
+measure; switched today). 20/20 questions completed without a harness error; total estimated
+cost $0.92.
 
 | route | n | errors | p50 s | p95 s | mean tokens | mean tool calls | mean cost $ |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| database | 6 | | | | | | |
-| ragflow | 6 | | | | | | |
-| internet | 5 | | | | | | |
-| mixed | 3 | | | | | | |
-| all | 20 | | | | | | |
+| database | 6 | 0 | 15.78 | 17.99 | 34898 | 9.7 | 0.0128 |
+| ragflow | 6 | 0 | 124.63 | 282.59 | 172539 | 30.8 | 0.0905 |
+| internet | 5 | 0 | 49.57 | 93.36 | 56574 | 13.4 | 0.0363 |
+| mixed | 3 | 0 | 54.01 | 58.93 | 79730 | 21.7 | 0.0389 |
+| all | 20 | 0 | 47.0 | 193.99 | 88334 | 18.8 | 0.0459 |
 
-Cost assumptions (`evals/pricing.yaml`): coordinator is self-hosted Qwen behind an
-OpenAI-compatible endpoint, counted at $0 per token; Gemini Flash-class list price for
-grounding tokens. Both are editable and recorded in `baseline.json`.
+Observations that Days 2–5 should turn into graded metrics:
+- **Knowledge-base retrieval failed on every kb question.** RAGFlow answered `get_assistant_list`
+  and retrieval found the right document (the amoxicillin label PDF appears in the sources),
+  but the answer stream carried `**ERROR**: CONNECTION_ERROR`: RAGFlow's own chat model
+  backend is unreachable (the assistants point at an LLM endpoint that is down, likely the same
+  local server the coordinator just moved off). The RAGFlow Agent therefore reported honestly
+  that it had no document text, and the coordinator then fanned out to the web and database
+  agents looking for the same facts. That fan-out is why `ragflow` is the slowest and most
+  expensive route (p95 283 s, 173k tokens). Root cause to fix before Day 2's golden set.
+- **Routing over-fans-out.** 11/20 runs invoked exactly the expected specialists; 9/20 invoked
+  extra ones (typically the RAGFlow Agent on web questions, or the web agent on kb questions).
+  No run missed an expected specialist. This is the routing-accuracy baseline for Day 3.
+- **Database route is tight**: 6/6 correct on spot check, ~16 s, ~10 tool calls, ~$0.013.
+- Every run includes one `ls` call from the coordinator's built-in filesystem tools (scratch
+  space); a candidate for the Day 5 context-engineering pass.
+
+Cost assumptions (`evals/pricing.yaml`): DeepSeek `deepseek-flash` peak-hour cache-miss list
+price for the coordinator; Gemini Flash-class list price for grounding tokens. Both are editable and recorded in `baseline.json`.
 
 **Azure and tooling**
 - Azure CLI logged in; subscription "CROO Cloud Services" (Enabled). Budget alert deliberately
@@ -71,7 +80,8 @@ grounding tokens. Both are editable and recorded in `baseline.json`.
    Day 3 scorecard before renaming; the article notes naming effects vary by model.
 
 **Pending / carry-over**
-- Run the 20-question baseline and fill the table above (needs tunnel + RAGFlow up).
+- Point the three RAGFlow chat assistants at a reachable chat model (RAGFlow → Model providers,
+  e.g. DeepSeek), then re-run the kb questions: `uv run python evals/run_baseline.py --ids kb-01 kb-02 kb-03 kb-04 kb-05 kb-06 --output evals/baseline_kb_rerun.json`.
 - Budget alert once the subscription is settled.
 - Enable secret scanning + push protection when the repo goes public.
 - Enable Docker Desktop WSL integration before Day 6.
