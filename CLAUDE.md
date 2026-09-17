@@ -12,7 +12,7 @@ WebSocket progress updates on `http://localhost:8000`.
 
 Preserve the user's chosen architecture: `create_deep_agent`, `InMemorySaver`, dictionary
 sub-agent specs, and asynchronous streaming in `agent/main_agent.py`. Do not replace it with
-the former two-specialist coordinator. `api文档.md` describes the API contract.
+the former two-specialist coordinator. `docs/api文档.md` describes the API contract; the long-form project write-ups are also in `docs/`.
 
 ## Commands
 
@@ -44,7 +44,7 @@ Vue changes before expecting them to appear in the UI served by FastAPI.
 ## Configuration
 
 Configuration comes from the git-ignored project `.env`, loaded with
-`load_dotenv(find_dotenv())`. Never print, copy into documentation, or commit credentials.
+`load_dotenv(find_dotenv())`; `.env.example` lists every variable. Never print, copy into documentation, or commit credentials.
 
 - Coordinator: `QWEN_REMOTE_BASE_URL`, `QWEN_REMOTE_API_KEY`, optional `QWEN_MODEL`.
 - Gemini search: `GEMINI_API_KEY`, optional `GEMINI_MODEL`.
