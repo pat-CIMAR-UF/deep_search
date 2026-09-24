@@ -99,3 +99,85 @@ and recorded in `baseline.json`.
 - Budget alert once the subscription is settled.
 - Enable secret scanning + push protection when the repo goes public.
 - Enable Docker Desktop WSL integration before Day 6.
+
+## Day 2 — 2026-09-18 — Golden dataset
+
+**Shipped** (working tree only; not committed at the user's request)
+- `evals/golden/v1.jsonl`: **111 rows** (target ≥100), assembled by `evals/golden/build.py` from
+  computed database rows plus three hand-authored source files. Schema per row: `id, specialist,
+  question, mode, expected_answer, expected_sources, expected_route, difficulty, tags, grader`;
+  optional `expected_values`, `governance.must_not_leak`, `gold_passage_ids`, `notes`.
+- Dataset card `evals/golden/README.md`: composition, grader methods, how the knowledge-base gold
+  passages were derived, routing rationale, licences, known gaps.
+- `evals/test_golden_schema.py`: 211 checks, including "v1.jsonl matches the build script", "every
+  governance token exists in the seed data", and per-specialist coverage gates. `evals` added to
+  pytest `testpaths`, so CI validates the set. Suite: 247 → 458 tests, all mocked.
+- `evals/golden/ingest_rag_mini_wikipedia.py` (idempotent) and `evals/golden/push_langsmith.py`
+  (idempotent on metadata id). Parquet cache `evals/golden/data/` is git-ignored.
+- `CLAUDE.md` knowledge-base table gained the new RAGFlow dataset.
+
+| specialist | prefix | rows | easy / med / hard | gold labels | grader |
+|---|---|---:|---|---|---|
+| Database Query Agent | `db-` | 31 | 8 / 17 / 6 | computed from `mongo/seed/*.json` by `build.py`; live Atlas counts matched (10 / 30 / 20) | `numeric` 15, `contains_all` 15, `contains_any` 1 (negative row: product that does not exist) |
+| RAGFlow Agent | `kb-` | 40 | 32 / 7 / 1 | rag-mini-wikipedia test split, verbatim; `gold_passage_ids` derived (see below) | `contains_all` 35, `contains_any` 5 |
+| Network Search Agent | `web-` | 20 | 12 / 8 / 0 | hand-authored time-stable facts with expected source domains | `contains_all` 14, `contains_any` 6 |
+| Coordinator routing | `route-` / `gov-` | 20 | 11 / 4 / 5 | `expected_route`: 6 database-only, 4 knowledge-base-only, 4 internet-only, 6 mixed (5 of the 20 are governance rows) | `routing` (set equality on delegated sub-agents) |
+
+Every row has a deterministic grader method; `llm_rubric` is defined in the card but not yet
+assigned to any row. Day 3 adds the judge on top (groundedness, completeness, report quality).
+
+**Governance rows.** `gov-01..05` mix private records with a public lookup. Each lists the concrete
+private tokens (customer names, batch numbers, warehouse names, the 2,153,200 revenue total) that
+must not appear in an `internet_search` query; a test asserts every token is traceable to the seed
+data. `gov-05` is a direct user instruction to web-search an internal sales department: the gold
+route is database-only and complying is a leak. Two routing traps: `route-10` (metformin) and
+`route-13` (Lipitor) have catalogue rows but ask public questions.
+
+**Knowledge-base corpus.** The plan assumed rag-mini-wikipedia ships gold passage ids; it does not
+(the test split is question/answer only). Derivation: answer string contained in the passage plus
+≥2 shared question terms → 195 of 918 questions with one confident candidate → 40 self-contained
+questions across 27 topics picked by hand → every gold passage read to confirm it answers. One
+indirect case kept as `hard` (`kb-40`: the passage says Singapore is second after Monaco). kb rows
+run in forced `ragflow` mode: they measure retrieval and grounding, not routing.
+
+Ingestion: the full 3,200-passage corpus (user's choice over a 300-passage subset) as 32 text
+files of 100 passages, each passage one line prefixed `[[passage N]]`, naive chunking at 128
+tokens, RAPTOR and GraphRAG **off** (the three existing datasets have both on, which would have
+pushed every chunk through an LLM). 1,875 chunks, parsed in about 4 minutes. New assistant
+`RAG Mini Wikipedia Assistant` is bound to the dataset and told to keep the markers when quoting;
+a live `create_ask_delete` call returned the 1832 answer with `[[passage 289]]` and three file
+references. Retrieval ceiling via the SDK `retrieve` call (top 10 chunks):
+
+| metric | result |
+|---|---:|
+| gold passage in top 10 | 40 / 40 |
+| gold passage in top 5 | 39 / 40 |
+
+This is the Day 3 upper bound for the kb cells, not an end-to-end score.
+
+LangSmith: dataset `deep-search-golden-v1`, 111 examples pushed (inputs: question, mode; outputs:
+gold fields; metadata: id, specialist, route, difficulty, tags).
+
+**Observations for Day 3**
+- Likely low cells: the 6 `hard` DB rows (grouping by the `warehouse_location` prefix, H1/H2
+  revenue split, sell-through ratio across three collections) and the 5 governance rows. The kb
+  rows are easy-skewed because rag-mini-wikipedia is single-fact lookup.
+- RAGFlow SDK quirks: `list_datasets(name=...)` raises "lacks permission" for a name that does not
+  exist, so filter the full list; dataset creation accepted a partial `parser_config`.
+- Web gold answers were written from author knowledge and not checked against the listed domains;
+  Day 3's citation-validity grader is the systematic check. Review `sources/web.jsonl` first.
+- All four RAGFlow assistants report `llm_id` `unsloth/Qwen3.8-27B-GGUF@qwen-remote@...`, which
+  contradicts the Day 1 note that they were re-pointed at `deepseek-flash`. Answers worked today, so
+  either the provider entry itself was re-pointed or the Day 1 note is wrong; check inside RAGFlow
+  before the Day 3 run and fix whichever is stale.
+
+**Reading:** Anthropic, *Define success criteria and build evaluations* — **not read yet**; queued
+for the start of Day 3, before writing graders. Things to check against it: the code/human/LLM
+grading split above, and the Likert rubric example for the 1–5 report-quality grader.
+
+**Pending / carry-over**
+- Commit the Day 2 work after reviewing `sources/web.jsonl` and `sources/routing.jsonl`.
+- Resolve the RAGFlow assistant model question above; remove the stale `qwen-remote` provider only
+  if nothing depends on it.
+- Day 1 carry-overs unchanged: Azure budget once the subscription is settled, secret scanning when
+  the repo goes public, Docker Desktop WSL integration before Day 6.

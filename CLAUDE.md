@@ -114,6 +114,7 @@ Local setup verified on 2026-09-06:
 | Drug Labels | AMOXIL/amoxicillin label; nifedipine extended-release label | Drug Labels Assistant |
 | Crib Assembly | IKEA GONATT crib manual | Crib Assembly Assistant |
 | Air Conditioner Installation | Midea U AC installation guide | Air Conditioner Installation Assistant |
+| RAG Mini Wikipedia | 3,200 `rag-mini-wikipedia` passages as 32 text files, each passage prefixed `[[passage N]]`; 1,875 chunks, RAPTOR/GraphRAG off (added 2026-09-18 by `evals/golden/ingest_rag_mini_wikipedia.py`) | RAG Mini Wikipedia Assistant |
 
 The four PDFs were indexed into 89 chunks, and retrieval was verified. The former
 `Uploaded Manuals` dataset was renamed to `Drug Labels`; the crib and AC documents were
