@@ -102,7 +102,7 @@ and recorded in `baseline.json`.
 
 ## Day 2 — 2026-09-18 — Golden dataset
 
-**Shipped** (working tree only; not committed at the user's request)
+**Shipped** (kept in the working tree on 2026-09-18 at the user's request; committed 2026-09-24 in `5bcf2ab`)
 - `evals/golden/v1.jsonl`: **111 rows** (target ≥100), assembled by `evals/golden/build.py` from
   computed database rows plus three hand-authored source files. Schema per row: `id, specialist,
   question, mode, expected_answer, expected_sources, expected_route, difficulty, tags, grader`;
@@ -176,7 +176,8 @@ for the start of Day 3, before writing graders. Things to check against it: the 
 grading split above, and the Likert rubric example for the 1–5 report-quality grader.
 
 **Pending / carry-over**
-- Commit the Day 2 work after reviewing `sources/web.jsonl` and `sources/routing.jsonl`.
+- Review `sources/web.jsonl` and `sources/routing.jsonl`. The Day 2 work was committed on
+  2026-09-24 (`5bcf2ab`), but no review of these two files is recorded; do it before the Day 3 run.
 - Resolve the RAGFlow assistant model question above; remove the stale `qwen-remote` provider only
   if nothing depends on it.
 - Day 1 carry-overs unchanged: Azure budget once the subscription is settled, secret scanning when

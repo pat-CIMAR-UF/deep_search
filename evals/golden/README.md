@@ -21,7 +21,7 @@ parsing, multi-collection, or a ratio that needs two aggregations.
 ```
 id                str   db-01 | kb-01 | web-01 | route-01 | gov-01
 specialist        str   db | kb | web | routing
-question          str   the user message sent in mode "auto"
+question          str   the user message, sent in the row's mode
 mode              str   auto (db, web, routing rows) | ragflow (kb rows: they measure retrieval, not routing)
 expected_answer   str   human-readable gold answer
 expected_values   obj   optional structured gold values (numbers, names) for code graders
@@ -110,7 +110,8 @@ First push 2026-09-18: 111 examples. Re-running updates examples in place by met
 - Web gold answers were written from the author's knowledge and checked against the listed domains only
   where noted in `notes`; Day 3's citation-validity grader is the systematic check.
 - All questions are in English; the app answers in the user's language, so a Chinese subset is a v2 item.
-- Only `mode: auto`. Forced modes (`database`, `internet`, `ragflow`) are not evaluated.
+- Forced `database` and `internet` modes are not evaluated. Forced `ragflow` mode appears only in the kb
+  rows (above); every other row runs in `mode: auto`.
 - The seed data is small (60 documents). DB questions are precise but do not stress the 100-document cap
   or `$group`-versus-capped-result behaviour that CLAUDE.md warns about.
 - Routing gold assumes the current three-specialist architecture and the current local RAGFlow datasets.

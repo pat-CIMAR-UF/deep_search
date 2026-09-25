@@ -29,10 +29,12 @@ uv run python scripts/seed_mongo.py           # load mongo/seed/*.json into Mong
 uv run pytest tests/test_gemini_tool.py        # search and concurrent-client regressions
 uv run pytest tests/test_main_agent.py        # actual graph with a scripted model
 uv run pytest tools/test_new_tools.py         # file and RAGFlow-tool regressions
+uv run pytest evals/test_golden_schema.py     # golden-set schema, coverage and staleness checks
+uv run python evals/golden/build.py           # regenerate evals/golden/v1.jsonl (--check to verify only)
 uv run python -m agent.prompts                # inspect the YAML prompts
 ```
 
-Pytest configuration is in `pyproject.toml`: `testpaths = ["tests", "tools"]` and
+Pytest configuration is in `pyproject.toml`: `testpaths = ["tests", "tools", "evals"]` and
 `pythonpath = ["."]`. There is no configured linter or formatter. Build the frontend with
 `cd ui && npm ci && npm run build`; this checks TypeScript and produces `ui/dist`.
 Vite development uses relative API URLs with `/api` and `/ws` proxies to port 8000.
@@ -64,7 +66,9 @@ The seed data is `mongo/seed/{drugs,inventory,sales_records}.json` (Extended JSO
 `drug_id` keys for `$lookup`), loaded by `scripts/seed_mongo.py` (pymongo, dev dependency).
 The app targets the Atlas cluster `yiqunpersonal`, database `pharma_db`. See `README.md` for
 setup. RAGFlow's own storage is separate from these business collections; do not treat a
-RAGFlow document upload as a MongoDB business-data update.
+RAGFlow document upload as a MongoDB business-data update. `evals/golden/build.py` computes the
+golden set's database answers from these fixtures, so after changing them regenerate
+`evals/golden/v1.jsonl` or the staleness test fails; see `evals/golden/README.md`.
 
 `GET /api/health` reports registered application capabilities, including `ragflow: true`.
 It does not test provider connectivity, authentication, or whether assistants are configured.
