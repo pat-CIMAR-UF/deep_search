@@ -18,8 +18,12 @@ DEFAULT_DEEPSEEK_MODEL = "deepseek-flash"
 DEFAULT_QWEN_MODEL = "unsloth/Qwen3.8-27B-GGUF:UD-Q6_K_M"
 
 
-class QwenChatOpenAI(ChatOpenAI):
-    """Omit agent labels that OpenAI-compatible endpoints may reject."""
+class CompatibleChatOpenAI(ChatOpenAI):
+    """ChatOpenAI for any configured provider, minus agent labels some endpoints reject.
+
+    DeepAgents tags assistant messages with ``name``; the self-hosted Qwen server rejects it.
+    Tool messages keep their ``name`` and tool calls keep their IDs.
+    """
 
     def _get_request_payload(self, input_, *, stop=None, **kwargs):
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
@@ -49,9 +53,9 @@ def provider_settings(provider: str | None = None) -> dict:
     raise ValueError(f"Unknown LLM_PROVIDER '{provider}'. Use 'deepseek' or 'qwen'.")
 
 
-def build_llm(provider: str | None = None) -> QwenChatOpenAI:
+def build_llm(provider: str | None = None) -> CompatibleChatOpenAI:
     settings = provider_settings(provider)
-    return QwenChatOpenAI(
+    return CompatibleChatOpenAI(
         model=settings["model"],
         base_url=settings["base_url"],
         api_key=SecretStr(settings["api_key"]),

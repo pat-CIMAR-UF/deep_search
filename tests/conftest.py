@@ -29,6 +29,9 @@ _TEST_ENV = {
     "MONGODB_DATABASE": "test_db",
     "RAGFLOW_API_KEY": "ragflow-test-key",
     "RAGFLOW_API_URL": "http://ragflow.test:9380",
+    # .env may enable LangSmith tracing. TRACING_V2 is checked before LANGSMITH_TRACING
+    # and the LANGCHAIN_* names, so this keeps test runs from sending traces.
+    "LANGSMITH_TRACING_V2": "false",
 }
 for _k, _v in _TEST_ENV.items():
     os.environ[_k] = _v
