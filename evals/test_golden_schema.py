@@ -22,7 +22,7 @@ DIFFICULTIES = {"easy", "medium", "hard"}
 MODES = {"auto", "database", "internet", "ragflow"}
 GRADER_METHODS = {"numeric", "contains_all", "contains_any", "routing", "llm_rubric"}
 ID_PATTERN = re.compile(r"^(db|kb|web|route|gov)-\d{2,3}$")
-SOURCE_PATTERN = re.compile(r"^(mongodb:[a-z_]+|ragflow:[A-Za-z ]+|rag-mini-wikipedia:passage:\d+|[a-z0-9.-]+\.[a-z]{2,})$")
+SOURCE_PATTERN = re.compile(r"^(mongodb:[a-z_]+|ragflow:[A-Za-z0-9][A-Za-z0-9 _+.-]*|rag-mini-wikipedia:passage:\d+|[a-z0-9.-]+\.[a-z]{2,})$")
 
 
 def load_rows() -> list[dict]:

@@ -38,7 +38,7 @@ def install_model(monkeypatch, responses):
 @pytest.mark.parametrize("mode,tool_name,spec_name", [
     ("database", "list_collections", "database_query_agent"),
     ("internet", "internet_search", "internet_search_agent"),
-    ("ragflow", "get_assistant_list", "knowledge_base_agent"),
+    ("ragflow", "list_knowledge_bases", "knowledge_base_agent"),
 ])
 def test_coordinator_delegates_to_real_specialist_graph(monkeypatch, session, mode, tool_name, spec_name):
     calls = []

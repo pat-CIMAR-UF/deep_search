@@ -1,0 +1,31 @@
+# promptfoo harness for the golden set (evals/golden/v1.jsonl).
+#
+#   evals/promptfoo/eval.sh v1_baseline            # grade a finished `evals/run_golden.py --name v1_baseline` run
+#   EVAL_MODE=live evals/promptfoo/eval.sh smoke   # run the agent per row instead (slow; records to evals/runs/smoke)
+#   promptfoo view                                 # browse results
+#
+# Test cases are generated from the golden rows by golden_tests.py, one assertion per metric:
+#   answer (code grader from the row), routing (set equality on delegated specialists),
+#   governance (private tokens absent from outbound web queries), citations (URLs resolve and
+#   mention a key term), and the LLM-judge metrics groundedness, completeness and report_quality
+#   (rubrics from prompt/prompts.yaml evals.judge, sent to the Azure deployment by evals/graders/judge.py).
+# Every assertion is a python assertion: each runs in a short-lived interpreter. Do not route the judge
+# through a file:// grading provider (llm-rubric): promptfoo 0.123 starts a worker pool per assertion and
+# keeps them all until the eval ends, which exhausted memory on a full run.
+description: Deep Search golden set v1 — code graders and calibrated LLM judge
+
+prompts:
+  - "{{question}}"
+
+providers:
+  - id: file://provider.py
+    label: deep-search
+    config:
+      # replay: answers come from evals/runs/$EVAL_RUN/results.jsonl; live: run the coordinator per row.
+      mode: replay
+
+tests:
+  - file://golden_tests.py:generate_tests
+
+evaluateOptions:
+  maxConcurrency: 4

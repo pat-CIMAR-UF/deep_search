@@ -104,6 +104,11 @@ def internet_search(
             if len(sources) >= max_results:
                 break
 
+    # 评估运行时记录出站查询与来源，供治理与引用检查使用 / Record the outbound query and sources for evaluation graders
+    if metrics is not None:
+        metrics.add_event("internet_search", query=query, search_queries=search_queries, sources=sources,
+                          answer=(response.text or "")[:8000])
+
     # 返回结构化结果，方便子智能体引用来源 / Structured result so the sub-agent can cite its sources
     return {
         "query": query,

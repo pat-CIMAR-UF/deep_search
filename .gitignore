@@ -17,3 +17,8 @@ output/
 # Personal sprint plan (kept local)
 15-Day_Agentic_AI_FDE_Sprint.md
 evals/golden/data/
+
+# Evaluation runs: per-row answers and tool traces (committed baselines are named runs, see evals/README)
+evals/runs/*
+!evals/runs/v1_baseline/
+evals/runs/*/promptfoo.json

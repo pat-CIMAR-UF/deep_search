@@ -245,7 +245,8 @@ def build_db_rows() -> list[dict]:  # noqa: C901 - one long, explicit list of qu
                        ["not"], ["drugs", "inventory"], "medium", ["negative", "hallucination-check"], method="contains_any",
                        values={"quantity_on_hand": 0},
                        notes="Grader: answer must state the product does not exist / no records; any positive quantity is a failure."))
-    rows[-1]["grader"]["targets"] = ["not in", "no record", "does not exist", "not found", "no inventory", "not carry", "not listed", "no such"]
+    rows[-1]["grader"]["targets"] = ["not in", "no record", "does not exist", "not found", "no inventory", "not carry",
+                                     "not listed", "no such", "no vitamin c", "0 matching", "zero matching"]
     return rows
 
 

@@ -24,6 +24,9 @@ class RunMetrics:
     gemini_calls: int = 0
     gemini_input_tokens: int = 0
     gemini_output_tokens: int = 0
+    # Ordered tool events for evaluation graders: sub-agent delegations, outbound web queries
+    # and their sources, and the chunks RAGFlow retrieved. Recorded only when metrics are installed.
+    events: list[dict] = field(default_factory=list)
 
     @property
     def total_tokens(self) -> int:
@@ -44,6 +47,13 @@ class RunMetrics:
         self.gemini_calls += 1
         self.gemini_input_tokens += int(prompt_tokens or 0)
         self.gemini_output_tokens += int(candidate_tokens or 0)
+
+    def add_event(self, kind: str, **data: Any) -> None:
+        """Append one tool event (``delegation``, ``internet_search``, ``ragflow_retrieval``)."""
+        self.events.append({"kind": kind, **data})
+
+    def events_of(self, kind: str) -> list[dict]:
+        return [event for event in self.events if event.get("kind") == kind]
 
     def as_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -80,9 +90,28 @@ class UsageCallbackHandler(BaseCallbackHandler):
             self.metrics.add_usage({"input_tokens": usage.get("prompt_tokens"),
                                     "output_tokens": usage.get("completion_tokens")})
 
+    # Tool results kept as grounding evidence for the LLM judge (web and RAGFlow tools record their own
+    # events): the MongoDB tools plus the file tools whose output the coordinator may describe.
+    EVIDENCE_TOOLS = frozenset({"find_documents", "aggregate_documents", "count_documents",
+                                "list_collections", "get_collection_schema",
+                                "read_file_content", "ls", "read_file", "glob", "grep"})
+    EVIDENCE_CHARS = 20_000
+
+    def on_tool_end(self, output, **kwargs) -> None:
+        name = kwargs.get("name")
+        if name not in self.EVIDENCE_TOOLS:
+            return
+        text = getattr(output, "content", output)
+        if not isinstance(text, str):
+            text = str(text)
+        self.metrics.add_event("tool_result", tool=name, output=text[:self.EVIDENCE_CHARS])
+
     def on_tool_start(self, serialized, input_str, *, inputs=None, **kwargs) -> None:
         name = kwargs.get("name") or (serialized or {}).get("name") or "unknown"
         self.metrics.tool_calls[name] += 1
         if name == "task":
-            target = (inputs or {}).get("subagent_type") if isinstance(inputs, dict) else None
+            args = inputs if isinstance(inputs, dict) else {}
+            target = args.get("subagent_type")
             self.metrics.subagent_calls[target or "unknown"] += 1
+            self.metrics.add_event("delegation", subagent=target or "unknown",
+                                   description=str(args.get("description") or ""))

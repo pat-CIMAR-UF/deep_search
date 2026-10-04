@@ -1,0 +1,250 @@
+{
+  "name": "v1_baseline",
+  "golden": "evals/golden/v1.jsonl",
+  "started_at": "2026-09-26T16:59:11+00:00",
+  "git_commit": "39685a3",
+  "coordinator": "deepseek:deepseek-flash",
+  "pricing": {
+    "coordinator": {
+      "note": "deepseek-flash (DeepSeek-V4.1-Flash) peak-hour list price, cache miss: $0.30 in / $1.20 out per 1M tokens. Off-peak is half; cache hits are ~$0.006 in.",
+      "input_per_million": 0.3,
+      "output_per_million": 1.2
+    },
+    "gemini": {
+      "note": "Gemini Flash-class list price assumption (verify against the current Google AI pricing page).",
+      "input_per_million": 0.3,
+      "output_per_million": 2.5
+    }
+  },
+  "invocations": [
+    {
+      "at": "2026-09-26T16:59:12+00:00",
+      "rows": [
+        "db-01",
+        "db-02",
+        "db-03",
+        "db-04",
+        "db-05",
+        "db-06",
+        "db-07",
+        "db-08",
+        "db-09",
+        "db-10",
+        "db-11",
+        "db-12",
+        "db-13",
+        "db-14",
+        "db-15",
+        "db-16",
+        "db-17",
+        "db-18",
+        "db-19",
+        "db-20",
+        "db-21",
+        "db-22",
+        "db-23",
+        "db-24",
+        "db-25",
+        "db-26",
+        "db-27",
+        "db-28",
+        "db-29",
+        "db-30",
+        "db-31",
+        "web-01",
+        "web-02",
+        "web-03",
+        "web-04",
+        "web-05",
+        "web-06",
+        "web-07",
+        "web-08",
+        "web-09",
+        "web-10",
+        "web-11",
+        "web-12",
+        "web-13",
+        "web-14",
+        "web-15",
+        "web-16",
+        "web-17",
+        "web-18",
+        "web-19",
+        "web-20"
+      ],
+      "argv": [
+        "--name",
+        "v1_baseline",
+        "--specialist",
+        "db",
+        "web"
+      ]
+    },
+    {
+      "at": "2026-09-26T17:27:24+00:00",
+      "rows": [
+        "route-01",
+        "route-02",
+        "route-03",
+        "route-04",
+        "route-05",
+        "route-06",
+        "route-07",
+        "route-08",
+        "route-09",
+        "route-10",
+        "route-11",
+        "route-12",
+        "route-13",
+        "route-14",
+        "route-15",
+        "gov-01",
+        "gov-02",
+        "gov-03",
+        "gov-04",
+        "gov-05"
+      ],
+      "argv": [
+        "--name",
+        "v1_baseline",
+        "--specialist",
+        "routing",
+        "--resume"
+      ]
+    },
+    {
+      "at": "2026-09-26T18:17:31+00:00",
+      "rows": [
+        "route-04"
+      ],
+      "argv": [
+        "--name",
+        "v1_baseline",
+        "--ids",
+        "route-04",
+        "--force"
+      ]
+    },
+    {
+      "at": "2026-09-26T19:03:12+00:00",
+      "rows": [
+        "kb-01",
+        "kb-02",
+        "kb-03",
+        "kb-04",
+        "kb-05",
+        "kb-06",
+        "kb-07",
+        "kb-08",
+        "kb-09",
+        "kb-10",
+        "kb-11",
+        "kb-12",
+        "kb-13",
+        "kb-14",
+        "kb-15",
+        "kb-16",
+        "kb-17",
+        "kb-18",
+        "kb-19",
+        "kb-20",
+        "kb-21",
+        "kb-22",
+        "kb-23",
+        "kb-24",
+        "kb-25",
+        "kb-26",
+        "kb-27",
+        "kb-28",
+        "kb-29",
+        "kb-30",
+        "kb-31",
+        "kb-32",
+        "kb-33",
+        "kb-34",
+        "kb-35",
+        "kb-36",
+        "kb-37",
+        "kb-38",
+        "kb-39",
+        "kb-40"
+      ],
+      "argv": [
+        "--name",
+        "v1_baseline",
+        "--specialist",
+        "kb",
+        "--resume"
+      ]
+    },
+    {
+      "at": "2026-09-28T20:44:55+00:00",
+      "rows": [
+        "db-16",
+        "db-18",
+        "db-30",
+        "db-31",
+        "web-05",
+        "web-06",
+        "web-10",
+        "web-16",
+        "route-06",
+        "route-07",
+        "route-08",
+        "route-09",
+        "route-10",
+        "route-12",
+        "route-14",
+        "route-15"
+      ],
+      "argv": [
+        "--name",
+        "v1_baseline",
+        "--force",
+        "--ids",
+        "db-16",
+        "db-18",
+        "db-30",
+        "db-31",
+        "web-05",
+        "web-06",
+        "web-10",
+        "web-16",
+        "route-06",
+        "route-07",
+        "route-08",
+        "route-09",
+        "route-10",
+        "route-12",
+        "route-14",
+        "route-15"
+      ]
+    },
+    {
+      "at": "2026-09-28T21:01:11+00:00",
+      "rows": [
+        "route-08"
+      ],
+      "argv": [
+        "--name",
+        "v1_baseline",
+        "--ids",
+        "route-08",
+        "--force"
+      ]
+    },
+    {
+      "at": "2026-09-28T21:02:50+00:00",
+      "rows": [
+        "route-12"
+      ],
+      "argv": [
+        "--name",
+        "v1_baseline",
+        "--ids",
+        "route-12",
+        "--force"
+      ]
+    }
+  ]
+}

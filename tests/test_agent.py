@@ -150,10 +150,10 @@ def test_tool_roundtrip_omits_unsupported_agent_names():
 # -------------------------------------------------- knowledge base subagent --
 def test_knowledge_base_agent_shape_and_prompt_section():
     from agent.subagents.knowledge_base_agent import knowledge_base_agent
-    from tools.ragflow_tools import create_ask_delete, get_assistant_list
+    from tools.ragflow_tools import ask_knowledge_base, list_knowledge_bases, retrieve_chunks
 
     _assert_subagent_shape(knowledge_base_agent)
-    assert knowledge_base_agent["tools"] == [get_assistant_list, create_ask_delete]
+    assert knowledge_base_agent["tools"] == [list_knowledge_bases, retrieve_chunks, ask_knowledge_base]
     section = prompts.sub_agents_content["ragflow"]
     assert knowledge_base_agent["name"] == section["name"]
     assert knowledge_base_agent["description"] == section["description"]

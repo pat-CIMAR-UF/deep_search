@@ -27,7 +27,7 @@ flowchart LR
     DB --> Mongo[list_collections · get_collection_schema<br/>find_documents · aggregate_documents · count_documents]
     Mongo -->|stdio, --readOnly| MCP[mongodb-mcp-server]
     MCP --> Atlas[(MongoDB Atlas<br/>pharma_db)]
-    KB --> RAG[get_assistant_list<br/>create_ask_delete]
+    KB --> RAG[list_knowledge_bases<br/>retrieve_chunks · ask_knowledge_base]
     RAG --> RAGFlow[(RAGFlow<br/>knowledge bases)]
 
     Coord -.->|tool + assistant events| Monitor[api/monitor.py] -.-> API
@@ -40,8 +40,9 @@ to public search; retrieved content is treated as data, not instructions.
 ## Quickstart
 
 Requirements: Python 3.13+ with [uv](https://docs.astral.sh/uv/), Node.js >= 22.13 (runs
-`mongodb-mcp-server`), a MongoDB Atlas cluster, a RAGFlow instance, and API keys for the
-coordinator model (DeepSeek by default) and Gemini.
+`mongodb-mcp-server`), a MongoDB Atlas cluster, access to a RAGFlow server (through an SSH tunnel
+by default, see [Knowledge base setup](#knowledge-base-setup)), and API keys for the coordinator
+model (DeepSeek by default) and Gemini.
 
 ```bash
 git clone https://github.com/pat-CIMAR-UF/deep_search.git && cd deep_search
@@ -52,7 +53,7 @@ uv run python scripts/seed_mongo.py       # load the mock business data into Atl
 uv run main.py                            # http://localhost:8000
 ```
 
-Validate the install without live services: `uv run pytest` (235 tests, all external services
+Validate the install without live services: `uv run pytest` (536 tests, all external services
 mocked). A built UI is included; see [Development](#development) to rebuild it.
 
 ## Using the app
@@ -85,7 +86,7 @@ variable:
 | `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` | DeepSeek API (default model `deepseek-flash`) |
 | `QWEN_REMOTE_BASE_URL`, `QWEN_REMOTE_API_KEY`, `QWEN_MODEL` | Self-hosted OpenAI-compatible coordinator when `LLM_PROVIDER=qwen` |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | Web search specialist (Google Search grounding) |
-| `RAGFLOW_API_URL`, `RAGFLOW_API_KEY` | Knowledge-base specialist |
+| `RAGFLOW_BASE_URL`, `RAGFLOW_API_KEY`, `RAGFLOW_DATASET` | Knowledge-base specialist: API base URL (default `http://localhost:8080`, the SSH tunnel's local end), API key, optional default knowledge base(s) |
 | `MONGODB_URI`, `MONGODB_DATABASE` | Business database (Atlas `mongodb+srv://` string with `/pharma_db`) |
 | `MONGODB_MCP_COMMAND`, `MONGODB_MCP_ARGS` | Optional: how the MCP server is launched (default: global binary, else `npx`) |
 | `TAVILY_API_KEY` | Optional alternative web search tool (not active) |
@@ -148,12 +149,51 @@ Quick check through the same tools the agent uses:
 uv run python -c "from tools.mongo_tools import list_collections; print(list_collections.invoke({}))"
 ```
 
+## Knowledge base setup
+
+The Knowledge-base specialist follows the conventions of the `RAGFlow_Example` command-line client:
+knowledge bases (RAGFlow datasets) are addressed by name and chat assistants are derived from them.
+
+1. **Reach the server.** RAGFlow runs on a remote host; open an SSH tunnel and leave it running
+   (`RAGFLOW_BASE_URL` is the tunnel's local end):
+
+   ```bash
+   ssh -N -L 8080:localhost:80 <ragflow-host>      # web UI and API at http://localhost:8080
+   ```
+
+   Put the API key from the web UI (avatar menu → API) in `RAGFLOW_API_KEY`. `RAGFLOW_DATASET`
+   optionally names the knowledge base(s) used when a question does not name one (comma-separated).
+   If your `.env` predates this setup and still has `RAGFLOW_API_URL`, rename it to `RAGFLOW_BASE_URL`
+   or remove it; the old value otherwise overrides the tunnel default.
+2. **Check what is there.** `uv run python -m ragflow.cli --list` prints every knowledge base with
+   its document and chunk counts and the assistants linked to it.
+3. **Add documents.** `uv run python -m ragflow.cli --dataset benefits --add handbook.pdf --chunk-method manual`
+   creates the knowledge base if needed, uploads the file (files already present by name are skipped),
+   starts parsing and waits for it to finish. Re-parsing a file requires deleting it in the web UI first.
+4. **Ask.** `uv run python -m ragflow.cli --dataset handbook "What is the usual adult dose of amoxicillin?"` answers
+   through the chat assistant linked to exactly that set of knowledge bases (created as
+   `<name>-assistant`, or `<a>+<b>-assistant` for several, when none exists); `--retrieve --top 5`
+   shows the matching chunks without the LLM. The agent's tools do the same: `list_knowledge_bases`,
+   `retrieve_chunks` and `ask_knowledge_base`.
+
+Answers cite passages as `[ID:n]`; the `Sources` list maps each marker to a document and snippet.
+Each question runs in a temporary session that is removed afterwards. The assistant's LLM, prompt
+and retrieval settings are configured in the RAGFlow web UI, not in this repository. The code
+targets RAGFlow v1.0.0-rc1, whose chat completion endpoint and document status fields differ from
+`ragflow-sdk` 0.27.2 (details in `ragflow/service.py`).
+
 ## Evaluation
 
-`evals/` holds the evaluation harness. `uv run python evals/run_baseline.py` runs a fixed set
-of representative questions through the coordinator and records latency, tokens, tool-call
-counts, and estimated cost per query to `evals/baseline.json`; the sprint log tracks how those
-numbers move. Golden datasets, graders, and CI regression gates build on this baseline.
+`evals/` holds the evaluation harness (details in `evals/README.md`):
+
+- `evals/run_baseline.py`: the Day 1 latency/token/cost baseline (`evals/baseline.json`).
+- `evals/golden/v1.jsonl`: 111 golden rows across the three specialists and coordinator routing,
+  validated by `uv run pytest evals/test_golden_schema.py`.
+- `evals/run_golden.py` records answers and tool traces per row; `evals/promptfoo/` grades them with
+  code graders (answer, routing, governance, citations) and an LLM judge (groundedness,
+  completeness, report quality) whose rubrics live in `prompt/prompts.yaml`; Ragas scores the
+  knowledge-base rows; `evals/score.py` writes the scorecard to `evals/reports/`.
+- `evals/calibration/` samples outputs for hand grading and reports judge-versus-human agreement.
 
 ## Development
 
@@ -173,7 +213,8 @@ Live checks against configured services:
 
 ```bash
 uv run python -c "from tools.mongo_tools import list_collections; print(list_collections.invoke({}))"
-uv run python -c "from tools.ragflow_tools import get_assistant_list; print(get_assistant_list.invoke({}))"
+uv run python -c "from tools.ragflow_tools import list_knowledge_bases; print(list_knowledge_bases.invoke({}))"
+uv run python -m ragflow.cli --list
 uv run python -c "
 from tools.gemini_tool import internet_search
 r = internet_search.invoke({'query': 'latest stable Python release', 'max_results': 3})
@@ -197,6 +238,10 @@ api/
   context.py                 # per-request session/thread context (ContextVar)
   monitor.py                 # tool-call progress reporting (WebSocket / console)
 prompt/prompts.yaml          # main-agent and sub-agent prompts
+ragflow/
+  rag_config.py              # RAGFLOW_* settings
+  service.py                 # RAGFlow service layer: knowledge bases, assistants, completions, ingestion
+  cli.py                     # command-line client (uv run python -m ragflow.cli)
 mongo/seed/*.json            # mock pharmaceutical database seed data
 scripts/seed_mongo.py        # loads mongo/seed into MongoDB
 tools/
@@ -204,11 +249,11 @@ tools/
   mcp_client.py              # persistent stdio session to mongodb-mcp-server
   mongo_tools.py             # read-only MongoDB tools for the database agent
   tavily_tool.py             # internet_search via Tavily
-  ragflow_tools.py           # RAGFlow assistant discovery and querying
+  ragflow_tools.py           # knowledge-base tools: list_knowledge_bases, retrieve_chunks, ask_knowledge_base
   markdown_tools.py, pdf_tools.py, upload_file_read_tool.py  # report and file tools
 utils/                       # path resolution, Markdown -> PDF conversion
 docs/                        # API contract (api文档.md) and the long-form project write-ups
-evals/                       # baseline harness and evaluation artifacts
+evals/                       # golden set, graders, promptfoo harness, scorecards
 ui/                          # Vue + Vite front end (built bundle served by FastAPI)
 ```
 

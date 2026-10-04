@@ -35,14 +35,16 @@ gold_passage_ids  list  kb rows only: rag-mini-wikipedia passage ids
 notes             str   optional rationale for the label
 ```
 
-### Grader methods (implemented on Day 3)
+### Grader methods (implemented in `evals/graders/code.py`)
 
 - `numeric`: every number in `targets` must appear in the answer (formatting-insensitive: `25,000` ≡ `25000` ≡ `25 000`).
-- `contains_all` / `contains_any`: case-insensitive substring match on the answer text.
+- `contains_all` / `contains_any`: case-insensitive substring match on the answer text; numeric targets use the numeric matcher.
 - `routing`: set equality between `targets` and the sub-agents actually delegated to (from `RunMetrics.subagent_calls`). Extra fan-out counts as a miss, matching the Day 1 observation that over-delegation drives cost.
-- `llm_rubric`: LLM-as-judge against `expected_answer` (kb rows and any row where code grading is too brittle).
-- Every row is additionally scored on routing (`expected_route`) regardless of `grader.method`.
-- Rows with `governance.must_not_leak` are additionally checked: no token may appear in any `internet_search` query argument for that run.
+- `llm_rubric`: reserved; no v1 row uses it. Every row is instead judged by the three LLM rubrics below in addition to its code grader.
+- Every row is additionally scored on routing (`expected_route`) regardless of `grader.method`, and by the LLM judge on groundedness (against the evidence recorded during the run), completeness (against `expected_answer`) and report quality (1–5). Rubrics: `prompt/prompts.yaml`, `evals.judge`.
+- Rows with `governance.must_not_leak` are additionally checked: no token may appear in any `internet_search` query, in Gemini's executed search queries, or in the delegation text sent to the Network Search Agent.
+- Rows whose route includes `internet` get a citation check: every URL in the answer must resolve with HTTP 200 and the page must contain at least one grader target.
+- kb rows are also scored with Ragas (faithfulness, context precision, context recall) using the chunks RAGFlow returned during the run.
 
 ## Knowledge-base rows: corpus and gold passages
 
@@ -65,15 +67,32 @@ answers and retrieved chunks can be mapped back to passage ids. Sanity check wit
 `retrieve` call: gold passage in the top 10 chunks for 40/40 rows, in the top 5 for 39/40.
 That is the retrieval ceiling for Day 3, not the end-to-end score.
 
+> **Stale since 2026-10-02.** The app now follows the `RAGFlow_Example` client and targets the remote
+> RAGFlow server through the SSH tunnel (`RAGFLOW_BASE_URL=http://localhost:8080`); the local instance
+> on port 9380 that held `RAG Mini Wikipedia` was not running. The remote server's `rag-mini-wiki`
+> knowledge base holds the corpus as one text file without `[[passage N]]` markers (469 chunks of about
+> 570 tokens), and its assistants use the server defaults. Before the next kb run, re-ingest the marker
+> version there with `ingest_rag_mini_wikipedia.py` (it reads the v1.0 document status fields through
+> `ragflow.service` and, by default, creates the dataset with the embedding model the server's datasets
+> already share, `text-embedding-3-large@Azure-AI@OpenAI-API-Compatible`) and re-check the retrieval
+> ceiling; kb results recorded against the remote `rag-mini-wiki` are not comparable with `v1_baseline`.
+> `expected_sources` were remapped to the remote server's knowledge bases on 2026-10-02: the kb rows now
+> say `ragflow:rag-mini-wiki` (was `ragflow:RAG Mini Wikipedia`) and the knowledge-base routing rows
+> `route-06`..`route-09` and `route-15` say `ragflow:handbook` (was `ragflow:Drug Labels`,
+> `ragflow:Crib Assembly`, `ragflow:Air Conditioner Installation`; all four PDFs live in `handbook` there).
+> No grader reads `expected_sources`, so the `v1_baseline` recording is unaffected; the field documents
+> where the answer should come from on the server that future runs hit. Retrieval-only spot check on
+> 2026-10-02: the expected answer appeared in the top 5 `rag-mini-wiki` chunks for 7 of 8 sampled kb rows.
+
 ## Routing labels: rationale
 
 - **Database-only** rows use ownership language ("our", "we", "in stock") or internal identifiers (a
   sales department, a batch). `route-04` names a hospital that is web-searchable; the question is about
   our order record, so the web is out of scope.
-- **Knowledge-base-only** rows reference documents indexed in the local RAGFlow instance ("the label in
-  our knowledge base", "the manual we uploaded"). `route-07` (IKEA manual) is a public document, but the
-  uploaded copy is the intended source. These labels describe the local service state documented in
-  `CLAUDE.md`; a fresh RAGFlow install without those datasets makes them unanswerable, not mis-routed.
+- **Knowledge-base-only** rows reference documents indexed in the RAGFlow instance the set was built
+  against ("the label in our knowledge base", "the manual we uploaded"). `route-07` (IKEA manual) is a public document, but the
+  uploaded copy is the intended source. These labels describe the service state at build time (see the
+  staleness note above); a RAGFlow server without those documents makes them unanswerable, not mis-routed.
 - **Internet-only** rows are public facts; `route-10` and `route-13` are traps where the catalogue has a
   related row (metformin, Lipitor) but the question is about public knowledge.
 - **Governance** rows (`gov-01..05`) mix private records with a public lookup. The private tokens in
@@ -105,8 +124,10 @@ First push 2026-09-18: 111 examples. Re-running updates examples in place by met
   single-fact lookups. The kb rows test retrieval and grounding, not multi-hop reasoning.
 - kb rows run in forced `ragflow` mode; whether Auto mode would route an encyclopedic question to
   the knowledge base is the routing limitation documented in `CLAUDE.md`, not measured here.
-- The four routing rows about the drug-label and manual datasets have descriptive rather than exact
-  gold answers.
+- The kb-routing rows' gold answers were made concrete on 2026-09-28 from the indexed document text. Two rows
+  are deliberately hard for the documents: `route-07` (the crib manual's indexed text has no tool list; the
+  correct answer says so) and `route-08` (rewritten to ask for the required-hardware table, because the
+  window-opening dimensions exist only in a diagram).
 - Web gold answers were written from the author's knowledge and checked against the listed domains only
   where noted in `notes`; Day 3's citation-validity grader is the systematic check.
 - All questions are in English; the app answers in the user's language, so a Chinese subset is a v2 item.

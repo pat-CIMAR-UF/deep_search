@@ -28,7 +28,8 @@ _TEST_ENV = {
     "MONGODB_URI": "mongodb://mongo.test:27017",
     "MONGODB_DATABASE": "test_db",
     "RAGFLOW_API_KEY": "ragflow-test-key",
-    "RAGFLOW_API_URL": "http://ragflow.test:9380",
+    "RAGFLOW_BASE_URL": "http://ragflow.test:8080",
+    "RAGFLOW_DATASET": "",
     # .env may enable LangSmith tracing. TRACING_V2 is checked before LANGSMITH_TRACING
     # and the LANGCHAIN_* names, so this keeps test runs from sending traces.
     "LANGSMITH_TRACING_V2": "false",
