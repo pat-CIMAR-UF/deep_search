@@ -1,7 +1,6 @@
-import logging
 import sys
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 from langchain_core.tools import tool
 _PROJECT_ROOT = str(Path(__file__).resolve().parents[1])
@@ -28,15 +27,6 @@ try:
 except ImportError:
     pd = None
 
-
-# def read_file_content(filename: str, instruction: str = "提取全部内容") -> str:
-#     """
-#     读取指定文件的内容。支持 Markdown(.md)、Word(.docx)、PDF(.pdf) 和 Excel(.xlsx/.xls)。
-#     对于 Excel 文件，会自动提供数据统计信息（head 和 describe）。
-
-#     Args:
-#         filename: 要读取的文件名或路径（支持 .md, .docx, .pdf, .xlsx, .xls）
-#         instruction: 对提取内容的具体指令（例如：'提取摘要', '统计数据'）
 
 @tool
 def read_file_content(

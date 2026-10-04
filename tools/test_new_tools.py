@@ -1,4 +1,4 @@
-"""Regression tests for local file tools and RAGFlow session lifecycle."""
+"""Regression tests for local file tools and the RAGFlow knowledge-base tools."""
 import ast
 import io
 from pathlib import Path
@@ -7,8 +7,7 @@ import sys
 import tempfile
 import tokenize
 import unittest
-from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 _PROJECT_ROOT = str(Path(__file__).resolve().parents[1])
 if _PROJECT_ROOT not in sys.path:
@@ -59,96 +58,77 @@ class FileToolsTests(unittest.TestCase):
 
 
 class RagflowToolsTests(unittest.TestCase):
+    """Knowledge-base tools over an in-memory RAGFlow client (tests/ragflow_fakes.py)."""
+
+    def setUp(self):
+        from tests.ragflow_fakes import FakeChat, FakeClient, completion
+        self.FakeChat, self.FakeClient, self.completion = FakeChat, FakeClient, completion
+        self.handbook = {"id": "ds-handbook", "name": "handbook", "document_count": 4, "chunk_count": 103,
+                         "embedding_model": "emb"}
+
     def test_sdk_network_calls_have_timeouts(self):
-        client = ragflow_tools._RAGFlowClient(api_key="test-key", base_url="http://ragflow.test")
-        with patch.object(ragflow_tools.requests, "request") as request:
-            client.get("/chats")
-            client.post("/chats/id/sessions", json={"name": "temporary"})
+        from ragflow import service
+        client = service.RAGFlowClient(api_key="test-key", base_url="http://ragflow.test")
+        with patch.object(service.requests, "request") as request:
+            client.get("/datasets")
+            client.post("/chat/completions", json={"chat_id": "id"})
             client.delete("/chats/id/sessions", json={"ids": ["temporary"]})
-        self.assertEqual(request.call_count, 3)
+            client.put("/datasets/id", json={"name": "x"})
+            client.patch("/datasets/id/documents/d", json={"chunk_method": "naive"})
+        self.assertEqual(request.call_count, 5)
         for call in request.call_args_list:
             self.assertEqual(call.kwargs["timeout"], (10, 120))
 
-    def test_assistant_discovery_supports_current_and_legacy_metadata(self):
-        from ragflow_sdk.modules.chat import Chat
-        client = Mock()
-        client.list_chats.return_value = [
-            Chat(client, {"name": "Drug Labels Assistant", "dataset_ids": ["drug-id"],
-                          "kb_names": ["Drug Labels"], "description": "Drug documents"}),
-            Chat(client, {"name": "Crib Assembly Assistant", "datasets": [{"name": "Crib Assembly"}]}),
-        ]
+    def test_knowledge_base_listing_names_linked_assistants(self):
+        client = self.FakeClient(datasets=[self.handbook], chats=[self.FakeChat("test", ["ds-handbook"])])
         with patch.object(ragflow_tools, "ragflow_client", client):
-            result = ragflow_tools.get_assistant_list.invoke({})
-        self.assertIn("assistant name:Drug Labels Assistant", result)
-        self.assertIn("associated knowledge bases: Drug Labels", result)
-        self.assertIn("associated knowledge bases: Crib Assembly", result)
+            result = ragflow_tools.list_knowledge_bases.invoke({})
+        self.assertIn("knowledge base: handbook;", result)
+        self.assertIn("assistants: test", result)
         self.assertNotIn("Failed", result)
 
     def test_missing_configuration_is_reported_on_use(self):
-        with patch.object(ragflow_tools, "ragflow_client", None), patch.object(
-            ragflow_tools, "_load_ragflow_env", return_value=(None, None)
+        with patch.object(ragflow_tools, "ragflow_client", None), patch.dict(
+            "os.environ", {"RAGFLOW_API_KEY": ""}
         ):
-            self.assertIn("Set RAGFLOW_API_KEY", ragflow_tools.get_assistant_list.invoke({}))
+            self.assertIn("RAGFLOW_API_KEY is not set", ragflow_tools.list_knowledge_bases.invoke({}))
 
-    def test_unknown_assistant(self):
-        client = Mock()
-        client.list_chats.return_value = []
+    def test_unknown_knowledge_base(self):
+        client = self.FakeClient(datasets=[self.handbook])
         with patch.object(ragflow_tools, "ragflow_client", client):
-            self.assertEqual(ragflow_tools.create_ask_delete.invoke(
-                {"chat_name": "missing", "question": "Hello"}),
-                "No assistant found with name: missing")
+            self.assertEqual(ragflow_tools.ask_knowledge_base.invoke(
+                {"knowledge_bases": "missing", "question": "Hello"}),
+                "Question failed: Knowledge base not found: missing. Available: handbook")
 
-    def test_session_cleanup_on_success_and_stream_failure(self):
+    def test_session_cleanup_on_success_and_completion_failure(self):
         for fail in [False, True]:
             with self.subTest(fail=fail):
-                session = Mock(id="session-id")
-                def response():
-                    yield SimpleNamespace(content="First")
-                    if fail:
-                        raise RuntimeError("stream interrupted")
-                    yield SimpleNamespace(content=" and final")
-                session.ask.return_value = response()
-                chat = Mock()
-                chat.create_session.return_value = session
-                client = Mock()
-                client.list_chats.return_value = [chat]
+                chat = self.FakeChat("test", ["ds-handbook"])
+                payload = RuntimeError("completion interrupted") if fail else self.completion("First and final", [])
+                client = self.FakeClient(datasets=[self.handbook], chats=[chat], completion=payload)
                 with patch.object(ragflow_tools, "ragflow_client", client):
-                    result = ragflow_tools.create_ask_delete.invoke(
-                        {"chat_name": "Example", "question": "Hello"})
-                chat.delete_sessions.assert_called_once_with(ids=["session-id"])
-                self.assertIn("stream interrupted" if fail else "First and final", result)
+                    result = ragflow_tools.ask_knowledge_base.invoke(
+                        {"knowledge_bases": "handbook", "question": "Hello"})
+                self.assertEqual(chat.deleted, [["session-1"]])
+                self.assertIn("completion interrupted" if fail else "First and final", result)
 
-    def test_delta_stream_retains_answer_when_final_event_only_has_sources(self):
-        from ragflow_sdk.modules.session import Message
-        client = Mock()
-        session = Mock(id="delta-session")
-        session.ask.return_value = iter([
-            Message(client, {"content": "MAW08"}),
-            Message(client, {"content": "V1QWT"}),
-            Message(client, {"content": "", "reference": [
-                {"document_name": "Midea U AC Installation Guide.pdf"},
-                {"document_name": "Midea U AC Installation Guide.pdf"},
-            ]}),
-        ])
-        chat = Mock()
-        chat.create_session.return_value = session
-        client.list_chats.return_value = [chat]
+    def test_cited_sources_follow_id_markers(self):
+        chunks = [{"id": "c1", "document_name": "Midea U AC Installation Guide.pdf", "content": "MAW08V1QWT"},
+                  {"id": "c1", "document_name": "Midea U AC Installation Guide.pdf", "content": "MAW08V1QWT"}]
+        chat = self.FakeChat("test", ["ds-handbook"])
+        client = self.FakeClient(datasets=[self.handbook], chats=[chat], completion=self.completion("MAW08V1QWT [ID:0]", chunks))
         with patch.object(ragflow_tools, "ragflow_client", client):
-            result = ragflow_tools.create_ask_delete.invoke({"chat_name": "AC", "question": "Models?"})
-        self.assertEqual(result, "MAW08V1QWT\n\nSources:\n- Midea U AC Installation Guide.pdf")
-        chat.delete_sessions.assert_called_once_with(ids=["delta-session"])
+            result = ragflow_tools.ask_knowledge_base.invoke({"knowledge_bases": "handbook", "question": "Models?"})
+        self.assertEqual(result, 'MAW08V1QWT [ID:0]\n\nSources:\n[ID:0] Midea U AC Installation Guide.pdf — "MAW08V1QWT"')
+        self.assertEqual(chat.deleted, [["session-1"]])
 
-    def test_empty_stream_reports_failure_and_cleans_up(self):
-        client = Mock()
-        session = Mock(id="empty-session")
-        session.ask.return_value = iter([])
-        chat = Mock()
-        chat.create_session.return_value = session
-        client.list_chats.return_value = [chat]
+    def test_empty_answer_reports_failure_and_cleans_up(self):
+        chat = self.FakeChat("test", ["ds-handbook"])
+        client = self.FakeClient(datasets=[self.handbook], chats=[chat], completion=self.completion("", []))
         with patch.object(ragflow_tools, "ragflow_client", client):
-            result = ragflow_tools.create_ask_delete.invoke({"chat_name": "AC", "question": "Models?"})
-        self.assertIn("Question failed", result)
-        chat.delete_sessions.assert_called_once_with(ids=["empty-session"])
+            result = ragflow_tools.ask_knowledge_base.invoke({"knowledge_bases": "handbook", "question": "Models?"})
+        self.assertEqual(result, "Question failed: RAGFlow returned an empty answer.")
+        self.assertEqual(chat.deleted, [["session-1"]])
 
 
 class SourceTests(unittest.TestCase):

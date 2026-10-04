@@ -7,7 +7,7 @@ import pytest
 from docx import Document
 
 from api.context import reset_session_context, set_session_context
-from tools import markdown_tools, pdf_tools, upload_file_read_tool
+from tools import upload_file_read_tool
 from tools.markdown_tools import generate_markdown
 from tools.pdf_tools import convert_md_to_pdf
 from tools.upload_file_read_tool import read_file_content

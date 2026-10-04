@@ -1,7 +1,7 @@
 """Local chat API, replayable progress, and session-scoped files."""
 import asyncio
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime
 import json
 import logging
 import os
@@ -146,7 +146,8 @@ def public_error(exc: Exception) -> str:
     if isinstance(exc, (TimeoutError, asyncio.TimeoutError)):
         return "This request timed out. Try a narrower question or check the model/search service."
     if isinstance(exc, KeyError):
-        return "The model is not configured. Check QWEN_REMOTE_BASE_URL and QWEN_REMOTE_API_KEY in .env."
+        # agent.llm reads the provider's variables with os.environ[...]; a missing one raises KeyError.
+        return "The coordinator model is not configured. Check LLM_PROVIDER and its API key and URL in .env (see .env.example)."
     return "The agent could not complete this request. Check the model, search, database and RAGFlow configuration, then try again."
 
 

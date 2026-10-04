@@ -1,11 +1,8 @@
 import logging
 import sys
 from pathlib import Path
+from typing import Annotated
 
-try:
-    from typing import Annotated
-except ImportError:
-    from typing_extensions import Annotated
 from langchain_core.tools import tool
 _PROJECT_ROOT = str(Path(__file__).resolve().parents[1])
 if _PROJECT_ROOT not in sys.path:
@@ -24,14 +21,12 @@ def generate_markdown(
         path: Annotated[str, "Destination directory (absolute or relative to the session directory)"] = ""
 ):
     """Generate a Markdown (.md) file from the supplied text."""
-    print(f"Destination path: {path}")
     monitor.report_tool("Markdown generation tool", {"content": content})
     if not filename.endswith('.md'):
         filename += '.md'
 
     # 获取上下文中的会话目录
     session_dir = get_session_context()
-    print(f"generate_markdown session directory: {session_dir}")  # 看这里！
 
     # --- 路径清洗与重定向逻辑 ---
     # 结合 path 和 filename
@@ -43,24 +38,14 @@ def generate_markdown(
     full_path_str = resolve_path(full_input_path, session_dir)
     file_path = Path(full_path_str)
 
-    # 获取父目录
-    parent_dir = file_path.parent
-
-    # 确保目录存在
-    print(f"[MarkdownTool] Debug: parent_dir={parent_dir}, filename={filename}, full_path={file_path}")
-
     try:
-        if not parent_dir.exists():
-            parent_dir.mkdir(parents=True, exist_ok=True)
-            print(f"[MarkdownTool] Created directory: {parent_dir}")
-
+        # 确保目录存在 / Make sure the directory exists
+        file_path.parent.mkdir(parents=True, exist_ok=True)
         # 使用 Path 直接写入文本
         file_path.write_text(content, encoding='utf-8')
-
-        print(f"[MarkdownTool] Successfully wrote to: {file_path}")
         return f"Markdown file '{file_path}' generated and saved successfully."
     except Exception as e:
-        print(f"[MarkdownTool] Error writing file: {e}")
+        logging.error(f"Markdown generation failed: {e}", exc_info=True)
         return f"Failed to generate Markdown file: {str(e)}"
 
 

@@ -1,0 +1,76 @@
+{
+  "metrics": {
+    "groundedness": {
+      "n": 25,
+      "agreement": 0.76,
+      "kappa": 0.522,
+      "note": "kappa 0.522"
+    },
+    "completeness": {
+      "n": 25,
+      "agreement": 1.0,
+      "kappa": 1.0,
+      "note": "kappa 1.0"
+    },
+    "report_quality": {
+      "n": 25,
+      "agreement": 1.0,
+      "exact": 0.84,
+      "mae": 0.16,
+      "note": "within ±1; exact 21/25, MAE 0.16"
+    }
+  },
+  "overall_agreement": 0.92,
+  "pending": [],
+  "disagreements": [
+    {
+      "id": "db-04",
+      "metric": "groundedness",
+      "judge": false,
+      "human": true,
+      "judge_reason": "The core claim of 20 records in 2025 is supported by the aggregate and count outputs. Several specifics have no support: the filter bounds, the claim that no records have missing or null dates, and th",
+      "notes": "Groundedness: the 20-record count and 2025 coverage are supported by [4]/[6]/[7]. 'Stored as UTC midnight' is a format description that matches every timestamp shown ([5]-[7]), and 'no null sale_date' follows from all 20 records falling in the 2025 range (inference from complete results). Completeness: supplies 20 sales records. Report quality: repeated counts, a method table, a one-row coverage table, and caveat/process sections pad a single-number answer."
+    },
+    {
+      "id": "db-11",
+      "metric": "groundedness",
+      "judge": false,
+      "human": true,
+      "judge_reason": "The core numbers (6 East China, 20 total, the region breakdown) are supported by the evidence. However, the claim that a filter on \"华东地区\" would return 0 results is not backed by any shown query, so it",
+      "notes": "Groundedness: counts of 6 and 20 and the full English region breakdown are supported by [4]-[6]; the exhaustive region listing supports the Chinese-filter caveat. Completeness: explicitly gives 6 records. Report quality: a method table, all-region table, and multiple caveats unnecessarily expand a simple count."
+    },
+    {
+      "id": "route-08",
+      "metric": "groundedness",
+      "judge": true,
+      "human": false,
+      "judge_reason": "The core table, quantities, optional list, and the \"12 Tye A screws\" quote match the knowledge-base evidence, and the public-source summary matches the web search results. The only unsupported items a",
+      "notes": "Groundedness: saying public quantities do not agree with the uploaded guide is unsupported: the corresponding internal quantity cells are blank/unreadable, so they cannot contradict 3 Type A or 2 quarter-inch Type B screws. Distinct required/optional screw sizes and the OCR phrase '12 Tye A screws' likewise do not establish an internal inconsistency. The no-drain-hose/slinger-ring and two preinstalled anti-tip screw claims are supported by [16]/[19]. Completeness: lists every required hardware item and both readable quantities. Report quality: a process-first opening, unnecessary public comparison, and speculative inconsistency caveats dilute the useful required-hardware table."
+    },
+    {
+      "id": "route-13",
+      "metric": "groundedness",
+      "judge": true,
+      "human": false,
+      "judge_reason": "Core claims (Parke-Davis/Warner-Lambert, Bruce Roth 1985, CI-981, 1996 co-promotion, FDA approval Dec 17 1996, ~$90B acquisition in 2000, Nov 2011 patent expiry) are supported by the evidence. Minor i",
+      "notes": "Groundedness: the table mislabels February 7, 2000 as the hostile-bid announcement; [7]/[10] place the hostile counter-bid on November 4, 1999 and the definitive merger agreement on February 7, 2000. November 2011 patent expiry is supported by [7]/[9]. Completeness: identifies Parke-Davis/Warner-Lambert and subsequent Pfizer ownership. Report quality: an extra commercial-history table, repeated conclusion, vague domain-only sourcing, and unrelated sales/acquisition valuation caveats pad the company-identification answer."
+    },
+    {
+      "id": "route-14",
+      "metric": "groundedness",
+      "judge": false,
+      "human": true,
+      "judge_reason": "Nearly all claims trace to the DB results and web searches. However, the answer states as fact that no other atorvastatin variants exist in the database, and that is only backed by the full drugs list",
+      "notes": "Groundedness: [13]/[14]/[17]-[21] support the sole internal 20 mg x 7 specification and inventory/sales activity; [22]-[25] support all four public strengths, tablet markings/dimensions, pack configurations, and marketer details. The unsuccessful KB lookup is accurately described. Completeness: includes 20 mg x 7 tablets and 10/20/40/80 mg. Report quality: three overlapping comparison tables, unrelated inventory/sales detail, a process-first opening, and extended source caveats make the comparison unnecessarily long."
+    },
+    {
+      "id": "route-15",
+      "metric": "groundedness",
+      "judge": false,
+      "human": true,
+      "judge_reason": "The inventory figures, antibiotic count, and label storage statements all match the evidence. However, the answer states as fact that no other antibiotics (azithromycin, ciprofloxacin, doxycycline, pe",
+      "notes": "Groundedness: the capsules-versus-vials units point is explicitly labelled as inferred from specifications ('not authoritative DB values'), so it is neutral. The antibiotic count and drug list ([7]-[9]), inventory totals ([13]) and quoted storage limits ([16]) are supported. Completeness: includes Amoxicillin 25,000 versus Ceftriaxone 10,500 and capsule storage at or below 20 C/68 F in a tight container. Report quality: the storage table is the requested content, with verbatim quotes and clear provenance; the opening line, scope notes, conditional 'tension' remark and report offer are minor excess."
+    }
+  ],
+  "target": 0.8
+}

@@ -8,7 +8,7 @@ from langchain_core.tools import tool
 from agent import main_agent
 from agent.metrics import RunMetrics, UsageCallbackHandler
 from api.context import get_run_metrics, reset_run_metrics, set_run_metrics
-from tests.test_main_agent import install_model, session  # noqa: F401 - fixture re-export
+from tests.graph_fakes import install_model
 
 
 def test_run_metrics_accumulates_and_serializes():
@@ -45,7 +45,7 @@ def test_callback_handler_reads_usage_and_tool_calls():
     assert m.subagent_calls == {"RAGFlow Agent": 1}
 
 
-def test_run_deep_agent_counts_subagent_tools_and_tokens_when_metrics_installed(monkeypatch, session):
+def test_run_deep_agent_counts_subagent_tools_and_tokens_when_metrics_installed(monkeypatch, graph_session):
     @tool("list_collections", description="Test lookup")
     def lookup(query: str = "") -> str:
         return "drugs,inventory"
@@ -72,7 +72,7 @@ def test_run_deep_agent_counts_subagent_tools_and_tokens_when_metrics_installed(
     assert get_run_metrics() is None
 
 
-def test_run_deep_agent_without_metrics_adds_no_callbacks(monkeypatch, session):
+def test_run_deep_agent_without_metrics_adds_no_callbacks(monkeypatch, graph_session):
     captured = {}
     class Graph:
         async def astream(self, payload, config=None, **kwargs):
@@ -106,3 +106,53 @@ def test_gemini_tool_records_usage_into_metrics(monkeypatch):
         reset_run_metrics(token)
     assert out["answer"] == "answer"
     assert (metrics.gemini_calls, metrics.gemini_input_tokens, metrics.gemini_output_tokens) == (1, 55, 9)
+
+
+def test_callback_records_delegation_and_evidence_events():
+    m = RunMetrics()
+    h = UsageCallbackHandler(m)
+    h.on_tool_start({"name": "task"}, "{}", inputs={"subagent_type": "Network Search Agent", "description": "look up X"})
+    h.on_tool_end("rows...", name="find_documents")
+    h.on_tool_end("ignored", name="internet_search")
+    from langchain_core.messages import ToolMessage
+    h.on_tool_end(ToolMessage(content="42", tool_call_id="c1"), name="count_documents")
+    assert m.events == [
+        {"kind": "delegation", "subagent": "Network Search Agent", "description": "look up X"},
+        {"kind": "tool_result", "tool": "find_documents", "output": "rows..."},
+        {"kind": "tool_result", "tool": "count_documents", "output": "42"},
+    ]
+    assert m.as_dict()["events"][0]["kind"] == "delegation"
+
+
+def test_gemini_and_ragflow_tools_record_events(monkeypatch):
+    import tools.gemini_tool as gemini_tool
+    import tools.ragflow_tools as ragflow_tools
+    from types import SimpleNamespace
+
+    class Web:
+        def __init__(self, uri, title):
+            self.uri, self.title = uri, title
+    chunk = SimpleNamespace(web=Web("https://s.org", "S"))
+    meta = SimpleNamespace(web_search_queries=["ran query"], grounding_chunks=[chunk])
+    response = SimpleNamespace(text="grounded", candidates=[SimpleNamespace(grounding_metadata=meta)], usage_metadata=None)
+    monkeypatch.setattr(gemini_tool, "_get_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=lambda **kw: response)))
+
+    from tests.ragflow_fakes import FakeChat, FakeClient, completion
+    chunk = {"id": "c1", "document_name": "d.txt", "content": "[[passage 1]] t", "similarity": "0.9"}
+    client = FakeClient(datasets=[{"id": "ds-a", "name": "A"}], chats=[FakeChat("A-assistant", ["ds-a"])],
+                        completion=completion("kb answer [ID:0]", [chunk, chunk, {"document_name": "d.txt"}]))
+    monkeypatch.setattr(ragflow_tools, "_get_client", lambda: client)
+
+    metrics = RunMetrics()
+    token = set_run_metrics(metrics)
+    try:
+        gemini_tool.internet_search.invoke({"query": "q"})
+        ragflow_tools.ask_knowledge_base.invoke({"knowledge_bases": "A", "question": "kb q"})
+    finally:
+        reset_run_metrics(token)
+    kinds = [e["kind"] for e in metrics.events]
+    assert kinds == ["internet_search", "ragflow_retrieval"]
+    assert metrics.events[0]["search_queries"] == ["ran query"] and metrics.events[0]["answer"] == "grounded"
+    assert metrics.events[1]["chunks"] == [{"document": "d.txt", "content": "[[passage 1]] t", "similarity": 0.9, "chunk_id": "c1"}]
+    assert metrics.events[1]["answer"] == "kb answer [ID:0]"
+    assert metrics.events[1]["assistant"] == "A-assistant" and metrics.events[1]["knowledge_bases"] == ["A"]

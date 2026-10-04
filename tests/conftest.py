@@ -28,7 +28,11 @@ _TEST_ENV = {
     "MONGODB_URI": "mongodb://mongo.test:27017",
     "MONGODB_DATABASE": "test_db",
     "RAGFLOW_API_KEY": "ragflow-test-key",
-    "RAGFLOW_API_URL": "http://ragflow.test:9380",
+    "RAGFLOW_BASE_URL": "http://ragflow.test:8080",
+    "RAGFLOW_DATASET": "",
+    # .env may enable LangSmith tracing. TRACING_V2 is checked before LANGSMITH_TRACING
+    # and the LANGCHAIN_* names, so this keeps test runs from sending traces.
+    "LANGSMITH_TRACING_V2": "false",
 }
 for _k, _v in _TEST_ENV.items():
     os.environ[_k] = _v
@@ -38,6 +42,17 @@ for _k, _v in _TEST_ENV.items():
 def test_env():
     """The dummy environment values injected for the test session."""
     return dict(_TEST_ENV)
+
+
+@pytest.fixture
+def graph_session(tmp_path):
+    """Session directory and thread id ("test-graph") for tests that run the coordinator graph."""
+    from api.context import reset_session_context, set_session_context, set_thread_context
+
+    session_token = set_session_context(str(tmp_path))
+    thread_token = set_thread_context("test-graph")
+    yield tmp_path
+    reset_session_context(session_token, thread_token)
 
 
 @pytest.fixture(autouse=True)

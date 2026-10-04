@@ -1,12 +1,7 @@
 """Tests for the evals/run_baseline.py harness math (no live services)."""
-import json
-import sys
-from pathlib import Path
-
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "evals"))
-import run_baseline  # noqa: E402
+from evals import run_baseline
 
 PRICING = {"coordinator": {"input_per_million": 1.0, "output_per_million": 2.0},
            "gemini": {"input_per_million": 0.5, "output_per_million": 4.0}}

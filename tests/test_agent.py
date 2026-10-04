@@ -120,10 +120,10 @@ def test_subagent_names_are_unique():
     assert len(set(names)) == len(names)
 
 
-def test_qwen_tool_roundtrip_omits_unsupported_agent_names():
+def test_tool_roundtrip_omits_unsupported_agent_names():
     import httpx
     from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
-    from agent.llm import QwenChatOpenAI
+    from agent.llm import CompatibleChatOpenAI
     requests = []
     def respond(request):
         import json
@@ -136,7 +136,7 @@ def test_qwen_tool_roundtrip_omits_unsupported_agent_names():
             'choices': [{'index': 0, 'message': {'role': 'assistant', 'content': 'Collections found'}, 'finish_reason': 'stop'}],
         })
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
-        model = QwenChatOpenAI(model='qwen-test', base_url='http://qwen.test/v1', api_key='test-key', http_client=client)
+        model = CompatibleChatOpenAI(model='qwen-test', base_url='http://qwen.test/v1', api_key='test-key', http_client=client)
         result = model.invoke([
             HumanMessage(content='List collections'),
             AIMessage(content='', name='Database Query Agent', tool_calls=[
@@ -150,10 +150,10 @@ def test_qwen_tool_roundtrip_omits_unsupported_agent_names():
 # -------------------------------------------------- knowledge base subagent --
 def test_knowledge_base_agent_shape_and_prompt_section():
     from agent.subagents.knowledge_base_agent import knowledge_base_agent
-    from tools.ragflow_tools import create_ask_delete, get_assistant_list
+    from tools.ragflow_tools import ask_knowledge_base, list_knowledge_bases, retrieve_chunks
 
     _assert_subagent_shape(knowledge_base_agent)
-    assert knowledge_base_agent["tools"] == [get_assistant_list, create_ask_delete]
+    assert knowledge_base_agent["tools"] == [list_knowledge_bases, retrieve_chunks, ask_knowledge_base]
     section = prompts.sub_agents_content["ragflow"]
     assert knowledge_base_agent["name"] == section["name"]
     assert knowledge_base_agent["description"] == section["description"]
@@ -194,7 +194,7 @@ def test_prompts_module_prints_every_agent_when_run_as_script(capsys):
 
 # ------------------------------------------------------------ providers --
 def test_build_llm_deepseek_provider(monkeypatch):
-    from agent.llm import build_llm, provider_settings, DEEPSEEK_BASE_URL
+    from agent.llm import build_llm, provider_settings, CompatibleChatOpenAI, DEEPSEEK_BASE_URL
 
     monkeypatch.setenv("LLM_PROVIDER", "deepseek")
     monkeypatch.delenv("DEEPSEEK_MODEL", raising=False)
@@ -204,7 +204,10 @@ def test_build_llm_deepseek_provider(monkeypatch):
     assert model.model_name == "deepseek-flash"
     assert model.openai_api_base == DEEPSEEK_BASE_URL
     assert model.openai_api_key.get_secret_value() == "test-deepseek-key"
-    assert build_llm("qwen").openai_api_base == "http://qwen.test/v1"
+    assert isinstance(model, CompatibleChatOpenAI)
+    qwen = build_llm("qwen")
+    assert isinstance(qwen, CompatibleChatOpenAI)
+    assert qwen.openai_api_base == "http://qwen.test/v1"
 
 
 def test_build_llm_rejects_unknown_provider():

@@ -1,11 +1,7 @@
 import logging
 import sys
 from pathlib import Path
-
-try:
-    from typing import Annotated, Optional
-except ImportError:
-    from typing_extensions import Annotated, Optional
+from typing import Annotated, Optional
 
 from langchain_core.tools import tool
 _PROJECT_ROOT = str(Path(__file__).resolve().parents[1])

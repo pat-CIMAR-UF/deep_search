@@ -1,14 +1,9 @@
-import datetime
 import asyncio
+import builtins  # 脚本模式可在 builtins.runtime 上挂 stream_writer / script runtimes may hang a stream_writer on builtins.runtime
+import datetime
 from typing import Any, Dict, Optional
 from fastapi import WebSocket
 from api.context import get_thread_context, get_run_context
-
-# 尝试导入全局运行时（用于脚本模式下的流式输出） / Try to import global runtime (used for streaming output in script mode)
-try:
-    import builtins
-except ImportError:
-    builtins = None
 
 
 class ToolMonitor:
@@ -92,9 +87,9 @@ class ToolMonitor:
             except Exception as e:
                 print(f"[Monitor] WebSocket send failed: {e}")
 
-        # 2. 尝试通过全局 runtime 输出 (DeepAgents 脚本模式) / 2. Try outputting via global runtime (DeepAgents script mode)
-        # 这使得 simple_agents.py 中的 MockRuntime 能接收到数据 / This allows MockRuntime in simple_agents.py to receive data
-        if builtins and hasattr(builtins, 'runtime') and hasattr(builtins.runtime, 'stream_writer'):
+        # 2. 可选：脚本运行时通过 builtins.runtime.stream_writer 接收事件（本仓库中无调用方）
+        #    Optional: a script runtime can receive events through builtins.runtime.stream_writer (no caller in this repo)
+        if hasattr(builtins, 'runtime') and hasattr(builtins.runtime, 'stream_writer'):
             try:
                 builtins.runtime.stream_writer(payload)
             except Exception:

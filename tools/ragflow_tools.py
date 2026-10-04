@@ -1,148 +1,162 @@
+"""LangChain tools for the RAGFlow knowledge-base specialist.
+
+Flow for the model: ``list_knowledge_bases`` (exact names) -> ``ask_knowledge_base`` (answer with
+cited sources) or ``retrieve_chunks`` (matching passages, no LLM). ``ragflow/service.py`` does the
+work; this module adds progress reporting, evaluation events and model-facing messages.
+"""
 from pathlib import Path
 import sys
 _PROJECT_ROOT = str(Path(__file__).parents[1])
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from api.monitor import monitor
-
-#  get_assistant_list 获取聊天助手和知识库信息
-#  create_ask_delete  创建提问和删除会话获取rag查询结果
-from langchain_core.tools import tool
-# 导入依赖
-from ragflow_sdk import RAGFlow #链接rag服务的客户端
-from ragflow.rag_config import _load_ragflow_env
 import requests
+from langchain_core.tools import tool
 
-# 创建一个ragflow的客户端
+from api.context import get_run_metrics
+from api.monitor import monitor
+from ragflow import service
+from ragflow.rag_config import load_ragflow_settings
+
+MAX_TOP = 20
+
+# Client connected on first use (tests replace it).
 ragflow_client = None
 
 
-class _RAGFlowClient(RAGFlow):
-    """Bound SDK requests so an offline service cannot occupy a worker forever."""
-
-    def _request(self, method, path, **kwargs):
-        return requests.request(method, self.api_url + path,
-                                headers=self.authorization_header, timeout=(10, 120), **kwargs)
-
-    def get(self, path, params=None, json=None):
-        return self._request("GET", path, params=params, json=json)
-
-    def post(self, path, json=None, stream=False, files=None):
-        return self._request("POST", path, json=json, stream=stream, files=files)
-
-    def delete(self, path, json):
-        return self._request("DELETE", path, json=json)
-
-
-def _get_client():
-    """Initialize RAGFlow on first use so imports do not require credentials."""
+def _get_client() -> service.RAGFlowClient:
+    """Connect on first use so imports do not require credentials."""
     global ragflow_client
     if ragflow_client is None:
-        api_key, base_url = _load_ragflow_env()
-        if not api_key or not base_url:
-            raise ValueError("Set RAGFLOW_API_KEY and RAGFLOW_API_URL before using RAGFlow tools.")
-        ragflow_client = _RAGFlowClient(api_key=api_key, base_url=base_url.rstrip("/"))
+        ragflow_client = service.connect()
     return ragflow_client
 
-# 1. 查询现在知识库中有哪些聊天助手和对应知识库的信息 （方便我们知道rag可以给我们提供哪些数据）
+
+def _failure(prefix: str, exc: Exception, client=None) -> str:
+    """Model-facing failure text; connection problems point at the SSH tunnel."""
+    if isinstance(exc, requests.ConnectionError) and client is not None:
+        return f"{prefix}: {service.unreachable_message(client)}"
+    if isinstance(exc, requests.Timeout):
+        return f"{prefix}: RAGFlow did not respond within {service.READ_TIMEOUT_S} seconds."
+    return f"{prefix}: {exc}"
+
+
+def _record_event(datasets, question: str, chunks: list[dict], assistant: str, answer: str) -> None:
+    """Keep the retrieved chunks for evaluation graders (only when a RunMetrics is installed)."""
+    metrics = get_run_metrics()
+    if metrics is not None:
+        metrics.add_event("ragflow_retrieval", assistant=assistant, knowledge_bases=[d.name for d in datasets],
+                          question=question, chunks=chunks, answer=answer)
+
+
 @tool
-def get_assistant_list() -> str:
-    """
-    Query RAGFlow for available chat assistants and the knowledge bases bound to each one.
-    The model should use this to decide which assistant can answer a given internal-document question.
-    Important: before asking an assistant a question, call this tool first to get assistant names and details.
+def list_knowledge_bases() -> str:
+    """List the RAGFlow knowledge bases that can be searched.
+
+    Call this first: it returns the exact knowledge-base names that ``retrieve_chunks`` and
+    ``ask_knowledge_base`` take, with each base's description, document and chunk counts,
+    embedding model, and the chat assistants already linked to it.
+
     Returns:
-        assistants found — name, description, and associated knowledge bases
-        none — No available assistants
-        error — Failed to query assistant information; no assistants available
-    :return:
+        One line per knowledge base, ``No knowledge bases available``, or
+        ``Failed to list knowledge bases: <reason>``.
     """
-
-    # 埋点,调用工具了告诉前端哪个工具被调用了！！
-    monitor.report_tool(tool_name="RAGFlow assistant list tool: get_assistant_list")
-
-    # 1. 创建ragflow客户端
+    monitor.report_tool(tool_name="RAGFlow knowledge-base list tool: list_knowledge_bases")
+    client = None
     try:
-        # 2. ragflow客户端查询所有的聊天助手 page: int = 1, page_size: int = 30
-        chat_list = _get_client().list_chats()
-        if not chat_list:
-            return "No available assistants"
-        # 3. 查询聊天助手的知识库信息
-        count_chat_info = "" #存储所有会话信息
-        for chat in chat_list:
-            dataset_names = list(getattr(chat, "kb_names", None) or [])
-            dataset_list = getattr(chat, "datasets", None) #当前聊天助手关联的知识库
-            if not dataset_names and isinstance(dataset_list, list):
-                # 知识库的name
-                for dataset in dataset_list:
-                    # print(dataset)
-                    dataset_names.append(dataset['name']) # 将一个助手的知识库的名字加入到列表中
+        client = _get_client()
+        bases = service.describe_knowledge_bases(client)
+    except Exception as exc:  # noqa: BLE001 - every failure becomes a model-readable message
+        return _failure("Failed to list knowledge bases", exc, client)
+    if not bases:
+        return "No knowledge bases available"
+    lines = [f"knowledge base: {kb.name}; description: {kb.description}; documents: {kb.document_count}; "
+             f"chunks: {kb.chunk_count}; embedding model: {kb.embedding_model}; "
+             f"assistants: {', '.join(kb.assistants) or 'none'}" for kb in bases]
+    default = load_ragflow_settings().default_datasets
+    if default:
+        lines.append(f"default when no knowledge base is given (RAGFLOW_DATASET): {', '.join(default)}")
+    return "\n".join(lines)
 
-            # 拼接下当前助手的信息 + 知识库信息
-            # 法律资源小助手  xxxxxx  关联知识库：xx、xxx、xxx
-            count_chat_info += f"assistant name:{chat.name}; description:{getattr(chat, 'description', '')}; associated knowledge bases: {', '.join(dataset_names)} \n"
-        return count_chat_info
-    except Exception as e:
-        return f"Failed to query assistant information; no assistants available. Error: {str(e)}"
 
-# 2. 对某个助手进行提问（创建会话 -》 提问 -》 删除会话）
 @tool
-def create_ask_delete(chat_name: str, question: str) -> str:
-    """
-    Create a one-off session with an assistant, ask a question, then close the session.
-    Use this to retrieve information from RAGFlow.
-    Note: call get_assistant_list first to confirm the assistant name and the question to ask.
-    :param chat_name: assistant name (get_assistant_list only exposes names to the LLM)
-    :param question: the question to ask
-    :return: the answer
-    """
-    # 埋点,调用工具了告诉前端哪个工具被调用了！！
-    monitor.report_tool(tool_name="RAGFlow ask-assistant tool: create_ask_delete", args={"chat_name": chat_name, "question": question})
-    # 1. 创建ragflow客户端
-    # 2. 查询对应name的chat
-    try:
-        chats = _get_client().list_chats(name=chat_name)
-        if not chats:
-            return f"No assistant found with name: {chat_name}"
-        use_chat = chats[0] #选中我们要使用的助手
-        # 3. chat上创建一个会话
-        session = use_chat.create_session(name="temp_session_ask")
-        try:
-            # 4. 使用会话进行提问
-            # 返回的提问结果是流式
-            response = session.ask(question = question,stream=True)
-            # 接收总结果
-            answer_parts = []
-            source_names = []
-            # 流的每一部分的对象 part
-            for part in response:
-                # 数据存在对象中content上！！
-                # print(part.content)
-                if part.content:
-                    answer_parts.append(part.content)
-                references = getattr(part, "reference", None)
-                if isinstance(references, list):
-                    for reference in references:
-                        if not isinstance(reference, dict):
-                            continue
-                        name = reference.get("document_name") or reference.get("document_keyword")
-                        if name and name not in source_names:
-                            source_names.append(name)
-            result = "".join(answer_parts).strip()
-            if not result:
-                return "Question failed: RAGFlow returned an empty answer."
-            if source_names:
-                result += "\n\nSources:\n" + "\n".join(f"- {name}" for name in source_names)
-            # 5. 关闭提问的会话
-            # chat -> 关闭 -》  session
-        finally:
-            use_chat.delete_sessions(ids=[session.id])
-        # 6. 返回结果
-        return result
-    except Exception as e:
-        return f"Question failed. Error: {str(e)}"
+def retrieve_chunks(question: str, knowledge_bases: str | list[str] = "", top: int = 3) -> str:
+    """Return the passages that best match a question, without generating an answer.
 
-# if __name__ == '__main__':
-#     # print(get_assistant_list())
-#     print(create_ask_delete("空调安装助手", "空调的绝热工作怎么做！"))
+    Use it to check what the documents actually contain, to quote exact wording, or when the
+    question is a lookup rather than a synthesis.
+
+    Args:
+        question: the search query.
+        knowledge_bases: exact names from ``list_knowledge_bases``, comma-separated (or a list) to
+            search several together (they must share an embedding model). Omit or leave empty to
+            use the ``RAGFLOW_DATASET`` default.
+        top: number of chunks to return (1-20, default 3).
+
+    Returns:
+        Numbered chunks ``[n] <document> (similarity 0.xx)`` each followed by its text,
+        ``No matching chunks.``, or ``Retrieval failed: <reason>``.
+    """
+    monitor.report_tool(tool_name="RAGFlow retrieval tool: retrieve_chunks",
+                        args={"knowledge_bases": knowledge_bases, "question": question, "top": top})
+    try:
+        top = max(1, min(int(top), MAX_TOP))
+    except (TypeError, ValueError):
+        top = 3
+    client = None
+    try:
+        client = _get_client()
+        datasets = service.resolve_datasets(client, knowledge_bases)
+        chunks = service.retrieve(client, datasets, question, top=top)
+    except Exception as exc:  # noqa: BLE001
+        return _failure("Retrieval failed", exc, client)
+    records = [{"document": chunk.document_name or "", "content": chunk.content or "",
+                "similarity": service.chunk_similarity(chunk), "chunk_id": chunk.id or ""} for chunk in chunks]
+    _record_event(datasets, question, records, assistant="", answer="")
+    if not records:
+        return "No matching chunks."
+    parts = []
+    for index, record in enumerate(records, 1):
+        similarity = record["similarity"]
+        shown = f"{similarity:.2f}" if similarity is not None else "?"
+        parts.append(f"[{index}] {record['document']} (similarity {shown})\n{record['content'].strip()}")
+    return "\n\n".join(parts)
+
+
+@tool
+def ask_knowledge_base(question: str, knowledge_bases: str | list[str] = "") -> str:
+    """Ask the chat assistant linked to the given knowledge bases and return its cited answer.
+
+    The assistant linked to exactly these knowledge bases is reused; otherwise one named
+    ``<name>-assistant`` (``<a>+<b>-assistant`` for several) is created with the server defaults.
+    The question runs in a temporary session that is removed afterwards.
+
+    Args:
+        question: one focused question.
+        knowledge_bases: exact names from ``list_knowledge_bases``, comma-separated (or a list) for
+            several (they must share an embedding model). Omit or leave empty to use the
+            ``RAGFLOW_DATASET`` default.
+
+    Returns:
+        The assistant's answer, whose ``[ID:n]`` markers point at the ``Sources`` list that
+        follows (document name and a snippet of each cited passage), or
+        ``Question failed: <reason>`` when the service, knowledge base or answer is unavailable.
+    """
+    monitor.report_tool(tool_name="RAGFlow ask tool: ask_knowledge_base",
+                        args={"knowledge_bases": knowledge_bases, "question": question})
+    client = None
+    try:
+        client = _get_client()
+        datasets = service.resolve_datasets(client, knowledge_bases)
+        answer = service.ask(client, datasets, question)
+    except Exception as exc:  # noqa: BLE001
+        return _failure("Question failed", exc, client)
+    _record_event(datasets, question, [ref.as_dict() for ref in answer.unique_references()],
+                  assistant=answer.assistant, answer=answer.content)
+    result = answer.content
+    cited = answer.cited
+    if cited:
+        result += "\n\nSources:\n" + "\n".join(f'[ID:{ref.index}] {ref.document or "?"} — "{ref.snippet}"' for ref in cited)
+    elif answer.sources:
+        result += "\n\nSources:\n" + "\n".join(f"- {name}" for name in answer.sources)
+    return result
