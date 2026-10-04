@@ -5,7 +5,8 @@ Usage:
     uv run python evals/graders/ragas_eval.py --run v1_baseline --ids kb-01 kb-02
 
 Metrics (all LLM-based, judged by the Azure deployment in evals/graders/judge.py):
-- faithfulness: claims in the answer supported by the retrieved chunks;
+- faithfulness: claims in the answer supported by the retrieved chunks (claims about the subject only;
+  provenance and process statements are not extracted, see STATEMENT_SCOPE);
 - context_precision: retrieved chunks ranked by relevance to the reference answer;
 - context_recall: reference answer covered by the retrieved chunks.
 The retrieved chunks come from the ``ragflow_retrieval`` events the run recorded (the RAGFlow
@@ -27,6 +28,16 @@ from evals.graders.code import retrieved_contexts  # noqa: E402
 from evals.run_golden import RUNS_DIR, load_results, load_rows  # noqa: E402
 
 METRIC_NAMES = ("faithfulness", "context_precision", "context_recall")
+
+# Ragas splits the whole answer into statements the passages must support, including provenance and
+# process lines ("supported by chunk [ID:0]", "no web search was used"). The passages carry no document
+# names or chunk ids and cannot describe the run, so those statements always fail (kb-27: 7 of 7 content
+# statements supported, 14 provenance/process statements failed). The judge rubric treats the same lines
+# as neutral; faithfulness here scores only claims about the subject.
+STATEMENT_SCOPE = (" Only extract statements about the subject of the question. Skip statements about where the "
+                   "information came from or how the answer was produced: source documents, file names, chunk or "
+                   "citation markers such as [ID:0], knowledge bases, databases, web searches, tools, attached "
+                   "files, and what the assistant did or did not do.")
 
 
 def shim_langchain_community() -> None:
@@ -67,26 +78,39 @@ def build_samples(rows: list[dict], results: dict[str, dict]) -> tuple[list[dict
     return samples, skipped
 
 
+def faithfulness_metric(llm=None):
+    """Ragas Faithfulness whose statement extraction skips provenance and process statements."""
+    from ragas.metrics import Faithfulness
+    metric = Faithfulness(llm=llm)
+    metric.statement_generator_prompt.instruction += STATEMENT_SCOPE  # per-instance prompt object
+    return metric
+
+
 def run_ragas(samples: list[dict]) -> list[dict]:
     shim_langchain_community()
     from ragas import EvaluationDataset, evaluate
     from ragas.llms import LangchainLLMWrapper
-    from ragas.metrics import Faithfulness, LLMContextPrecisionWithReference, LLMContextRecall
+    from ragas.metrics import LLMContextPrecisionWithReference, LLMContextRecall
     from ragas.run_config import RunConfig
 
     from evals.graders.judge import build_judge_chat_model
 
-    llm = LangchainLLMWrapper(build_judge_chat_model())
+    # The GPT judge deployments reject any temperature but the default (ragas sends 0.01) and the `n`
+    # parameter; with the bypasses ragas leaves both unset and loops for n > 1 instead.
+    llm = LangchainLLMWrapper(build_judge_chat_model(), bypass_temperature=True, bypass_n=True)
     dataset = EvaluationDataset.from_list([{k: v for k, v in s.items() if k != "id"} for s in samples])
-    metrics = [Faithfulness(llm=llm), LLMContextPrecisionWithReference(llm=llm), LLMContextRecall(llm=llm)]
-    result = evaluate(dataset=dataset, metrics=metrics, llm=llm, run_config=RunConfig(max_workers=4, timeout=180),
-                      show_progress=False)
+    # Output key -> metric; the result frame names columns by metric.name, which is not always the key
+    # (LLMContextPrecisionWithReference reports "llm_context_precision_with_reference").
+    metrics = {"faithfulness": faithfulness_metric(llm), "context_precision": LLMContextPrecisionWithReference(llm=llm),
+               "context_recall": LLMContextRecall(llm=llm)}
+    result = evaluate(dataset=dataset, metrics=list(metrics.values()), llm=llm,
+                      run_config=RunConfig(max_workers=4, timeout=180), show_progress=False)
     frame = result.to_pandas()
     scores = []
     for sample, (_, row) in zip(samples, frame.iterrows()):
         entry = {"id": sample["id"], "n_contexts": len(sample["retrieved_contexts"])}
         for name in METRIC_NAMES:
-            value = row.get(name)
+            value = row.get(metrics[name].name)
             entry[name] = None if value is None or value != value else round(float(value), 4)  # NaN -> None
         scores.append(entry)
     return scores

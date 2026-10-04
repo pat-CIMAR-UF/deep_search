@@ -131,3 +131,11 @@ def test_sample_keep_extends_without_touching_grades(tmp_path, monkeypatch):
     assert len(grades) == 2 and grades[1]["id"].startswith("kb-") and grades[1]["report_quality"] is None
     sheet = (cal / "review_sheet.md").read_text()
     assert "ans db-01" in sheet and grades[1]["id"] in sheet
+
+
+def test_faithfulness_skips_provenance_statements_without_touching_the_ragas_default():
+    ragas_eval.shim_langchain_community()
+    from ragas.metrics import Faithfulness
+    metric = ragas_eval.faithfulness_metric()
+    assert metric.statement_generator_prompt.instruction.endswith(ragas_eval.STATEMENT_SCOPE)
+    assert ragas_eval.STATEMENT_SCOPE not in Faithfulness().statement_generator_prompt.instruction

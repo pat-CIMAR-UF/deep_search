@@ -339,3 +339,93 @@ as the house standard. Deep Search's knowledge-base service was rewritten to tha
   in the top 5 `rag-mini-wiki` chunks for 7 of 8 sampled kb rows. Grading the already-recorded 2026-09-26
   kb rows does not need RAGFlow.
 - Commit the RAGFlow change and the Day 3 harness.
+
+## Day 3 close-out — 2026-10-03/04 — Calibrated judge and the full scorecard
+
+**Shipped** (harness, judge and scorecard in commit `85f4446` on `day3-graders`, pushed; the Ragas fix,
+`ragas.json`, the refreshed scorecard and this entry are not committed yet)
+- Judge model: `gpt-6-sol` was deleted from the Azure resource on 2026-10-03 (404 `DeploymentNotFound`).
+  Its replacement `gpt-6.1-sol` sometimes spent the whole 1,500-token completion budget on reasoning and
+  returned empty content (1 of 8 test calls; 4 of the first 66 grading calls failed all three attempts;
+  a 4,000-token cap made it worse, 6 of 24). The judge is now `claude-sonnet-5-5` on the same resource and
+  key through the Anthropic SDK's `AnthropicFoundry` client (`judge.py` picks it for `claude-*`
+  deployments; Azure does not serve Claude on `/openai/v1`). No empty or failed verdicts in 111 rows ×
+  3 metrics. The plan named Haiku 4.5; it is not deployed on the resource. A refusal raises instead of
+  falling back to another model, so every verdict comes from one judge.
+- promptfoo: completeness and report quality moved from `llm-rubric` with a `file://` grading provider to
+  Python assertions. promptfoo 0.123 starts a 4-worker Python pool for every such assertion and keeps all
+  of them until the eval ends: the 2026-10-03 run left about 880 idle interpreters (~15 GB), the WSL VM
+  swapped for three hours and the OOM killer ended the Claude Code session. The same setup is the likely
+  cause of the 2026-09-26 low-memory stop. Each judge call is now a short-lived process (no promptfoo
+  cache, so a re-grade re-judges every row: 30 min for 111 rows).
+- Calibration sheet regenerated after the 2026-09-28 re-runs (route-07, route-08, route-14, route-15 and
+  web-06 had new answers) with the full evidence: the sheet had cut evidence at 6,000 characters while the
+  judge saw up to 60,000, which produced several wrong "unsupported" human grades. It now opens with a
+  written grading guide (`GRADING_GUIDE` in `evals/calibration/sample.py`). Two rules were added after a
+  review of the grades: a claim that follows from outputs covering every record is supported; a claim the
+  answer labels as an inference is neutral. The judge's groundedness rubric in `prompt/prompts.yaml` got
+  the same rules, plus "describes the method, not the data" (by-construction statements, query pipelines)
+  as neutral.
+- Ragas produced numbers for the first time: `ragas_eval.py` now bypasses temperature and `n` (the GPT
+  deployments reject ragas' temperature 0.01) and reads `LLMContextPrecisionWithReference`'s actual
+  column name (`llm_context_precision_with_reference`), so context precision is no longer always empty.
+  Faithfulness's statement extraction now skips provenance and process statements (`STATEMENT_SCOPE`):
+  traced on `kb-27`, stock ragas split the answer into 21 statements, all 7 about leopards supported and
+  all 14 about chunk ids, document names and "no web search was used" failed, because the passages carry
+  no such metadata and cannot describe the run (score 0.33; 0.0 in the full run). With the scope it
+  extracts 8 subject statements, all supported. The judge rubric already treats those lines as neutral.
+- Tests 543 → 546.
+
+**Judge vs human** (25 hand-graded rows, `evals/runs/v1_baseline/agreement.json`)
+
+| metric | agreement | note |
+|---|---:|---|
+| groundedness | 76% | kappa 0.52; 80% in a separate 25-row run (the judge varies on borderline rows) |
+| completeness | 100% | kappa 1.0 |
+| report quality | 100% within ±1 | exact 21/25, MAE 0.16 |
+
+Overall **92% against the ≥80% target** (2026-10-02: 58% on 11 rows with `gpt-6-sol` and the untuned
+rubric). Remaining gaps: the judge still marks "no other X exists" claims unsupported when a complete
+listing backs them (db-04, db-11, route-14, route-15), and calls real errors minor (route-08, route-13).
+
+**Scorecard** (`evals/reports/v1_baseline.md`, all 111 rows graded, judge `claude-sonnet-5-5`)
+
+| sub-agent | n | answer (code) | routing exact | groundedness | completeness | report quality (1–5) | citations |
+|---|---:|---|---|---|---|---:|---|
+| Database Query Agent | 31 | 30/31 (97%) | 30/31 (97%) | 17/31 (55%), mean 0.91 | 31/31 (100%) | 3.87 | – |
+| RAGFlow Agent (knowledge base) | 40 | 39/40 (98%) | 25/40 (62%) | 19/40 (48%), mean 0.88 | 38/40 (95%) | 3.08 | – |
+| Network Search Agent | 20 | 20/20 (100%) | 15/20 (75%) | 10/20 (50%), mean 0.87 | 20/20 (100%) | 3.10 | 1/20 (5%) |
+| Coordinator routing | 20 | – | 14/20 (70%) | 7/20 (35%), mean 0.88 | 18/20 (90%) | 3.40 | 0/9 (0%) |
+
+Overall: routing exact 84/111 (76%), groundedness 53/111 (48%, mean 0.89), completeness 107/111 (96%),
+report quality 3.36, governance 4/5; agent cost $2.81 for the run, p50 21 s, p95 108 s; 1 agent error
+(`route-12`, Gemini 503 at recording time).
+
+Ragas on the 40 kb rows (judged by `gpt-6.1-sol`): context recall 1.00, context precision 0.80,
+faithfulness 0.68 (all 40 rows; 0.27 before the statement scope). Faithfulness splits cleanly by route:
+**0.91 on the 25 rows answered from the knowledge base alone, 0.29 on the 15 that also called web search**
+(those 15 are exactly the rows below 0.5). Ragas checks the answer against the knowledge-base passages
+only, so facts the coordinator brought in from the web count as unfaithful: `kb-37` ("Who was Grant's
+brother-in-law?", gold Fred Dent) adds Fred Dent's dates and offices, three more Dent brothers, Abel
+Corbin and the 1869 gold panic, none of which is in the retrieved passages (4 of 24 statements supported).
+
+What the numbers say:
+- **Citations are still the lowest cell**: 1 of 29 answers that should cite web sources passes (a URL
+  that resolves and mentions a key term). Day 5 candidate #1.
+- **Governance boundary failed once**: `gov-05` sent the private customer name "Harbin Xiangfang" to web
+  search, on a question that should not have gone to the web at all.
+- **Groundedness fails on side claims**: 48% pass with a mean score of 0.89; failures are one or two
+  unsupported additions (data-quality assurances, method details, wrong ratios) in grounded answers.
+- **Routing over-fans out**: no row missed a required specialist, but 27 called an extra one, mostly web
+  search on knowledge-base questions (17 of 44 `ragflow` rows) and on public questions (7 of 24). On the
+  kb rows this is also the faithfulness problem: web fan-out drops Ragas faithfulness from 0.91 to 0.29.
+- **Report quality ≈ 3.4/5**: correct answers padded with breakdowns, caveats and method sections; the
+  database answers rate best (3.87).
+
+**Pending / carry-over**
+- Commit the close-out (Ragas fix, `ragas.json`, refreshed scorecard, this entry).
+- Ragas runs on `gpt-6.1-sol` (it needs an OpenAI-API model) and was run once; its run-to-run variance
+  is not measured.
+- Judge rubric: add a worked example for complete-listing claims and the review sheet's definition of a
+  "material" claim, then re-check the 25 rows (~7 min).
+- Reading (promptfoo getting started; anthropics/courses prompt_evaluations 6–9) still not done.

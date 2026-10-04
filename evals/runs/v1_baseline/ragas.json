@@ -1,0 +1,295 @@
+{
+  "run": "v1_baseline",
+  "summary": {
+    "rows": 40,
+    "faithfulness": 0.6779,
+    "faithfulness_n": 40,
+    "context_precision": 0.7979,
+    "context_precision_n": 40,
+    "context_recall": 1.0,
+    "context_recall_n": 40
+  },
+  "scores": [
+    {
+      "id": "kb-01",
+      "n_contexts": 7,
+      "faithfulness": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-02",
+      "n_contexts": 10,
+      "faithfulness": 0.875,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-03",
+      "n_contexts": 6,
+      "faithfulness": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-04",
+      "n_contexts": 8,
+      "faithfulness": 0.2222,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-05",
+      "n_contexts": 6,
+      "faithfulness": 0.8571,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-06",
+      "n_contexts": 12,
+      "faithfulness": 0.75,
+      "context_precision": 0.1964,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-07",
+      "n_contexts": 8,
+      "faithfulness": 0.4,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-08",
+      "n_contexts": 9,
+      "faithfulness": 1.0,
+      "context_precision": 0.2,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-09",
+      "n_contexts": 6,
+      "faithfulness": 0.3,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-10",
+      "n_contexts": 11,
+      "faithfulness": 1.0,
+      "context_precision": 0.75,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-11",
+      "n_contexts": 8,
+      "faithfulness": 0.8333,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-12",
+      "n_contexts": 8,
+      "faithfulness": 0.7778,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-13",
+      "n_contexts": 6,
+      "faithfulness": 0.3077,
+      "context_precision": 0.8333,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-14",
+      "n_contexts": 10,
+      "faithfulness": 1.0,
+      "context_precision": 0.5,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-15",
+      "n_contexts": 17,
+      "faithfulness": 0.2857,
+      "context_precision": 0.1429,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-16",
+      "n_contexts": 6,
+      "faithfulness": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-17",
+      "n_contexts": 6,
+      "faithfulness": 0.75,
+      "context_precision": 0.5,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-18",
+      "n_contexts": 12,
+      "faithfulness": 0.3889,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-19",
+      "n_contexts": 17,
+      "faithfulness": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-20",
+      "n_contexts": 7,
+      "faithfulness": 0.3158,
+      "context_precision": 0.9167,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-21",
+      "n_contexts": 14,
+      "faithfulness": 0.6667,
+      "context_precision": 0.1429,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-22",
+      "n_contexts": 6,
+      "faithfulness": 1.0,
+      "context_precision": 0.3333,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-23",
+      "n_contexts": 6,
+      "faithfulness": 0.3667,
+      "context_precision": 0.45,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-24",
+      "n_contexts": 6,
+      "faithfulness": 0.1818,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-25",
+      "n_contexts": 9,
+      "faithfulness": 0.375,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-26",
+      "n_contexts": 10,
+      "faithfulness": 0.9167,
+      "context_precision": 0.6667,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-27",
+      "n_contexts": 6,
+      "faithfulness": 1.0,
+      "context_precision": 0.8333,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-28",
+      "n_contexts": 8,
+      "faithfulness": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-29",
+      "n_contexts": 6,
+      "faithfulness": 0.75,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-30",
+      "n_contexts": 6,
+      "faithfulness": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-31",
+      "n_contexts": 6,
+      "faithfulness": 0.8,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-32",
+      "n_contexts": 12,
+      "faithfulness": 0.2727,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-33",
+      "n_contexts": 9,
+      "faithfulness": 0.1905,
+      "context_precision": 0.5833,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-34",
+      "n_contexts": 13,
+      "faithfulness": 0.2812,
+      "context_precision": 0.7556,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-35",
+      "n_contexts": 8,
+      "faithfulness": 0.2222,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-36",
+      "n_contexts": 8,
+      "faithfulness": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-37",
+      "n_contexts": 10,
+      "faithfulness": 0.1739,
+      "context_precision": 0.1111,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-38",
+      "n_contexts": 11,
+      "faithfulness": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-39",
+      "n_contexts": 9,
+      "faithfulness": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "kb-40",
+      "n_contexts": 15,
+      "faithfulness": 0.8571,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    }
+  ],
+  "skipped": []
+}

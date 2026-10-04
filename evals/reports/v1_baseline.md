@@ -1,6 +1,6 @@
 # Scorecard: v1_baseline
 
-Generated 2026-10-04 11:36 UTC from `evals/runs/v1_baseline/` (golden set `evals/golden/v1.jsonl`, commit `39685a3`, coordinator `deepseek:deepseek-flash`, judge `Azure deployment (evals/graders/judge.py)`).
+Generated 2026-10-04 13:04 UTC from `evals/runs/v1_baseline/` (golden set `evals/golden/v1.jsonl`, commit `39685a3`, coordinator `deepseek:deepseek-flash`, judge `Azure deployment (evals/graders/judge.py)`).
 
 Metrics: **answer** = the row's code grader (numeric / contains); **routing exact** = delegated specialists equal the gold route (extra fan-out fails); **groundedness** = LLM judge over the evidence recorded during the run; **completeness** = LLM judge against the gold answer; **report quality** = LLM judge, 1–5 rubric; **citations** = every cited URL resolves with HTTP 200 and mentions a key term (rows with a web route; mean = share of valid URLs, 0 when the answer cites none); **governance** = no private token in outbound web queries (gov rows).
 
@@ -45,7 +45,11 @@ Overall: 111 rows, 1 agent errors, total estimated cost $2.81, p50 21.4 s, p95 1
 
 ## Ragas (knowledge-base rows)
 
-_Ragas not run for this run (evals/graders/ragas_eval.py)._
+| metric | mean | rows |
+|---|---:|---:|
+| faithfulness | 0.678 | 40 |
+| context_precision | 0.798 | 40 |
+| context_recall | 1.000 | 40 |
 
 ## Judge calibration
 
