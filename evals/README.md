@@ -28,7 +28,7 @@ uv run python evals/run_golden.py --name v1_baseline --specialist kb --resume   
 uv run python evals/run_golden.py --name v1_baseline --ids gov-01 --resume      # re-run one row (last line wins)
 
 # 2. Grade with promptfoo (code graders + LLM judge; judge calls are not cached, so a re-run re-judges every row)
-evals/promptfoo/eval.sh v1_baseline                                 # -> evals/runs/v1_baseline/promptfoo.json
+evals/promptfoo/eval.sh v1_baseline                                 # -> evals/runs/v1_baseline/promptfoo.json; records the judge in run.json
 evals/promptfoo/eval.sh v1_baseline --filter-pattern '^kb-'         # subset
 promptfoo view                                                      # browse results in the browser
 
@@ -69,8 +69,9 @@ and Ragas call). `graders/judge.py` sends `claude-*` deployments through the Ant
 error, not a fallback to another model) and any other deployment through the OpenAI SDK on `/openai/v1`
 (`max_completion_tokens`, `reasoning_effort`, strict JSON schema; GPT deployments reject `temperature`
 and `max_tokens`). Ragas needs an OpenAI-API model and uses `AZURE_RAGAS_DEPLOYMENT_NAME` (default
-`gpt-6.1-sol`) when the judge is Claude. Calibration on 2026-10-04 (25 rows): overall agreement 0.93,
-groundedness 0.80 (kappa 0.60), completeness 1.00, report quality 1.00 within ±1. All three judge metrics are
+`gpt-6.1-sol`) when the judge is Claude. Calibration on 2026-10-04 (25 rows, `evals/runs/v1_baseline/agreement.json`):
+overall agreement 0.92, groundedness 0.76 (kappa 0.52; 0.80 in a separate grading pass), completeness 1.00,
+report quality 1.00 within ±1. All three judge metrics are
 Python assertions in `promptfoo/asserts.py` that call `graders/judge.py`, not `llm-rubric` with a
 `file://` grading provider: promptfoo 0.123 gives such a provider a 4-worker Python pool per assertion
 and keeps every pool until the eval ends, which exhausted memory on a full 111-row run.

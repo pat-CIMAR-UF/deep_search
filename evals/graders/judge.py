@@ -22,6 +22,7 @@ import os
 import re
 import sys
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -79,10 +80,24 @@ def judge_settings() -> dict[str, str]:
     effort = (os.getenv("AZURE_REASONING_EFFORT") or DEFAULT_REASONING_EFFORT).strip().lower()
     if effort not in REASONING_EFFORTS:
         raise RuntimeError(f"AZURE_REASONING_EFFORT must be one of {REASONING_EFFORTS}, not {effort!r}.")
-    model = os.getenv("AZURE_DEPLOYMENT_NAME") or os.getenv("AZURE_MODEL_NAME") or DEFAULT_DEPLOYMENT
+    model = os.getenv("AZURE_DEPLOYMENT_NAME") or DEFAULT_DEPLOYMENT
     return {"base_url": endpoint + "/", "api_key": key, "model": model, "reasoning_effort": effort,
             "provider": "anthropic" if model.startswith("claude-") else "openai",
             "resource": urlparse(endpoint).netloc.split(".")[0]}
+
+
+def record_judge(run_dir: Path) -> str:
+    """Write the judge deployment and grading time into ``run.json`` so the scorecard names the judge.
+
+    Called by ``evals/promptfoo/eval.sh`` after promptfoo finishes; ``evals/score.py`` reads the ``judge`` key.
+    """
+    settings = judge_settings()
+    path = run_dir / "run.json"
+    meta = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"name": run_dir.name}
+    meta["judge"] = settings["model"]
+    meta["graded_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    path.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return settings["model"]
 
 
 def _get_client():

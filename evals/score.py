@@ -187,7 +187,8 @@ def agreement_section(agreement: dict | None) -> str:
                 "`evals/calibration/agreement.py`._")
     lines = ["| metric | n | agreement | note |", "|---|---:|---:|---|"]
     for name, cell in agreement["metrics"].items():
-        lines.append(f"| {name} | {cell['n']} | {cell['agreement'] * 100:.0f}% | {cell.get('note', '')} |")
+        rate = f"{cell['agreement'] * 100:.0f}%" if cell.get("agreement") is not None else "–"
+        lines.append(f"| {name} | {cell['n']} | {rate} | {cell.get('note', '')} |")
     return "\n".join(lines)
 
 
@@ -225,7 +226,7 @@ def build_report(run: str, meta: dict, scored: list[dict], ragas: dict | None, a
     by_specialist = {key: summarize([s for s in scored if s["specialist"] == key])
                      for key in ("db", "kb", "web", "routing") if any(s["specialist"] == key for s in scored)}
     overall = summarize(scored)
-    judge = meta.get("judge", "Azure deployment (evals/graders/judge.py)")
+    judge = meta.get("judge") or "not recorded (grade with evals/promptfoo/eval.sh)"
     parts = [
         f"# Scorecard: {run}",
         "",

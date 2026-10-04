@@ -3,6 +3,7 @@ import json
 
 import pytest
 
+from evals import score
 from evals.graders import code, judge
 from evals.promptfoo import asserts as pf_asserts, golden_tests as pf_tests, provider as pf_provider
 
@@ -264,7 +265,6 @@ def test_judge_settings_require_azure_configuration(monkeypatch):
     monkeypatch.setenv("AZURE_ENDPOINT", "https://example.openai.azure.com/openai/v1/")
     monkeypatch.setenv("AZURE_API_KEY", "k")
     monkeypatch.delenv("AZURE_DEPLOYMENT_NAME", raising=False)
-    monkeypatch.delenv("AZURE_MODEL_NAME", raising=False)
     monkeypatch.delenv("AZURE_REASONING_EFFORT", raising=False)
     settings = judge.judge_settings()
     assert settings == {"base_url": "https://example.openai.azure.com/openai/v1/", "api_key": "k", "model": "gpt-6.1-sol",
@@ -281,6 +281,19 @@ def test_judge_settings_require_azure_configuration(monkeypatch):
     monkeypatch.delenv("AZURE_API_KEY")
     with pytest.raises(RuntimeError):
         judge.judge_settings()
+
+
+def test_record_judge_writes_the_deployment_into_run_json(tmp_path, monkeypatch):
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
+    monkeypatch.setenv("AZURE_ENDPOINT", "https://example.openai.azure.com/openai/v1")
+    monkeypatch.setenv("AZURE_API_KEY", "k")
+    monkeypatch.setenv("AZURE_DEPLOYMENT_NAME", "claude-sonnet-5-5")
+    monkeypatch.delenv("AZURE_REASONING_EFFORT", raising=False)
+    (tmp_path / "run.json").write_text(json.dumps({"name": "t", "coordinator": "deepseek:x"}), encoding="utf-8")
+    assert judge.record_judge(tmp_path) == "claude-sonnet-5-5"
+    meta = json.loads((tmp_path / "run.json").read_text(encoding="utf-8"))
+    assert meta["coordinator"] == "deepseek:x" and meta["judge"] == "claude-sonnet-5-5" and meta["graded_at"]
+    assert "claude-sonnet-5-5" in score.build_report("t", meta, [], None, None)
 
 
 # --------------------------------------------------------------------------- #
@@ -329,16 +342,20 @@ def test_provider_replays_recorded_results(tmp_path, monkeypatch):
 
 def test_provider_live_mode_runs_the_row_and_appends(tmp_path, monkeypatch):
     path = tmp_path / "results.jsonl"
+    rows = []
 
     async def fake_run_row(row, pricing, name):
+        rows.append(row)
         return make_record(row["id"], answer=f"live answer for {row['question']}")
 
     import evals.run_golden as run_golden
     monkeypatch.setattr(run_golden, "run_row", fake_run_row)
     monkeypatch.setenv("EVAL_MODE", "live")
-    response = pf_provider.call_api("q", {"config": {"results": str(path)}}, {"vars": {"id": "db-01", "question": "How many?"}})
+    response = pf_provider.call_api("q", {"config": {"results": str(path)}},
+                                    {"vars": {"id": "db-01", "question": "How many?", "expected_route": '["database"]'}})
     assert response["output"] == "live answer for How many?"
     assert json.loads(path.read_text().splitlines()[0])["id"] == "db-01"
+    assert rows[0]["expected_route"] == ["database"]  # list vars arrive JSON-encoded and are decoded for the record
 
 
 def context_for(row_id, record, **vars_):

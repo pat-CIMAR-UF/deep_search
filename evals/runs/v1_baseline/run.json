@@ -246,5 +246,7 @@
         "--force"
       ]
     }
-  ]
+  ],
+  "judge": "claude-sonnet-5-5",
+  "graded_at": "2026-10-04T11:36:25+00:00"
 }

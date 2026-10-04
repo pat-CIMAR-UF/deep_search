@@ -1,15 +1,14 @@
 """Validate every row of the golden dataset (evals/golden/v1.jsonl). No live services."""
 import json
 import re
-import sys
 from collections import Counter
 from pathlib import Path
 
 import pytest
 
+from evals.golden import build as golden_build
+
 GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
-sys.path.insert(0, str(GOLDEN_DIR))
-import build as golden_build  # noqa: E402
 
 V1 = GOLDEN_DIR / "v1.jsonl"
 

@@ -214,8 +214,9 @@ def test_public_error_messages_never_include_exception_text():
     assert server.public_error(secret).startswith("The agent could not complete")
     assert "timed out" in server.public_error(TimeoutError())
     assert "timed out" in server.public_error(asyncio.TimeoutError())
-    configuration = server.public_error(KeyError("QWEN_REMOTE_BASE_URL"))
-    assert "not configured" in configuration and "QWEN_REMOTE_API_KEY" in configuration
+    configuration = server.public_error(KeyError("DEEPSEEK_API_KEY"))
+    assert "not configured" in configuration and "LLM_PROVIDER" in configuration
+    assert "DEEPSEEK_API_KEY" not in configuration
 
 
 # --------------------------------------------------------- request validation --

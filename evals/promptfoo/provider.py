@@ -64,11 +64,24 @@ def response_from_record(record: dict) -> dict:
     }
 
 
+def decode_list(value) -> list:
+    """List vars arrive JSON-encoded from golden_tests.py (promptfoo flattens lists before Python sees them)."""
+    if isinstance(value, list):
+        return value
+    if not value:
+        return []
+    try:
+        parsed = json.loads(value)
+    except (TypeError, ValueError):
+        return [value]
+    return parsed if isinstance(parsed, list) else [parsed]
+
+
 def run_live(row_id: str, vars_: dict, config: dict) -> dict:
     from evals.run_baseline import load_pricing
     from evals.run_golden import DEFAULT_PRICING, run_row
     row = {"id": row_id, "specialist": vars_.get("specialist", ""), "question": vars_["question"],
-           "mode": vars_.get("mode", "auto"), "expected_route": vars_.get("expected_route", [])}
+           "mode": vars_.get("mode", "auto"), "expected_route": decode_list(vars_.get("expected_route"))}
     name = run_name(config)
     record = asyncio.run(run_row(row, load_pricing(DEFAULT_PRICING), name))
     path = results_path(config)

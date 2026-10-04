@@ -36,6 +36,7 @@ EVALS_DIR = PROJECT_ROOT / "evals"
 GOLDEN = EVALS_DIR / "golden" / "v1.jsonl"
 RUNS_DIR = EVALS_DIR / "runs"
 DEFAULT_PRICING = EVALS_DIR / "pricing.yaml"
+DEFAULT_TIMEOUT_S = 600
 
 
 def load_rows(path: Path = GOLDEN, ids=None, specialists=None, limit=None) -> list[dict]:
@@ -77,9 +78,6 @@ def coordinator_label() -> str:
         return f"{settings['provider']}:{settings['model']}"
     except Exception:  # noqa: BLE001 - metadata only
         return os.getenv("LLM_PROVIDER", "unknown")
-
-
-DEFAULT_TIMEOUT_S = 600
 
 
 async def run_row(row: dict, pricing: dict, run_name: str, timeout_s: float = DEFAULT_TIMEOUT_S) -> dict:
@@ -151,10 +149,9 @@ def main(argv=None) -> int:
     if args.resume:
         done = load_results(results_path)
         rows = [r for r in rows if r["id"] not in done]
-    elif args.force:
-        pass
-    elif results_path.exists() and results_path.stat().st_size:
-        print(f"{results_path} exists; pass --resume to continue it or choose another --name.", file=sys.stderr)
+    elif not args.force and results_path.exists() and results_path.stat().st_size:
+        print(f"{results_path} exists; pass --resume to continue it, --force to re-run rows, or choose another --name.",
+              file=sys.stderr)
         return 1
     if not rows:
         print("No rows selected (all done?).", file=sys.stderr)

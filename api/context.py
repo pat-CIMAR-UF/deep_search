@@ -1,5 +1,8 @@
 from contextvars import ContextVar
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from agent.metrics import RunMetrics
 
 # =================================================================================================
 # 核心知识点: ContextVars (上下文变量) / Core Concept: ContextVars (Context Variables)

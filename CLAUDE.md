@@ -43,7 +43,11 @@ uv run python -m agent.prompts                # inspect the YAML prompts
 ```
 
 Pytest configuration is in `pyproject.toml`: `testpaths = ["tests", "tools", "evals"]` and
-`pythonpath = ["."]`. There is no configured linter or formatter. Build the frontend with
+`pythonpath = ["."]`, so tests import project modules as packages (`evals.run_baseline`,
+`evals.golden.build`, `tests.graph_fakes`); do not add `sys.path` hacks or import fixtures from
+other test modules. There is no configured linter or formatter; `uvx pyflakes agent api tools
+ragflow utils evals scripts tests` is clean except for the deliberate `get_session_context`
+overrides inside the file tools' `__main__` demo blocks. Build the frontend with
 `cd ui && npm ci && npm run build`; this checks TypeScript and produces `ui/dist`.
 Vite development uses relative API URLs with `/api` and `/ws` proxies to port 8000.
 
@@ -76,7 +80,8 @@ Configuration comes from the git-ignored project `.env`, loaded with
 - Session storage: optional `DEEP_SEARCH_OUTPUT_DIR`, defaulting to the project `output/`.
 - Evaluation judge (evals only): `AZURE_ENDPOINT` (the resource's `/openai/v1` base URL),
   `AZURE_API_KEY`, `AZURE_DEPLOYMENT_NAME`, optional `AZURE_REASONING_EFFORT` (`low` | `medium` |
-  `high`, default `medium`). Since 2026-10-04 the judge is `claude-sonnet-5-5` (`gpt-6-sol` was removed
+  `high`, default `medium`). The former `AZURE_MODEL_NAME` alias is no longer read (a `.env` that
+  still sets it is harmless). Since 2026-10-04 the judge is `claude-sonnet-5-5` (`gpt-6-sol` was removed
   from the resource on 2026-10-03; `gpt-6.1-sol` often spent its whole token budget on reasoning and
   returned empty verdicts). `evals/graders/judge.py` picks the backend from the deployment name:
   `claude-*` goes through the Anthropic SDK's `AnthropicFoundry` client on the same resource and key
@@ -233,9 +238,12 @@ in `<untrusted-user-data-…>` tags. Use `$group` aggregations for totals instea
 capped result as complete data. The app never uses `pymongo`; it is only for the seed script.
 
 Executable tool modules insert the project root into `sys.path` before importing project
-modules so they also work as scripts. Tool imports must tolerate missing API credentials;
-initialize service clients on first use. Under `tools/`, runtime strings, annotations, and
-tool-facing docstrings are English; Chinese comments may remain.
+modules so they also work as scripts; their `__main__` blocks are manual demos that write to
+`./test_session_123` under the current directory. Tool imports must tolerate missing API credentials;
+initialize service clients on first use (`tools/tavily_tool.py`, the inactive alternative, still
+builds its client at import time). Under `tools/`, runtime strings, annotations, and
+tool-facing docstrings are English; Chinese comments may remain. Report failures through the
+tool's return string plus `logging`, not `print` debugging.
 
 ## Sessions, files, and progress
 
@@ -250,8 +258,9 @@ to continue the in-memory checkpoint. Durable state is stored under
 `output/session_<id>/.state.json`. This is a local single-user app: session IDs separate
 conversations, not authenticated accounts. Keep state and attachments git-ignored.
 
-`api/monitor.py` reports tool and assistant activity through the WebSocket manager, optional
-runtime stream writer, and console. Bind the manager to the running event loop. The API
+`api/monitor.py` reports tool and assistant activity through the WebSocket manager, an optional
+`builtins.runtime.stream_writer` hook (kept for script runtimes; nothing in this repository sets
+it), and the console. Bind the manager to the running event loop. The API
 aggregates events into versioned snapshots and ignores stale events from other run IDs or
 completed/cancelled runs. Cancellation stops orchestration; a synchronous external call
 already in flight can finish in the background.
@@ -262,7 +271,10 @@ reference context; documents are read through `read_file_content`. Conversation 
 are not automatically ingested into RAGFlow.
 
 `tools/session_paths.py` wraps the legacy `utils/path_utils.py` resolver to reject access
-outside the session directory and to hidden state. Use session-relative paths such as
+outside the session directory and to hidden state. The `updated/` handling in that resolver and
+the copy from `updated/session_<id>` in `run_deep_agent()` are leftovers of the original upload
+workflow: nothing writes that directory any more and the wrapper rejects `updated/` paths, so do
+not build on them. Use session-relative paths such as
 `report.md` or `uploads/example.docx`. DeepAgents built-in filesystem tools use private
 state-backed scratch space; downloadable reports use the explicit file tools.
 `utils.word_converter.convert_md_to_pdf()` uses WeasyPrint, despite the module's historical
@@ -276,7 +288,12 @@ writes `evals/runs/<run>/results.jsonl` (answers plus `RunMetrics.events`: deleg
 web queries with Gemini's executed queries and sources, RAGFlow chunks, MongoDB/file tool results);
 promptfoo replays that file through `evals/promptfoo/provider.py` and grades it with Python
 assertions in `evals/promptfoo/asserts.py`: code graders from `evals/graders/code.py` and the Azure
-judge (groundedness, completeness, report_quality) from `evals/graders/judge.py`. Keep the judge metrics
+judge (groundedness, completeness, report_quality) from `evals/graders/judge.py`. After promptfoo
+finishes, `eval.sh` calls `judge.record_judge()` to write the judge deployment and grading time into
+`run.json`, which `score.py` prints in the scorecard header, and then exits with promptfoo's own
+status (100 whenever any assertion failed, so wrap it accordingly). promptfoo flattens list vars to
+strings, so `golden_tests.py` JSON-encodes them and `provider.decode_list()` decodes them in both
+the assertions and live mode. Keep the judge metrics
 as Python assertions; do not route them through `llm-rubric` with a `file://` grading provider.
 promptfoo 0.123 starts a 4-worker Python pool for every such assertion and keeps all of them until
 the eval ends; a full run left about 880 idle interpreters, exhausted WSL memory and triggered the
@@ -303,7 +320,9 @@ instead.
 ## Validation and troubleshooting
 
 Automated tests mock external services. `tests/conftest.py` injects dummy credentials before
-project imports and supplies `fake_mcp`, `make_tool_result`, and `monitor_calls` fixtures;
+project imports and supplies the `fake_mcp`, `make_tool_result`, `monitor_calls` and `graph_session`
+(session directory plus thread id `test-graph`) fixtures; `tests/graph_fakes.py` holds the scripted
+chat model and `install_model()` for graph tests, `tests/ragflow_fakes.py` the in-memory RAGFlow client;
 `tests/test_mcp_client.py` replaces `mcp.Client` with a fake and never spawns Node. Preserve that isolation;
 unit tests must not query real databases or paid services. File tests perform actual local
 Word/Excel reading and WeasyPrint PDF generation in temporary directories.

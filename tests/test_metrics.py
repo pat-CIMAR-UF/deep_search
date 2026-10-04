@@ -8,7 +8,7 @@ from langchain_core.tools import tool
 from agent import main_agent
 from agent.metrics import RunMetrics, UsageCallbackHandler
 from api.context import get_run_metrics, reset_run_metrics, set_run_metrics
-from tests.test_main_agent import install_model, session  # noqa: F401 - fixture re-export
+from tests.graph_fakes import install_model
 
 
 def test_run_metrics_accumulates_and_serializes():
@@ -45,7 +45,7 @@ def test_callback_handler_reads_usage_and_tool_calls():
     assert m.subagent_calls == {"RAGFlow Agent": 1}
 
 
-def test_run_deep_agent_counts_subagent_tools_and_tokens_when_metrics_installed(monkeypatch, session):
+def test_run_deep_agent_counts_subagent_tools_and_tokens_when_metrics_installed(monkeypatch, graph_session):
     @tool("list_collections", description="Test lookup")
     def lookup(query: str = "") -> str:
         return "drugs,inventory"
@@ -72,7 +72,7 @@ def test_run_deep_agent_counts_subagent_tools_and_tokens_when_metrics_installed(
     assert get_run_metrics() is None
 
 
-def test_run_deep_agent_without_metrics_adds_no_callbacks(monkeypatch, session):
+def test_run_deep_agent_without_metrics_adds_no_callbacks(monkeypatch, graph_session):
     captured = {}
     class Graph:
         async def astream(self, payload, config=None, **kwargs):
@@ -121,7 +121,6 @@ def test_callback_records_delegation_and_evidence_events():
         {"kind": "tool_result", "tool": "find_documents", "output": "rows..."},
         {"kind": "tool_result", "tool": "count_documents", "output": "42"},
     ]
-    assert m.events_of("tool_result")[0]["tool"] == "find_documents"
     assert m.as_dict()["events"][0]["kind"] == "delegation"
 
 

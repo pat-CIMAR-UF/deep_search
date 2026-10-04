@@ -52,9 +52,6 @@ class RunMetrics:
         """Append one tool event (``delegation``, ``internet_search``, ``ragflow_retrieval``)."""
         self.events.append({"kind": kind, **data})
 
-    def events_of(self, kind: str) -> list[dict]:
-        return [event for event in self.events if event.get("kind") == kind]
-
     def as_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["tool_calls"] = dict(sorted(self.tool_calls.items()))

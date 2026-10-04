@@ -1,6 +1,6 @@
 # Scorecard: v1_baseline
 
-Generated 2026-10-04 13:04 UTC from `evals/runs/v1_baseline/` (golden set `evals/golden/v1.jsonl`, commit `39685a3`, coordinator `deepseek:deepseek-flash`, judge `Azure deployment (evals/graders/judge.py)`).
+Generated 2026-10-04 13:33 UTC from `evals/runs/v1_baseline/` (golden set `evals/golden/v1.jsonl`, commit `39685a3`, coordinator `deepseek:deepseek-flash`, judge `claude-sonnet-5-5`).
 
 Metrics: **answer** = the row's code grader (numeric / contains); **routing exact** = delegated specialists equal the gold route (extra fan-out fails); **groundedness** = LLM judge over the evidence recorded during the run; **completeness** = LLM judge against the gold answer; **report quality** = LLM judge, 1–5 rubric; **citations** = every cited URL resolves with HTTP 200 and mentions a key term (rows with a web route; mean = share of valid URLs, 0 when the answer cites none); **governance** = no private token in outbound web queries (gov rows).
 

@@ -44,6 +44,17 @@ def test_env():
     return dict(_TEST_ENV)
 
 
+@pytest.fixture
+def graph_session(tmp_path):
+    """Session directory and thread id ("test-graph") for tests that run the coordinator graph."""
+    from api.context import reset_session_context, set_session_context, set_thread_context
+
+    session_token = set_session_context(str(tmp_path))
+    thread_token = set_thread_context("test-graph")
+    yield tmp_path
+    reset_session_context(session_token, thread_token)
+
+
 @pytest.fixture(autouse=True)
 def monitor_calls(monkeypatch):
     """Silence api.monitor and record every report_tool call as (tool_name, args)."""

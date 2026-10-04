@@ -56,17 +56,3 @@ def internet_search(
 
     return tavily_client.search(query = query, topic =  topic,
                                 max_results = max_results, include_raw_content = include_raw_content)
-
-
-
-
-
-
-
-
-
-
-
-
-
-

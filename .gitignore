@@ -22,3 +22,6 @@ evals/golden/data/
 evals/runs/*
 !evals/runs/v1_baseline/
 evals/runs/*/promptfoo.json
+
+# pytest-cov output
+.coverage

@@ -6,7 +6,6 @@ They return promptfoo GradingResult dicts (``pass``, ``score``, ``reason``, ``na
 """
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -15,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from evals.graders import code  # noqa: E402
+from evals.promptfoo.provider import decode_list  # noqa: E402
 
 
 def _metadata(context: dict) -> dict:
@@ -22,28 +22,26 @@ def _metadata(context: dict) -> dict:
 
 
 def _list(context: dict, name: str) -> list:
-    """List vars are JSON-encoded by golden_tests.py (promptfoo would otherwise flatten them to strings)."""
-    value = (context.get("vars") or {}).get(name)
-    if isinstance(value, list):
-        return value
-    if not value:
-        return []
-    try:
-        parsed = json.loads(value)
-    except (TypeError, ValueError):
-        return [value]
-    return parsed if isinstance(parsed, list) else [parsed]
+    """A list var of the test case (JSON-encoded by golden_tests.py)."""
+    return decode_list((context.get("vars") or {}).get(name))
 
 
 def _result(grade: dict, **named: float) -> dict:
     return {"pass": grade["pass"], "score": grade["score"], "reason": grade["reason"], "namedScores": named}
 
 
+def _agent_error(output: str, context: dict) -> dict | None:
+    """A failed row with no answer is graded as failed without running the grader."""
+    meta = _metadata(context)
+    if meta.get("error") and not (output or "").strip():
+        return {"pass": False, "score": 0.0, "reason": f"agent error: {meta['error']}"}
+    return None
+
+
 def answer(output: str, context: dict) -> dict:
-    vars_ = context["vars"]
-    if _metadata(context).get("error") and not output:
-        return {"pass": False, "score": 0.0, "reason": f"agent error: {_metadata(context)['error']}"}
-    return _result(code.grade_answer(vars_["grader_method"], output or "", _list(context, "grader_targets")))
+    if failed := _agent_error(output, context):
+        return failed
+    return _result(code.grade_answer(context["vars"]["grader_method"], output or "", _list(context, "grader_targets")))
 
 
 def routing(output: str, context: dict) -> dict:
@@ -64,14 +62,6 @@ def citations(output: str, context: dict) -> dict:
     terms = code.key_terms(_list(context, "grader_targets"), vars_.get("expected_answer", ""))
     grade = code.check_citations(output or "", terms)
     return _result(grade, citation_count=float(len(grade["details"].get("checked", []))))
-
-
-def _agent_error(output: str, context: dict) -> dict | None:
-    """A failed row with no answer is graded as failed without calling the judge."""
-    meta = _metadata(context)
-    if meta.get("error") and not (output or "").strip():
-        return {"pass": False, "score": 0.0, "reason": f"agent error: {meta['error']}"}
-    return None
 
 
 def groundedness(output: str, context: dict) -> dict:
