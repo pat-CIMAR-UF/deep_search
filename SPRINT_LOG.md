@@ -497,6 +497,14 @@ What the numbers say:
   `v1_baseline` as the golden README notes; 13 of 40 still fanned out to web search.
 - `gov-05` leaked "Harbin Xiangfang" to web search again. Citations remain the lowest cell.
 
+**Repository** (same day, after the re-run): `day3-graders` opened as PR #3 (CI green on the first GitHub Actions run of
+the Day 3 suite). Merge protection cannot be enforced on a private Free-plan repository, so the repo was made public
+after a clean secret scan of the tree and history (the one pattern hit is an opaque Gemini redirect token in
+`results.jsonl`); ruleset `protect-main` on the default branch (no deletion or force-push, pull request required,
+`pytest` status check required) and secret scanning with push protection are enabled. Resolves the Day 1 carry-over
+"enable secret scanning + push protection when the repo goes public". The pre-rewrite commit with the revoked keys
+remains fetchable as a dangling object until GitHub Support purges it.
+
 **Pending / carry-over**
 - Hand-grade `evals/calibration/v1_rerun/human_grades.jsonl` (25 rows), then `agreement.py --run v1_rerun`.
 - Decide whether `evals/runs/v1_rerun/` joins the kept runs in `.gitignore`.
