@@ -36,6 +36,8 @@ uv run python evals/golden/build.py           # regenerate evals/golden/v1.jsonl
 uv run python evals/run_golden.py --name <run>   # record golden-row answers + tool traces (live services)
 evals/promptfoo/eval.sh <run>                 # grade a recorded run: code graders + LLM judge (promptfoo)
 uv run python evals/graders/ragas_eval.py --run <run>   # Ragas metrics on the kb rows
+uv run python evals/calibration/sample.py --run <run> --keep   # rebuild the review sheet for the graded sample
+uv run python evals/calibration/agreement.py --run <run>       # judge vs human agreement -> agreement.json
 uv run python evals/score.py --run <run>      # scorecard -> evals/reports/<run>.md
 uv run python -m agent.prompts                # inspect the YAML prompts
 ```
@@ -283,8 +285,20 @@ OOM killer. Judge rubrics live in `prompt/prompts.yaml` under `evals.judge` and 
 JSON strings because promptfoo flattens lists before Python assertions see them. `promptfoo/tests.py`
 must not exist under that name: it would shadow the `tests` package during pytest collection.
 Evidence capture only happens when an evaluation installs `RunMetrics`; the API path is unchanged.
-Ragas 0.4.3 needs the import shim in `ragas_eval.py` with langchain-community 0.4. Do not re-point
-RAGFlow assistants or other shared service state from the harness; report what is stale instead.
+Ragas 0.4.3 needs the import shim in `ragas_eval.py` with langchain-community 0.4. It runs on an
+OpenAI-API deployment through LangChain with `bypass_temperature` and `bypass_n` (the GPT deployments
+reject its temperature 0.01), reads result columns by `metric.name` (context precision reports
+`llm_context_precision_with_reference`), and extracts only statements about the subject for
+faithfulness (`STATEMENT_SCOPE`: provenance and process lines can never be supported by bare passages).
+Faithfulness checks answers against the knowledge-base passages only, so rows where the coordinator also
+searched the web score low by design.
+
+Calibration: `evals/calibration/v1_baseline/human_grades.jsonl` holds hand grades; never overwrite them.
+The review sheet shows the same evidence the judge receives (`evidence_text` with its default limit) and
+opens with `GRADING_GUIDE` from `evals/calibration/sample.py`; keep that guide and the judge rubrics in
+`prompt/prompts.yaml` stating the same rules, or agreement measures the difference between two standards.
+Do not re-point RAGFlow assistants or other shared service state from the harness; report what is stale
+instead.
 
 ## Validation and troubleshooting
 

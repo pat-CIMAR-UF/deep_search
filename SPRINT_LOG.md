@@ -342,8 +342,7 @@ as the house standard. Deep Search's knowledge-base service was rewritten to tha
 
 ## Day 3 close-out — 2026-10-03/04 — Calibrated judge and the full scorecard
 
-**Shipped** (harness, judge and scorecard in commit `85f4446` on `day3-graders`, pushed; the Ragas fix,
-`ragas.json`, the refreshed scorecard and this entry are not committed yet)
+**Shipped** (commits `85f4446` and `fb64a5b` on `day3-graders`, pushed 2026-10-04; not merged to `main`)
 - Judge model: `gpt-6-sol` was deleted from the Azure resource on 2026-10-03 (404 `DeploymentNotFound`).
   Its replacement `gpt-6.1-sol` sometimes spent the whole 1,500-token completion budget on reasoning and
   returned empty content (1 of 8 test calls; 4 of the first 66 grading calls failed all three attempts;
@@ -422,8 +421,36 @@ What the numbers say:
 - **Report quality ≈ 3.4/5**: correct answers padded with breakdowns, caveats and method sections; the
   database answers rate best (3.87).
 
+**Deviations from the plan**
+- Schedule: planned as one day; ran 2026-09-26 to 2026-10-04 because of the RAGFlow outage and
+  re-platform, the deleted judge deployment and the promptfoo memory leak.
+- Judge model: `claude-sonnet-5-5` instead of Claude Haiku 4.5. Haiku is not deployed on the Azure
+  resource and both GPT deployments failed (above). Sonnet 5.5 lists at twice Haiku's per-token price
+  ($2 / $10 against $1 / $5 per million tokens); judge spend per run was not measured. Side effect for
+  Day 9: Claude through Microsoft Foundry (`AnthropicFoundry`, API key) already works on this resource,
+  which has `claude-sonnet-5-5` and `claude-opus-5-5` deployed, so the Path A subscription question is
+  settled; Entra ID / managed identity and the sub-agent adapter remain.
+- Harness: promptfoo runs every judge metric as a Python assertion, not `llm-rubric` (the memory leak
+  above). promptfoo therefore does not cache judge calls; Day 5's "cache LLM calls in CI" needs a judge
+  cache of its own.
+- Ragas is judged by `gpt-6.1-sol` (it needs an OpenAI-API LangChain model here), not the Claude judge,
+  and its faithfulness counts only statements about the subject (`STATEMENT_SCOPE`), unlike stock Ragas.
+  Compare faithfulness only between runs with the same scope.
+- Calibration: one tuning round. The human grades were revised once, after the sheet's evidence cut was
+  found, and the same two rules went into both the grading guide and the judge rubric; the judge was not
+  iterated further once agreement passed 80%.
+- Governance is checked from the recorded run events (`RunMetrics`), as the plan allows before Day 4's
+  traces.
+- The kb rows were recorded on 2026-09-26 against the former local RAGFlow dataset, which had
+  `[[passage N]]` markers. That instance is gone and the remote `rag-mini-wiki` has no markers, so the kb
+  rows can be re-graded but not re-recorded until the marker corpus is ingested there; Day 5's
+  before/after on kb rows depends on it.
+
+**Resolved from earlier entries**: the Day 3 pending items (full re-grade, kb recording, calibration)
+and the Interlude's "commit the RAGFlow change and the Day 3 harness".
+
 **Pending / carry-over**
-- Commit the close-out (Ragas fix, `ragas.json`, refreshed scorecard, this entry).
+- Merge `day3-graders` into `main` (pull request).
 - Ragas runs on `gpt-6.1-sol` (it needs an OpenAI-API model) and was run once; its run-to-run variance
   is not measured.
 - Judge rubric: add a worked example for complete-listing claims and the review sheet's definition of a
