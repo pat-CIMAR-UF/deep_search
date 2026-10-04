@@ -456,3 +456,48 @@ and the Interlude's "commit the RAGFlow change and the Day 3 harness".
 - Judge rubric: add a worked example for complete-listing claims and the review sheet's definition of a
   "material" claim, then re-check the 25 rows (~7 min).
 - Reading (promptfoo getting started; anthropics/courses prompt_evaluations 6–9) still not done.
+
+## Interlude — 2026-10-04 — Cleanup and a second full run
+
+Not a planned sprint day. A dead-code review of the Day 1–3 work, then the whole Day 3 pipeline re-run on
+the cleaned code to prove nothing broke.
+
+**Shipped** (commit `fe4a059` on `day3-graders`, pushed)
+- Cleanup: `eval.sh` records the judge deployment and grading time in `run.json` (`judge.record_judge`;
+  `score.py` had read a key nothing wrote, so every scorecard header named a placeholder) and exits with
+  promptfoo's status; removed the `AZURE_MODEL_NAME` alias, `RunMetrics.events_of`, the `--force` no-op
+  branch, debug prints and dead `typing_extensions` fallbacks in the file tools, the Qwen-only
+  `public_error` message from before the provider switch, and the unreferenced `tools/test_session`
+  artifacts; list vars are decoded once (`provider.decode_list`) so live mode records `expected_route` as a
+  list; graph-test helpers moved to `tests/graph_fakes.py` and a `graph_session` fixture; `evals` modules
+  imported as packages instead of through `sys.path`. 546 → 547 tests. `v1_baseline/run.json` backfilled with
+  `claude-sonnet-5-5`; the report header regenerated, `scores.json` identical.
+- Re-run `v1_rerun` (`evals/reports/v1_rerun.md`, `evals/calibration/v1_rerun/`; run artifacts git-ignored):
+  111 rows, 0 agent errors, $3.84; 74 min recording, 30 min grading, 8 min Ragas. Memory stayed near 3 GB
+  during grading, so the promptfoo pool leak is gone.
+
+| metric | v1_baseline | v1_rerun |
+|---|---|---|
+| answer (code) | 89/91 | 90/91 |
+| routing exact | 84/111 (76%) | 81/111 (73%) |
+| groundedness | 53/111 (48%), mean 0.89 | 36/111 (32%), mean 0.81 |
+| completeness | 107/111 | 107/111 |
+| citations | 1/29 | 4/29 |
+| governance | 4/5 | 4/5 |
+| report quality (1–5) | 3.36 | 3.45 |
+| Ragas faithfulness / precision / recall | 0.68 / 0.80 / 1.00 | 0.73 / 0.85 / 1.00 |
+| p50 / p95 s | 21 / 108 | 26 / 99 |
+
+What the numbers say:
+- The deltas are run-to-run noise, not the cleanup: no prompt, grader or judge call changed. Groundedness
+  moves most (web rows 10/20 → 4/20 grounded, 15/20 → 11/20 exact routing). First variance data point for
+  Day 5's "fail if groundedness drops more than 2 points" gate: 2 points would fire on noise; use a wider
+  margin, repeated judgings, or paired comparison on the same recording.
+- kb rows ran against the remote `rag-mini-wiki` (no passage markers), so they are not comparable with
+  `v1_baseline` as the golden README notes; 13 of 40 still fanned out to web search.
+- `gov-05` leaked "Harbin Xiangfang" to web search again. Citations remain the lowest cell.
+
+**Pending / carry-over**
+- Hand-grade `evals/calibration/v1_rerun/human_grades.jsonl` (25 rows), then `agreement.py --run v1_rerun`.
+- Decide whether `evals/runs/v1_rerun/` joins the kept runs in `.gitignore`.
+- Day 3 close-out items unchanged (merge `day3-graders`, Ragas variance now has one data point, rubric example).
